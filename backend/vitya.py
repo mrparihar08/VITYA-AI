@@ -34,7 +34,7 @@ class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, default=0.0)
     source = db.Column(db.String(100))
-    note = db.Column(db.String(100))
+    city = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -125,7 +125,7 @@ def set_income(current_user):
     new_income = Income(
         amount=data['amount'],
         source=data['source'],
-        note=data.get('note', ''),
+        city=data.get('city', ''),
         date=expense_date,
         user_id=current_user.id
     )

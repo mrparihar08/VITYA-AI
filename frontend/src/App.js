@@ -11,7 +11,7 @@ function App() {
   const [token, setToken] = useState('');
   const [IncomeAmount, setIncomeAmount] = useState('');
   const [IncomeSource, setIncomeSource] = useState('');
-  const [IncomeNote, setIncomeNote] = useState('');
+  const [IncomeCity, setIncomeCity] = useState('');
   const [IncomeDate, setIncomeDate] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
@@ -74,7 +74,7 @@ function App() {
   };
 
   const handleSetIncome = () => postWithAuth('/api/incomes', {
-    amount: parseFloat(IncomeAmount), date: IncomeDate, source: IncomeSource, Note: IncomeNote
+    amount: parseFloat(IncomeAmount), date: IncomeDate, source: IncomeSource, Note: IncomeCity
   });
 
   const handleAddExpense = () => postWithAuth('/api/expenses', {
@@ -154,24 +154,8 @@ function App() {
           <h1 className="topi">cashflow</h1>
           {token && <p>Hi, {loginUsername}</p>}
         </div>
+        {/* --- NEW: Tax Advice Card --- */}
         <div className="card advice-card">
-          <h2 className="text-xl font-semibold mb-4">Get Advice</h2>
-          <button className="fetch-button" onClick={handleGetAdvice}>Fetch Advice</button>
-          {advice.length > 0 && (
-            <div className="advice-grid">
-              <h3 className="font-bold mb-2">Advice:</h3>
-              {advice.map((rec, idx) => (
-                <div key={idx} className="advice-item">
-                  <span className="category">{rec.category}:</span>
-                  <span className="value">{rec.advice || 'No advice'}</span>
-                  <span className="prediction">(Predicted: {rec.predicted_next_month?.toFixed(2) ?? 'N/A'})</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-         {/* --- NEW: Tax Advice Card --- */}
-         <div className="card advice-card">
           <h2>Tax Advice</h2>
           <button onClick={handleGetTaxAdvice}>Fetch Tax Advice</button>
           {taxData && (
@@ -219,6 +203,23 @@ function App() {
             </div>
           )}
         </div>
+        <div className="card advice-card">
+          <h2 className="text-xl font-semibold mb-4">Get Advice</h2>
+          <button className="fetch-button" onClick={handleGetAdvice}>Fetch Advice</button>
+          {advice.length > 0 && (
+            <div className="advice-grid">
+              <h3 className="font-bold mb-2">Advice:</h3>
+              {advice.map((rec, idx) => (
+                <div key={idx} className="advice-item">
+                  <span className="category">{rec.category}:</span>
+                  <span className="value">{rec.advice || 'No advice'}</span>
+                  <span className="prediction">(Predicted: {rec.predicted_next_month?.toFixed(2) ?? 'N/A'})</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+         
       </aside>
       <main className="main-content">
         <h1 className="main-title">VITYA-AI</h1>
@@ -247,7 +248,7 @@ function App() {
             <p className="small-note">Salary can be added once a month, and other income can be added as needed.</p>
             <input type="number" placeholder="Amount" value={IncomeAmount} onChange={(e) => setIncomeAmount(e.target.value)} />
             <input type="text" placeholder="Source" value={IncomeSource} onChange={(e) => setIncomeSource(e.target.value)} />
-            <input type="text" placeholder="Note" value={IncomeNote} onChange={(e) => setIncomeNote(e.target.value)} />
+            <input type="text" placeholder="City" value={IncomeCity} onChange={(e) => setIncomeCity(e.target.value)} />
             <input type="text" placeholder="Date (DD-MM-YYYY)" value={IncomeDate} onChange={(e) => setIncomeDate(e.target.value)} />
             <button onClick={handleSetIncome}>Set Income</button>
           </div>
@@ -256,7 +257,7 @@ function App() {
             <input type="number" placeholder="Amount" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} />
             <input type="text" placeholder="Category" value={expenseCategory} onChange={(e) => setExpenseCategory(e.target.value)} />
             <input type="text" placeholder="Payment Type" value={expensepayment_type} onChange={(e) => setExpensepayment_type(e.target.value)} />
-            <input type="text" placeholder="Description (optional)" value={expenseDescription} onChange={(e) => setExpenseDescription(e.target.value)} />
+            <input type="text" placeholder="Description" value={expenseDescription} onChange={(e) => setExpenseDescription(e.target.value)} />
             <input type="text" placeholder="Date (DD-MM-YYYY)" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} />
             <button onClick={handleAddExpense}>Add Expense</button>
           </div>
