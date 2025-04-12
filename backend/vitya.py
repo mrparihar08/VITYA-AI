@@ -125,7 +125,7 @@ def set_income(current_user):
     new_income = Income(
         amount=data['amount'],
         source=data['source'],
-        city=data.get('city', ''),
+        city=data.get('city',''),
         date=expense_date,
         user_id=current_user.id
     )
