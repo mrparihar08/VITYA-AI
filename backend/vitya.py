@@ -46,7 +46,12 @@ class Expense(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     payment_type = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
+# -------------------------------
+# DEFAULT ROOT URL
+# -------------------------------
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"message": "Welcome to VITYA-AI backend! 🚀"}), 200
 # -------------------------------
 # TOKEN REQUIRED DECORATOR
 # -------------------------------
