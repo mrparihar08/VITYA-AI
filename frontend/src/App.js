@@ -23,7 +23,7 @@ function App() {
   const [graphBase64, setGraphBase64] = useState('');
   const [incomeGraph64, setIncomeGraph64] = useState('');
   const [expenseGraph64, setExpenseGraph64] = useState('');
-    const API_URL = 'http://127.0.0.1:5000';
+    const API_URL = 'https://vitya-ai1.onrender.com';
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
