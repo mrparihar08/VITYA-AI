@@ -88,16 +88,21 @@ function App() {
     }
   };
 
-  const handleGetAdvice = async () => {
-    if (!token) return alert('Please login first.');
-    try {
-      const res = await axios.get(`${API_URL}/api/advice`, authHeaders());
-      if (res.data.recommendations?.length > 0) setAdvice(res.data.recommendations);
-      else setAdvice([]);
-    } catch (err) {
-      alert(err.response?.data?.error || 'Error getting advice');
-    }
-  };
+  const [loadingAdvice, setLoadingAdvice] = useState(false);
+
+const handleGetAdvice = async () => {
+  if (!token) return alert('Please login first.');
+  setLoadingAdvice(true);
+  try {
+    const res = await axios.get(`https://vitya-ai1.onrender.com/api/advice`, authHeaders());
+    if (res.data.recommendations?.length > 0) setAdvice(res.data.recommendations);
+    else setAdvice([]);
+  } catch (err) {
+    alert(err.response?.data?.error || 'Error getting advice');
+  } finally {
+    setLoadingAdvice(false);
+  }
+};
 
   const handleGetGraph = async () => {
     if (!token) return alert('Please login first.');
