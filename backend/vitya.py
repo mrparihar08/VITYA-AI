@@ -17,6 +17,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vitya.db'
 app.config['SECRET_KEY'] = 'machebox@0810#2000$nature'
+ML_API_BASE = "https://vitya-ml-api.onrender.com"
 db = SQLAlchemy(app)
 
 # -------------------------------
@@ -310,11 +311,11 @@ def get_expense_advice(current_user):
             ]
         }
         # ML training API
-        train_resp = requests.post("http://localhost:8080/train/", json=user_data)
+        train_resp = requests.post(f"{ML_API_BASE}/train/", json=user_data)
         if train_resp.status_code != 200:
             return jsonify({"error": "Training failed"}), 500
         # ML prediction API
-        predict_resp = requests.post("http://localhost:8080/predict/", json=user_data)
+        predict_resp = requests.post(f"{ML_API_BASE}/predict/", json=user_data)
         if predict_resp.status_code != 200:
             return jsonify({"error": "Prediction failed"}), 500
         return jsonify(predict_resp.json()), 200
