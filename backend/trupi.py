@@ -3,10 +3,22 @@ from flask_cors import CORS
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import os
+import pickle
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 models = {}
+MODEL_FILE = "models.pkl"
+
+def save_models_to_disk(filename=MODEL_FILE):
+    with open(filename, 'wb') as f:
+        pickle.dump(models, f)
+
+def load_models_from_disk(filename=MODEL_FILE):
+    global models
+    if os.path.exists(filename):
+        with open(filename, 'rb') as f:
+            models = pickle.load(f)
 
 def train_model(df: pd.DataFrame):
     global models
@@ -31,6 +43,7 @@ def train_model(df: pd.DataFrame):
             "model": model,
             "start_date": category_df["date"].min()
         }
+    save_models_to_disk()  # Save trained models after training
 
 def run_prediction_logic_from_df(df: pd.DataFrame):
     if not models:
@@ -74,7 +87,7 @@ def train_from_json():
             return jsonify({"error": "Invalid or missing 'expenses' data"}), 400
         df = pd.DataFrame(data["expenses"])
         train_model(df)
-        return jsonify({"message": "Models trained successfully", "categories": list(models.keys())})
+        return jsonify({"message": "Models trained and saved successfully", "categories": list(models.keys())})
     except Exception as e:
         print("Train Error:", str(e))
         return jsonify({"error": str(e)}), 500
@@ -93,4 +106,5 @@ def predict_from_json():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True,host="0.0.0.0", port=8080)
+    load_models_from_disk()  # Load models when server starts
+    app.run(debug=True, host="0.0.0.0", port=8080)
