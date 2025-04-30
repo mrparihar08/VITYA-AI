@@ -65,8 +65,6 @@ body {
   background-color: var(--bg-card-alt);
   border-radius: 1rem;
   max-width: none;
-  margin-left: 15px;
-  margin-right: 15px;
 }
 
 .form-card {

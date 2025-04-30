@@ -17,7 +17,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vitya.db'
 app.config['SECRET_KEY'] = 'machebox@0810#2000$nature'
-ML_API_BASE = "https://vitya-ai1.onrender.com"
+ML_API_BASE = "http://127.0.0.1:8080"
 db = SQLAlchemy(app)
 
 # -------------------------------
@@ -249,7 +249,7 @@ def get_expense_income_trend(current_user):
     # Step 5: Plot Income
     buf_income = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Income'], marker='o')
+    plt.plot(df.index, df['Income'], marker='o',color='red')
     plt.title("Monthly Income")
     plt.xlabel("Month")
     plt.ylabel("Income (₹)")
@@ -264,7 +264,7 @@ def get_expense_income_trend(current_user):
     # Step 6: Plot Expenses
     buf_expense = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Expenses'], marker='o')
+    plt.plot(df.index, df['Expenses'], marker='o',color='red')
     plt.title("Monthly Expenses")
     plt.xlabel("Month")
     plt.ylabel("Expenses (₹)")
@@ -311,11 +311,11 @@ def get_expense_advice(current_user):
             ]
         }
         # ML training API
-        train_resp = requests.post(f"https://vitya-ai1.onrender.com/train/", json=user_data)
+        train_resp = requests.post(f"{ML_API_BASE}/train/", json=user_data)
         if train_resp.status_code != 200:
             return jsonify({"error": "Training failed"}), 500
         # ML prediction API
-        predict_resp = requests.post(f"https://vitya-ai1.onrender.com/predict/", json=user_data)
+        predict_resp = requests.post(f"{ML_API_BASE}/predict/", json=user_data)
         if predict_resp.status_code != 200:
             return jsonify({"error": "Prediction failed"}), 500
         return jsonify(predict_resp.json()), 200
