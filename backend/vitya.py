@@ -249,7 +249,7 @@ def get_expense_income_trend(current_user):
     # Step 5: Plot Income
     buf_income = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Income'], marker='o',color='red')
+    plt.plot(df.index, df['Income'], marker='o',color='green')
     plt.title("Monthly Income")
     plt.xlabel("Month")
     plt.ylabel("Income (₹)")
