@@ -6,8 +6,8 @@ function App() {
   const [token, setToken] = useState('');
   const [registerData, setRegisterData] = useState({ username: '', email: '', password: '' });
   const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [incomeData, setIncomeData] = useState({ amount: '', source: '', city: '', date: '' });
-  const [expenseData, setExpenseData] = useState({ amount: '', category: '', payment_type: '', description: '', date: '' });
+  const [incomeData, setIncomeData] = useState({ amount: '', source: '', city: '', date: getCurrentDate() });
+  const [expenseData, setExpenseData] = useState({ amount: '', category: '', payment_type: '', description: '', date: getCurrentDate() });
   const [financialOverview, setFinancialOverview] = useState(null);
   const [advice, setAdvice] = useState([]);
   const [graphBase64, setGraphBase64] = useState('');
@@ -123,6 +123,14 @@ function App() {
     }
   };
 
+  function getCurrentDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   return (
     <div className="app-container">
       <main className="main-content">
@@ -161,28 +169,37 @@ function App() {
           <div className="card form-card">
             <h2>Income</h2>
             <p className="small-note">Salary can be added once a month, and other income as needed.</p>
-            <input type="number" placeholder="Amount" value={incomeData.amount}
+            <label htmlFor="income-amount">Amount:</label>
+            <input type="number" id="income-amount" placeholder="Amount" value={incomeData.amount}
               onChange={(e) => setIncomeData({ ...incomeData, amount: e.target.value })} />
-            <input type="text" placeholder="Source" value={incomeData.source}
+            <label htmlFor="income-source">Source:</label>
+            <input type="text" id="income-source" placeholder="Source" value={incomeData.source}
               onChange={(e) => setIncomeData({ ...incomeData, source: e.target.value })} />
-            <input type="text" placeholder="City" value={incomeData.city}
+            <label htmlFor="income-city">City:</label>
+            <input type="text" id="income-city" placeholder="City" value={incomeData.city}
               onChange={(e) => setIncomeData({ ...incomeData, city: e.target.value })} />
-            <input type="date" value={incomeData.date}
+            <label htmlFor="income-date">Date:</label>
+            <input type="date" id="income-date" value={incomeData.date}
               onChange={(e) => setIncomeData({ ...incomeData, date: e.target.value })} />
             <button onClick={handleSetIncome}>Set Income</button>
           </div>
 
           <div className="card form-card">
             <h2>Add Expense</h2>
-            <input type="number" placeholder="Amount" value={expenseData.amount}
+            <label htmlFor="expense-amount">Amount:</label>
+            <input type="number" id="expense-amount" placeholder="Amount" value={expenseData.amount}
               onChange={(e) => setExpenseData({ ...expenseData, amount: e.target.value })} />
-            <input type="text" placeholder="Category" value={expenseData.category}
+            <label htmlFor="expense-category">Category:</label>
+            <input type="text" id="expense-category" placeholder="Category" value={expenseData.category}
               onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })} />
-            <input type="text" placeholder="Payment Type" value={expenseData.payment_type}
+            <label htmlFor="expense-payment-type">Payment Type:</label>
+            <input type="text" id="expense-payment-type" placeholder="Payment Type" value={expenseData.payment_type}
               onChange={(e) => setExpenseData({ ...expenseData, payment_type: e.target.value })} />
-            <input type="text" placeholder="Description" value={expenseData.description}
+            <label htmlFor="expense-description">Description:</label>
+            <input type="text" id="expense-description" placeholder="Description" value={expenseData.description}
               onChange={(e) => setExpenseData({ ...expenseData, description: e.target.value })} />
-            <input type="date" value={expenseData.date}
+            <label htmlFor="expense-date">Date:</label>
+            <input type="date" id="expense-date" value={expenseData.date}
               onChange={(e) => setExpenseData({ ...expenseData, date: e.target.value })} />
             <button onClick={handleAddExpense}>Add Expense</button>
           </div>
