@@ -12,14 +12,13 @@ import base64
 import requests
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SECRET_KEY'] = 'machebox@0810#2000$nature'
 ML_API_BASE = "https://vitya-ai-ml.onrender.com"
-import os
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 
 # -------------------------------
