@@ -15,9 +15,11 @@ import pandas as pd
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vitya.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SECRET_KEY'] = 'machebox@0810#2000$nature'
 ML_API_BASE = "https://vitya-ai-ml.onrender.com"
+import os
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 
 # -------------------------------
@@ -348,4 +350,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         fix_expense_dates()
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", debug=False)

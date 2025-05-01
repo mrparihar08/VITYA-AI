@@ -107,4 +107,4 @@ def predict_from_json():
 
 if __name__ == '__main__':
     load_models_from_disk()  # Load models when server starts
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=True, host="0.0.0.0")

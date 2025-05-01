@@ -1,0 +1,40 @@
+# Exported from Render on 2025-05-01T04:14:44Z
+services:
+- type: web
+  name: VITYA-AI1
+  runtime: python
+  repo: https://github.com/mrparihar08/VITYA-AI
+  plan: free
+  envVars:
+  - key: SECRET_KEY
+    sync: false
+  - key: REACT_APP_API_URL
+    sync: false
+  - key: SQLALCHEMY_DATABASE_URI
+    sync: false
+  region: oregon
+  buildCommand: pip install -r requirements.txt
+  startCommand: gunicorn backend.vitya:app
+- type: web
+  name: VITYA-AI-ML
+  runtime: python
+  repo: https://github.com/mrparihar08/VITYA-AI
+  plan: free
+  envVars:
+  - key: REACT_APP_API_URL
+    sync: false
+  - key: DATABASE_URI
+    sync: false
+  region: oregon
+  buildCommand: pip install -r requirements.txt
+  startCommand: gunicorn backend.trupi:app
+- type: web
+  name: VITYA-AI
+  runtime: static
+  repo: https://github.com/mrparihar08/VITYA-AI
+  envVars:
+  - key: REACT_APP_API_URL
+    sync: false
+  buildCommand: cd frontend && npm install && npm run build
+  staticPublishPath: frontend/build
+version: "1"
