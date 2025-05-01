@@ -6,7 +6,7 @@ import os
 import pickle
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3001"}})
+CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
 models = {}
 MODEL_FILE = "models.pkl"
 
