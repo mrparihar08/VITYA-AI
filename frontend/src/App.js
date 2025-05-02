@@ -33,7 +33,7 @@ function App() {
       const res = await axios.post(`${API_URL}/api/register`, registerData);
       alert(res.data.message);
     } catch (err) {
-      alert(err.response?.data?.error || 'Registration failed');
+      alert(err.response?.data?.error || err.response?.data?.message || 'Registration failed');
     }
   };
 
