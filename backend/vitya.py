@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from dotenv import load_dotenv
+from dateutil import parser
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
@@ -132,9 +133,9 @@ def set_income(current_user):
     if not data or 'amount' not in data or 'source' not in data:
         return jsonify({"error": "Amount and source are required"}), 400
     try:
-        expense_date = datetime.strptime(data['date'], '%d-%m-%Y') if 'date' in data else datetime.utcnow()
-    except ValueError:
-        return jsonify({"error": "Incorrect date format. Use DD-MM-YYYY."}), 400
+         expense_date = parser.parse(data['date']) if 'date' in data else datetime.utcnow()
+    except Exception:
+          return jsonify({"error": "Invalid date format"}), 400
     new_income = Income(
         amount=data['amount'],
         source=data['source'],
@@ -156,9 +157,9 @@ def add_expense(current_user):
     if 'amount' not in data or 'payment_type' not in data:
         return jsonify({"error": "Amount and payment_type are required"}), 400
     try:
-        expense_date = datetime.strptime(data['date'], '%d-%m-%Y') if 'date' in data else datetime.utcnow()
-    except ValueError:
-        return jsonify({"error": "Incorrect date format. Use DD-MM-YYYY."}), 400
+        expense_date = parser.parse(data['date']) if 'date' in data else datetime.utcnow()
+    except Exception:
+        return jsonify({"error": "Invalid date format"}), 400
     exp = Expense(
         amount=data['amount'],
         category=data.get('category', 'Uncategorized'),
