@@ -4,17 +4,27 @@ import './App.css';
 
 function App() {
   const [token, setToken] = useState('');
-  const [registerData, setRegisterData] = useState({ username: '', email: '', password: '' });
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [incomeData, setIncomeData] = useState({ amount: '', source: '', city: '', date: getCurrentDate() });
-  const [expenseData, setExpenseData] = useState({ amount: '', category: '', payment_type: '', description: '', date: getCurrentDate() });
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [IncomeAmount, setIncomeAmount] = useState('');
+  const [IncomeSource, setIncomeSource] = useState('');
+  const [IncomeCity, setIncomeCity] = useState('');
+  const [IncomeDate, setIncomeDate] = useState(getCurrentDate());
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState('');
+  const [expenseDate, setExpenseDate] = useState(getCurrentDate());
+  const [expensepayment_type, setExpensePaymentType] = useState('');
   const [financialOverview, setFinancialOverview] = useState(null);
   const [advice, setAdvice] = useState([]);
   const [graphBase64, setGraphBase64] = useState('');
   const [incomeGraph64, setIncomeGraph64] = useState('');
   const [expenseGraph64, setExpenseGraph64] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_URL || 'https://vitya-ai1.onrender.com';
+  const API_URL = process.env.REACT_APP_API_URL ;
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -25,12 +35,10 @@ function App() {
     if (token) localStorage.setItem('token', token);
   }, [token]);
 
-  const authHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
-
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/register`, registerData);
+      const res = await axios.post(`${API_URL}/api/register`, { username, email, password });
       alert(res.data.message);
     } catch (err) {
       alert(err.response?.data?.error || err.response?.data?.message || 'Registration failed');
@@ -40,7 +48,7 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/login`, loginData);
+      const res = await axios.post(`${API_URL}/api/login`, { username: loginUsername, password: loginPassword });
       if (res.data.token) {
         setToken(res.data.token);
         alert('Login successful!');
@@ -56,6 +64,8 @@ function App() {
     alert('Logged out successfully!');
   };
 
+  const authHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
+
   const postWithAuth = async (endpoint, data, successMessage) => {
     if (!token) return alert('Please login first.');
     try {
@@ -68,20 +78,20 @@ function App() {
 
   const handleSetIncome = () => {
     postWithAuth('/api/incomes', {
-      amount: parseFloat(incomeData.amount),
-      source: incomeData.source,
-      city: incomeData.city,
-      date: incomeData.date,
+      amount: parseFloat(IncomeAmount),
+      source: IncomeSource,
+      city: IncomeCity,
+      date: IncomeDate,
     }, 'Income added successfully!');
   };
 
   const handleAddExpense = () => {
     postWithAuth('/api/expenses', {
-      amount: parseFloat(expenseData.amount),
-      category: expenseData.category,
-      payment_type: expenseData.payment_type,
-      description: expenseData.description,
-      date: expenseData.date,
+      amount: parseFloat(expenseAmount),
+      description: expenseDescription,
+      category: expenseCategory || undefined,
+      date: expenseDate,
+      payment_type: expensepayment_type,
     }, 'Expense added successfully!');
   };
 
@@ -141,12 +151,12 @@ function App() {
           <div className="card form-card">
             <h2>Register</h2>
             <form onSubmit={handleRegister}>
-              <input type="text" placeholder="Username" value={registerData.username}
-                onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })} required />
-              <input type="email" placeholder="Email" value={registerData.email}
-                onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} required />
-              <input type="password" placeholder="Password" value={registerData.password}
-                onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} required />
+              <input type="text" placeholder="Username" value={username}
+                onChange={(e) => setUsername(e.target.value)} required />
+              <input type="email" placeholder="Email" value={email}
+                onChange={(e) => setEmail(e.target.value)} required />
+              <input type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)} required />
               <button type="submit">Register</button>
             </form>
           </div>
@@ -154,10 +164,10 @@ function App() {
           <div className="card form-card">
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
-              <input type="text" placeholder="Username" value={loginData.username}
-                onChange={(e) => setLoginData({ ...loginData, username: e.target.value })} required />
-              <input type="password" placeholder="Password" value={loginData.password}
-                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })} required />
+              <input type="text" placeholder="Username" value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)} required />
+              <input type="password" placeholder="Password" value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)} required />
               <button type="submit">Login</button>
               {token && <button type="button" onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>}
             </form>
@@ -168,39 +178,38 @@ function App() {
         <div className="flex-row">
           <div className="card form-card">
             <h2>Income</h2>
-            <p className="small-note">Salary can be added once a month, and other income as needed.</p>
-            <label htmlFor="income-amount">Amount:</label>
-            <input type="number" id="income-amount" placeholder="Amount" value={incomeData.amount}
-              onChange={(e) => setIncomeData({ ...incomeData, amount: e.target.value })} />
-            <label htmlFor="income-source">Source:</label>
-            <input type="text" id="income-source" placeholder="Source" value={incomeData.source}
-              onChange={(e) => setIncomeData({ ...incomeData, source: e.target.value })} />
-            <label htmlFor="income-city">City:</label>
-            <input type="text" id="income-city" placeholder="City" value={incomeData.city}
-              onChange={(e) => setIncomeData({ ...incomeData, city: e.target.value })} />
-            <label htmlFor="income-date">Date:</label>
-            <input type="date" id="income-date" value={incomeData.date}
-              onChange={(e) => setIncomeData({ ...incomeData, date: e.target.value })} />
+            <label>Amount:</label>
+            <input type="number" placeholder="Amount" value={IncomeAmount}
+              onChange={(e) => setIncomeAmount(e.target.value)} />
+            <label>Source:</label>
+            <input type="text" placeholder="Source" value={IncomeSource}
+              onChange={(e) => setIncomeSource(e.target.value)} />
+            <label>City:</label>
+            <input type="text" placeholder="City" value={IncomeCity}
+              onChange={(e) => setIncomeCity(e.target.value)} />
+            <label>Date:</label>
+            <input type="date" value={IncomeDate}
+              onChange={(e) => setIncomeDate(e.target.value)} />
             <button onClick={handleSetIncome}>Set Income</button>
           </div>
 
           <div className="card form-card">
             <h2>Add Expense</h2>
-            <label htmlFor="expense-amount">Amount:</label>
-            <input type="number" id="expense-amount" placeholder="Amount" value={expenseData.amount}
-              onChange={(e) => setExpenseData({ ...expenseData, amount: e.target.value })} />
-            <label htmlFor="expense-category">Category:</label>
-            <input type="text" id="expense-category" placeholder="Category" value={expenseData.category}
-              onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })} />
-            <label htmlFor="expense-payment-type">Payment Type:</label>
-            <input type="text" id="expense-payment-type" placeholder="Payment Type" value={expenseData.payment_type}
-              onChange={(e) => setExpenseData({ ...expenseData, payment_type: e.target.value })} />
-            <label htmlFor="expense-description">Description:</label>
-            <input type="text" id="expense-description" placeholder="Description" value={expenseData.description}
-              onChange={(e) => setExpenseData({ ...expenseData, description: e.target.value })} />
-            <label htmlFor="expense-date">Date:</label>
-            <input type="date" id="expense-date" value={expenseData.date}
-              onChange={(e) => setExpenseData({ ...expenseData, date: e.target.value })} />
+            <label>Amount:</label>
+            <input type="number" placeholder="Amount" value={expenseAmount}
+              onChange={(e) => setExpenseAmount(e.target.value)} />
+            <label>Category:</label>
+            <input type="text" placeholder="Category" value={expenseCategory}
+              onChange={(e) => setExpenseCategory(e.target.value)} />
+            <label>Payment Type:</label>
+            <input type="text" placeholder="Payment Type" value={expensepayment_type}
+              onChange={(e) => setExpensePaymentType(e.target.value)} />
+            <label>Description:</label>
+            <input type="text" placeholder="Description" value={expenseDescription}
+              onChange={(e) => setExpenseDescription(e.target.value)} />
+            <label>Date:</label>
+            <input type="date" value={expenseDate}
+              onChange={(e) => setExpenseDate(e.target.value)} />
             <button onClick={handleAddExpense}>Add Expense</button>
           </div>
         </div>
@@ -229,11 +238,11 @@ function App() {
 
         {/* Advice Section */}
         <div className="card advice-card">
-          <h2 className="text-xl font-semibold mb-4">Expense Advice</h2>
-          <button className="fetch-button" onClick={handleGetAdvice}>Advice</button>
+          <h2>Expense Advice</h2>
+          <button onClick={handleGetAdvice}>Advice</button>
           {advice.length > 0 && (
             <div className="advice-grid">
-              <h3 className="font-bold mb-2">Advice:</h3>
+              <h3>Advice:</h3>
               {advice.map((rec, idx) => (
                 <div key={idx} className="advice-item">
                   <span className="category">{rec.category}:</span>
