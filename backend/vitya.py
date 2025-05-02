@@ -335,13 +335,19 @@ def fix_expense_dates():
     rows = db.session.execute(text("SELECT id, date FROM expense")).fetchall()
     fixed = 0
     skipped = 0
+
+    # Supported formats
+    possible_formats = ['%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
+
     for eid, date_val in rows:
         if isinstance(date_val, str):
-            for fmt in ('%m-%d-%Y', '%m/%d/%Y'):
+            for fmt in possible_formats:
                 try:
                     parsed_date = datetime.strptime(date_val, fmt)
-                    # Update the record with the correctly parsed date
-                    db.session.execute(text("UPDATE expense SET date=:date WHERE id=:id"),{"date": parsed_date, "id": eid})
+                    db.session.execute(
+                        text("UPDATE expense SET date = :date WHERE id = :id"),
+                        {"date": parsed_date, "id": eid}
+                    )
                     fixed += 1
                     break
                 except ValueError:
@@ -349,8 +355,7 @@ def fix_expense_dates():
             else:
                 skipped += 1
     db.session.commit()
-    print(f"Fixed: {fixed}, Skipped: {skipped}")
-
+    print(f" Fixed: {fixed},  Skipped (unrecognized format): {skipped}")
 if __name__ == '__main__':
     with app.app_context():
        if os.environ.get("FLASK_ENV") != "production":
