@@ -14,15 +14,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from dotenv import load_dotenv
-from dateutil import parser
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
+load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
 if raw_db_url and raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
-load_dotenv()
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = "https://vitya-ai-ml.onrender.com"
@@ -133,9 +133,10 @@ def set_income(current_user):
     if not data or 'amount' not in data or 'source' not in data:
         return jsonify({"error": "Amount and source are required"}), 400
     try:
-         expense_date = parser.parse(data['date']) if 'date' in data else datetime.utcnow()
-    except Exception:
-          return jsonify({"error": "Invalid date format"}), 400
+        expense_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
+    except ValueError:
+        return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
+
     new_income = Income(
         amount=data['amount'],
         source=data['source'],
@@ -157,9 +158,10 @@ def add_expense(current_user):
     if 'amount' not in data or 'payment_type' not in data:
         return jsonify({"error": "Amount and payment_type are required"}), 400
     try:
-        expense_date = parser.parse(data['date']) if 'date' in data else datetime.utcnow()
-    except Exception:
-        return jsonify({"error": "Invalid date format"}), 400
+        expense_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
+    except ValueError:
+        return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
+
     exp = Expense(
         amount=data['amount'],
         category=data.get('category', 'Uncategorized'),
