@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from functools import wraps
@@ -19,11 +18,11 @@ import traceback
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
 load_dotenv()
+
 raw_db_url = os.environ.get('DATABASE_URL')
 if raw_db_url and raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
-
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = "https://vitya-ai-ml.onrender.com"
@@ -56,12 +55,14 @@ class Expense(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     payment_type = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 # -------------------------------
 # DEFAULT ROOT URL
 # -------------------------------
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "Welcome to VITYA-AI backend! 🚀"}), 200
+
 # -------------------------------
 # TOKEN REQUIRED DECORATOR
 # -------------------------------
@@ -85,7 +86,7 @@ def token_required(f):
     return decorated
 
 # -------------------------------
-# register and login
+# REGISTER AND LOGIN
 # -------------------------------
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -126,8 +127,9 @@ def login():
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    print("ERROR:", traceback.format_exc())  # Logs full stack trace
+    print("ERROR:", traceback.format_exc())
     return jsonify({"error": str(e)}), 500
+
 # -------------------------------
 # SET INCOME
 # -------------------------------
@@ -138,7 +140,7 @@ def set_income(current_user):
     if not data or 'amount' not in data or 'source' not in data:
         return jsonify({"error": "Amount and source are required"}), 400
     try:
-        expense_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
+        income_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
     except ValueError:
         return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
 
@@ -146,7 +148,7 @@ def set_income(current_user):
         amount=data['amount'],
         source=data['source'],
         city=data.get('city',''),
-        date=expense_date,
+        date=income_date,
         user_id=current_user.id
     )
     db.session.add(new_income)
@@ -154,7 +156,7 @@ def set_income(current_user):
     return jsonify({"message": "Income added successfully!"}), 201
 
 # -------------------------------
-# EXPENSE ROUTES
+# ADD EXPENSE
 # -------------------------------
 @app.route('/api/expenses', methods=['POST'])
 @token_required
@@ -178,8 +180,9 @@ def add_expense(current_user):
     db.session.add(exp)
     db.session.commit()
     return jsonify({"message": "Expense added successfully!"}), 201
+
 # -------------------------------
-# DASHBOARD ANALYTICS
+# ANALYTICS OVERVIEW
 # -------------------------------
 @app.route('/api/analytics_overview', methods=['GET'])
 @token_required
@@ -194,8 +197,9 @@ def get_financial_overview(current_user):
         "expense_distribution": dist,
         "available_balance": total_income - total_expenses
     }), 200
+
 # -------------------------------
-# EXPENSE GRAPH
+# EXPENSE GRAPH (PIE CHART)
 # -------------------------------
 @app.route('/api/expenses/graph', methods=['GET'])
 @token_required
@@ -215,32 +219,26 @@ def get_expense_graph(current_user):
     img.seek(0)
     img_base64 = base64.b64encode(img.getvalue()).decode()
     return jsonify({"graph": img_base64}), 200
+
+# -------------------------------
+# INCOME VS EXPENSE TREND (LINE GRAPH)
+# -------------------------------
 @app.route('/api/expenses_income_trend', methods=['GET'])
 @token_required
 def get_expense_income_trend(current_user):
-    # Step 1: Prepare data
-    income_data = [
-        {'amount': inc.amount, 'date': inc.date}
-        for inc in current_user.income
-    ]
-    expense_data = [
-        {'amount': exp.amount, 'date': exp.date}
-        for exp in current_user.expenses
-    ]
+    income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.income]
+    expense_data = [{'amount': exp.amount, 'date': exp.date} for exp in current_user.expenses]
 
-    # Step 2: Create DataFrames
     income_df = pd.DataFrame(income_data)
     expense_df = pd.DataFrame(expense_data)
 
     if income_df.empty and expense_df.empty:
         return jsonify({"message": "No data to show"}), 404
 
-    # Step 3: Parse dates and group by month Period
     if not income_df.empty:
         income_df['date'] = pd.to_datetime(income_df['date'])
         income_df['month'] = income_df['date'].dt.to_period('M')
         monthly_income = income_df.groupby('month')['amount'].sum()
-        # ← CONVERT PeriodIndex → TimestampIndex
         monthly_income.index = monthly_income.index.to_timestamp()
     else:
         monthly_income = pd.Series(dtype='float64')
@@ -249,22 +247,19 @@ def get_expense_income_trend(current_user):
         expense_df['date'] = pd.to_datetime(expense_df['date'])
         expense_df['month'] = expense_df['date'].dt.to_period('M')
         monthly_expenses = expense_df.groupby('month')['amount'].sum()
-        # ← SAME CONVERSION HERE
         monthly_expenses.index = monthly_expenses.index.to_timestamp()
     else:
         monthly_expenses = pd.Series(dtype='float64')
 
-    # Step 4: Combine, fill gaps, sort
     df = pd.DataFrame({
         'Income': monthly_income,
         'Expenses': monthly_expenses
     }).fillna(0)
     df.sort_index(inplace=True)
 
-    # Step 5: Plot Income
     buf_income = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Income'], marker='o',color='green')
+    plt.plot(df.index, df['Income'], marker='o', color='green')
     plt.title("Monthly Income")
     plt.xlabel("Month")
     plt.ylabel("Income (₹)")
@@ -276,10 +271,9 @@ def get_expense_income_trend(current_user):
     buf_income.seek(0)
     graph_income_b64 = base64.b64encode(buf_income.getvalue()).decode()
 
-    # Step 6: Plot Expenses
     buf_expense = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Expenses'], marker='o',color='red')
+    plt.plot(df.index, df['Expenses'], marker='o', color='red')
     plt.title("Monthly Expenses")
     plt.xlabel("Month")
     plt.ylabel("Expenses (₹)")
@@ -291,20 +285,18 @@ def get_expense_income_trend(current_user):
     buf_expense.seek(0)
     graph_expense_b64 = base64.b64encode(buf_expense.getvalue()).decode()
 
-    # Step 7: Return both graphs
     return jsonify({
         "income_graph": graph_income_b64,
         "expense_graph": graph_expense_b64
     }), 200
 
 # -------------------------------
-# ML-BASED ADVICE
+# ML ADVICE
 # -------------------------------
 @app.route('/api/advice', methods=['GET'])
 @token_required
 def get_expense_advice(current_user):
     try:
-        # Prepare user-specific data
         user_data = {
             "user_id": current_user.id,
             "income": [
@@ -325,26 +317,23 @@ def get_expense_advice(current_user):
                 } for exp in current_user.expenses
             ]
         }
-        # ML training API
         train_resp = requests.post(f"{ML_API_BASE}/train/", json=user_data)
         if train_resp.status_code != 200:
             return jsonify({"error": "Training failed"}), 500
-        # ML prediction API
         predict_resp = requests.post(f"{ML_API_BASE}/predict/", json=user_data)
         if predict_resp.status_code != 200:
             return jsonify({"error": "Prediction failed"}), 500
         return jsonify(predict_resp.json()), 200
     except Exception as e:
         return jsonify({"error": f"Internal error: {str(e)}"}), 500
+
 # -------------------------------
-# FIX EXPENSE DATES (one‑time)
+# FIX DATES (One-Time Fixer)
 # -------------------------------
 def fix_expense_dates():
-    rows = db.session.execute(text("SELECT id, date FROM expense")).fetchall()
+    rows = db.session.execute(db.text("SELECT id, date FROM expense")).fetchall()
     fixed = 0
     skipped = 0
-
-    # Supported formats
     possible_formats = ['%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
 
     for eid, date_val in rows:
@@ -353,7 +342,7 @@ def fix_expense_dates():
                 try:
                     parsed_date = datetime.strptime(date_val, fmt)
                     db.session.execute(
-                        text("UPDATE expense SET date = :date WHERE id = :id"),
+                        db.text("UPDATE expense SET date = :date WHERE id = :id"),
                         {"date": parsed_date, "id": eid}
                     )
                     fixed += 1
@@ -363,10 +352,13 @@ def fix_expense_dates():
             else:
                 skipped += 1
     db.session.commit()
-    print(f" Fixed: {fixed},  Skipped (unrecognized format): {skipped}")
+    print(f"Fixed: {fixed}, Skipped: {skipped}")
+
+# -------------------------------
+# ENTRY POINT
+# -------------------------------
 if __name__ == '__main__':
     with app.app_context():
-       with app.app_context():
-            db.create_all()
-            fix_expense_dates()
-    app.run(host="0.0.0.0", debug=False)
+        db.create_all()
+        fix_expense_dates()
+    app.run(host="0.0.0.0", port=5000, debug=False)
