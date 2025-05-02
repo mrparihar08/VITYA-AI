@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from dotenv import load_dotenv
+import traceback
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
@@ -123,6 +124,10 @@ def login():
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return jsonify({'token': token}), 200
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("ERROR:", traceback.format_exc())  # Logs full stack trace
+    return jsonify({"error": str(e)}), 500
 # -------------------------------
 # SET INCOME
 # -------------------------------
@@ -361,7 +366,7 @@ def fix_expense_dates():
     print(f" Fixed: {fixed},  Skipped (unrecognized format): {skipped}")
 if __name__ == '__main__':
     with app.app_context():
-       if os.environ.get("FLASK_ENV") != "production":
-        db.create_all()
-        fix_expense_dates()
+       with app.app_context():
+            db.create_all()
+            fix_expense_dates()
     app.run(host="0.0.0.0", debug=False)
