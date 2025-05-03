@@ -361,4 +361,6 @@ if __name__ == '__main__':
             db.create_all()
             fix_expense_dates()
     
-    app.run(host="0.0.0.0", debug=debug_mode)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
+
