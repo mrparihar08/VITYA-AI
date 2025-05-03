@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
 
 load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
@@ -354,8 +354,11 @@ def fix_expense_dates():
 # ENTRY POINT
 # -------------------------------
 if __name__ == '__main__':
+    debug_mode = os.environ.get("FLASK_ENV") != "production"
+
     with app.app_context():
-        if os.environ.get("FLASK_ENV") != "production":
+        if debug_mode:
             db.create_all()
             fix_expense_dates()
-    app.run(host="0.0.0.0", debug=False)
+    
+    app.run(host="0.0.0.0", debug=debug_mode)

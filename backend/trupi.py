@@ -143,5 +143,7 @@ def status():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    debug_mode = os.environ.get("FLASK_ENV") != "production"
     load_models_from_disk()
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=debug_mode, host="0.0.0.0")
+
