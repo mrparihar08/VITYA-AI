@@ -33,27 +33,27 @@ db = SQLAlchemy(app)
 # -------------------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(500), unique=True, nullable=False)
+    password = db.Column(db.String(2000), nullable=False)
+    email = db.Column(db.String(1000), unique=True, nullable=False)
     expenses = db.relationship('Expense', backref='user')
     income = db.relationship('Income', backref='user')
 
 class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, default=0.0)
-    source = db.Column(db.String(100))
-    city = db.Column(db.String(100))
+    source = db.Column(db.String(1000))
+    city = db.Column(db.String(1000))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, default=0.0)
-    category = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.String(200))
+    category = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.String(2000))
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    payment_type = db.Column(db.String(200))
+    payment_type = db.Column(db.String(2000))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # -------------------------------
