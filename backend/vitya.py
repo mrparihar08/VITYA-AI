@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai.onrender.com"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
 
 load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
@@ -25,7 +25,7 @@ if raw_db_url and raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
-ML_API_BASE = "https://vitya-ai-ml.onrender.com"
+ML_API_BASE = "https://vitya-ai-ml-pufe.onrender.com"
 db = SQLAlchemy(app)
 
 # -------------------------------
