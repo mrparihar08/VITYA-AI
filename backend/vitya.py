@@ -22,10 +22,10 @@ load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
 if raw_db_url and raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
+app.config['SQLALCHEMY_DATABASE_URL'] = raw_db_url
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
-ML_API_BASE = "https://vitya-ai-ml-pufe.onrender.com"
+ML_API_BASE = os.environ.get("ML_API_BASE")
 db = SQLAlchemy(app)
 
 # -------------------------------
@@ -34,7 +34,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(500), unique=True, nullable=False)
-    password = db.Column(db.String(2000), nullable=False)
+    password = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(1000), unique=True, nullable=False)
     expenses = db.relationship('Expense', backref='user')
     income = db.relationship('Income', backref='user')

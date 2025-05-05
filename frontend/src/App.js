@@ -38,7 +38,11 @@ function App() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/register`, { username, email, password });
+      const res = await axios.post(
+        `${API_URL}/api/register`,
+        { username, email, password },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       alert(res.data.message);
     } catch (err) {
       alert(err.response?.data?.error || err.response?.data?.message || 'Registration failed');
