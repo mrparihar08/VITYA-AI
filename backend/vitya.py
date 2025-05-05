@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from dotenv import load_dotenv
+from passlib.context import CryptContext
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
@@ -27,6 +29,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = os.environ.get("ML_API_BASE")
 db = SQLAlchemy(app)
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto")
+
 
 # -------------------------------
 # MODELS
@@ -101,7 +105,7 @@ def register():
     user = User(
         username=data['username'],
         email=data['email'],
-        password=generate_password_hash(data['password'])
+        password=pwd_context.hash(data['password'])
     )
     db.session.add(user)
     try:
@@ -117,7 +121,7 @@ def login():
     if not all(k in data for k in ('username', 'password')):
         return jsonify({'error': 'Username and password are required'}), 400
     user = User.query.filter_by(username=data['username']).first()
-    if not user or not check_password_hash(user.password, data['password']):
+    if not user or not pwd_context.verify(data['password'], user.password):
         return jsonify({'error': 'Invalid username or password'}), 401
     payload = {
         'user_id': user.id,
