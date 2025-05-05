@@ -22,7 +22,7 @@ load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
 if raw_db_url and raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URL'] = raw_db_url
+app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = os.environ.get("ML_API_BASE")
