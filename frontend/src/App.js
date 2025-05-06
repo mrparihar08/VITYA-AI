@@ -52,7 +52,12 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/login`, { username: loginUsername, password: loginPassword });
+      const res = await axios.post(
+        `${API_URL}/api/login`,
+        { username: loginUsername, password: loginPassword },
+        { headers: { 'Content-Type': 'application/json' } }  // ✅ Add this
+      );
+      
       if (res.data.token) {
         setToken(res.data.token);
         alert('Login successful!');

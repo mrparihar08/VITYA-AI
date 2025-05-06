@@ -14,12 +14,10 @@ services:
       - key: SECRET_KEY
         value: machebox@0810#2000$nature
       - key: ML_API_BASE
-        value: https://vitya-ai-ml-pufe.onrender.com
-      - key: REACT_APP_API_URL
-        value: https://vitya-ai-qlbn.onrender.com
+        value: https://vitya-ai-ml.onrender.com
       - key: DATABASE_URL
         fromDatabase:
-          name: vitya-db
+          name: vitya-database
           property: connectionString
 
   - type: web
@@ -34,9 +32,9 @@ services:
       - key: FLASK_ENV
         value: production
       - key: DATABASE_URL
-        value: postgresql://<your-ml-db-uri-here>
-      - key: REACT_APP_API_URL
-        value: https://vitya-ai-qlbn.onrender.com
+        fromDatabase:
+          name: vitya-database
+          property: connectionString
 
   - type: web
     name: vitya-ai-frontend
