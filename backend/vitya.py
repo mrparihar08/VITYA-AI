@@ -18,7 +18,7 @@ from passlib.context import CryptContext
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.com"}})
 
 load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = os.environ.get("ML_API_BASE")
 db = SQLAlchemy(app)
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto")
 
 
 # -------------------------------
