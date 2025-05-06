@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
 
 ML_API_BASE = os.environ.get("ML_API_BASE")
 db = SQLAlchemy(app)
-pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 # -------------------------------

@@ -33,7 +33,7 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: DATABASE_URI
+      - key: DATABASE_URL
         value: postgresql://<your-ml-db-uri-here>
       - key: REACT_APP_API_URL
         value: https://vitya-ai-qlbn.onrender.com
@@ -49,5 +49,5 @@ services:
         value: https://vitya-ai-backend.onrender.com
 
 databases:
-  - name: vitya-db
+  - name: vitya-database
     plan: free
