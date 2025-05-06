@@ -7,7 +7,7 @@ import pickle
 import logging
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://vitya-ai-re.com"}})
+CORS(app, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
 models = {}
 MODEL_FILE = "models.pkl"
 

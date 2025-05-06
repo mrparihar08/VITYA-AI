@@ -18,7 +18,7 @@ from passlib.context import CryptContext
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.com"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
 
 load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')

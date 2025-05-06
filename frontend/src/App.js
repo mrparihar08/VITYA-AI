@@ -24,7 +24,7 @@ function App() {
   const [incomeGraph64, setIncomeGraph64] = useState('');
   const [expenseGraph64, setExpenseGraph64] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_URL ||`https://vitya-ai.com`;
+  const API_URL = process.env.REACT_APP_API_URL ||`https://vitya-ai-qlbn.onrender.com`;
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
