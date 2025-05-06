@@ -73,8 +73,16 @@ function App() {
     alert('Logged out successfully!');
   };
 
-  const authHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
-
+  const authHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+  
   const postWithAuth = async (endpoint, data, successMessage) => {
     if (!token) return alert('Please login first.');
     try {
