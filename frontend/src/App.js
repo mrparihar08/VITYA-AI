@@ -238,14 +238,27 @@ function App() {
             <button onClick={handleAddExpense}>Add Expense</button>
           </div>
         </div>
-
-        {/* Overview and Graphs */}
-        <div className="flex-row">
-          <div className="card overview-card">
-            <h2>Financial Overview</h2>
-            <button onClick={handleGetOverview}>Get Overview</button>
-            {financialOverview && <pre className="json-output">{JSON.stringify(financialOverview, null, 2)}</pre>}
-          </div>
+      {/* Overview and Graphs */}
+      <div className="flex-row">
+        <div className="card overview-card">
+          <h2>Financial Overview</h2>
+          <button onClick={handleGetOverview}>Get Overview</button>
+          {financialOverview && (
+            <div className="overview-grid">
+              <p><strong>Total Income:</strong> ₹{financialOverview.total_income}</p>
+              <p><strong>Total Expenses:</strong> ₹{financialOverview.total_expenses}</p>
+              <p><strong>Available Balance:</strong> ₹{financialOverview.available_balance}</p>
+              <div>
+                <strong>Expense Breakdown:</strong>
+                <ul>
+                  {Object.entries(financialOverview.expense_distribution || {}).map(([category, amount]) => (
+                    <li key={category}>{category}: ₹{amount}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
           <div className="card graph-card">
             <h2>Expense Graph</h2>
             <button onClick={handleGetGraph}>Graph</button>
