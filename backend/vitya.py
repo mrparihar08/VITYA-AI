@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
@@ -40,8 +40,8 @@ class User(db.Model):
     username = db.Column(db.String(500), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(1000), unique=True, nullable=False)
-    expenses = db.relationship('Expense', backref='user')
-    income = db.relationship('Income', backref='user')
+    expenses = db.relationship('Expense', backref='user',lazy=True)
+    incomes = db.relationship('Income', backref='user',lazy=True)
 
 class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -187,17 +187,22 @@ def add_expense(current_user):
 @app.route('/api/analytics_overview', methods=['GET'])
 @token_required
 def get_financial_overview(current_user):
-    total_income = sum(inc.amount for inc in current_user.income)
-    total_expenses = sum(e.amount for e in current_user.expenses)
-    dist = {}
-    for e in current_user.expenses:
-        dist[e.category] = dist.get(e.category, 0) + e.amount
-    return jsonify({
-        "total_expenses": total_expenses,
-        "expense_distribution": dist,
-        "available_balance": total_income - total_expenses
-    }), 200
-
+    try:
+         total_income = sum(inc.amount for inc in current_user.incomes)
+         total_expenses = sum(e.amount for e in current_user.expenses)
+         dist = {}
+         for e in current_user.expenses:
+             dist[e.category] = dist.get(e.category, 0) + e.amount
+         return jsonify({
+             "total_income": total_income,
+             "total_expenses": total_expenses,
+             "expense_distribution": dist,
+             "available_balance": total_income - total_expenses
+       }), 200
+    except Exception as e:
+        # isse aapko Render logs me full traceback mil jaayega
+        current_app.logger.exception("analytics_overview failed")
+        return jsonify(error=str(e)), 500
 # -------------------------------
 # EXPENSE PIE GRAPH
 # -------------------------------
@@ -226,7 +231,7 @@ def get_expense_graph(current_user):
 @app.route('/api/expenses_income_trend', methods=['GET'])
 @token_required
 def get_expense_income_trend(current_user):
-    income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.income]
+    income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.incomes]
     expense_data = [{'amount': exp.amount, 'date': exp.date} for exp in current_user.expenses]
 
     income_df = pd.DataFrame(income_data)
@@ -305,7 +310,7 @@ def get_expense_advice(current_user):
                     "source": inc.source,
                     "city": inc.city,
                     "date": inc.date.strftime('%Y-%m-%d')
-                } for inc in current_user.income
+                } for inc in current_user.incomes
             ],
             "expenses": [
                 {

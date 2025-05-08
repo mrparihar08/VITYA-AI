@@ -24,7 +24,21 @@ function App() {
   const [incomeGraph64, setIncomeGraph64] = useState('');
   const [expenseGraph64, setExpenseGraph64] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_URL ||`https://vitya-ai-qlbn.onrender.com`;
+  const API_URL = process.env.REACT_APP_API_URL || `https://vitya-ai-qlbn.onrender.com`;
+
+  // Axios instance with auth token
+  const axiosAuth = axios.create({
+    baseURL: API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  axiosAuth.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -55,9 +69,9 @@ function App() {
       const res = await axios.post(
         `${API_URL}/api/login`,
         { username: loginUsername, password: loginPassword },
-        { headers: { 'Content-Type': 'application/json' } }  // ✅ Add this
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      
+
       if (res.data.token) {
         setToken(res.data.token);
         alert('Login successful!');
@@ -73,22 +87,13 @@ function App() {
     alert('Logged out successfully!');
   };
 
-  const authHeaders = () => {
-    const token = localStorage.getItem('token');
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    };
-  };
-  
   const postWithAuth = async (endpoint, data, successMessage) => {
     if (!token) return alert('Please login first.');
     try {
-      const res = await axios.post(`${API_URL}${endpoint}`, data, authHeaders());
+      const res = await axiosAuth.post(endpoint, data);
       alert(res.data.message || successMessage);
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'An error occurred.');
     }
   };
@@ -114,38 +119,41 @@ function App() {
 
   const handleGetOverview = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/analytics_overview`, authHeaders());
+      const res = await axiosAuth.get('/api/analytics_overview');
       setFinancialOverview(res.data);
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'Error fetching overview');
     }
   };
 
   const handleGetAdvice = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/advice`, authHeaders());
-      if (res.data.recommendations?.length > 0) setAdvice(res.data.recommendations);
-      else setAdvice([]);
+      const res = await axiosAuth.get('/api/advice');
+      setAdvice(res.data.recommendations?.length > 0 ? res.data.recommendations : []);
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'Error getting advice');
     }
   };
 
   const handleGetGraph = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/expenses/graph`, authHeaders());
+      const res = await axiosAuth.get('/api/expenses/graph');
       setGraphBase64(res.data.graph || '');
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'Error fetching graph');
     }
   };
 
   const handleGetGraphTrend = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/expenses_income_trend`, authHeaders());
+      const res = await axiosAuth.get('/api/expenses_income_trend');
       setIncomeGraph64(res.data.income_graph || '');
       setExpenseGraph64(res.data.expense_graph || '');
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'Error fetching trend graphs');
     }
   };
