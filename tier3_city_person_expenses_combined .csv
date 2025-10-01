@@ -1,0 +1,310 @@
+amount,category,description,date,payment type
+4000.0,rent,Rent monthly expense,2025-01-01,cash
+1500.0,loan,Loan monthly expense,2025-01-01,cash
+800.0,insurance,Insurance monthly expense,2025-01-01,credit card
+1000.0,bills,Bills monthly expense,2025-01-01,debit card
+394.59,eating out,Eating out expense,2025-01-01,net banking
+197.62,transport,Transport expense,2025-01-01,cash
+104.66,transport,Transport expense,2025-01-02,net banking
+55.79,other,Other expense,2025-01-03,net banking
+234.76,entertainment,Entertainment expense,2025-01-04,credit card
+655.28,grocery,Grocery expense,2025-01-04,debit card
+472.2,education,Education expense,2025-01-04,debit card
+387.16,entertainment,Entertainment expense,2025-01-04,credit card
+144.98,transport,Transport expense,2025-01-05,credit card
+826.42,money transfer,Money transfer expense,2025-01-06,UPI
+42.47,other,Other expense,2025-01-06,UPI
+188.01,transport,Transport expense,2025-01-06,net banking
+311.37,entertainment,Entertainment expense,2025-01-07,cash
+331.92,entertainment,Entertainment expense,2025-01-07,cash
+359.95,entertainment,Entertainment expense,2025-01-07,UPI
+208.92,miscellaneous,Miscellaneous expense,2025-01-08,credit card
+248.07,eating out,Eating out expense,2025-01-08,debit card
+731.64,money transfer,Money transfer expense,2025-01-08,cash
+151.24,other,Other expense,2025-01-09,debit card
+144.86,miscellaneous,Miscellaneous expense,2025-01-09,net banking
+605.71,healthcare,Healthcare expense,2025-01-10,cash
+346.54,entertainment,Entertainment expense,2025-01-10,credit card
+159.57,money transfer,Money transfer expense,2025-01-11,net banking
+227.58,healthcare,Healthcare expense,2025-01-11,UPI
+907.75,education,Education expense,2025-01-11,UPI
+205.95,eating out,Eating out expense,2025-01-11,debit card
+918.26,education,Education expense,2025-01-12,UPI
+231.59,healthcare,Healthcare expense,2025-01-12,debit card
+108.83,other,Other expense,2025-01-12,cash
+350.98,eating out,Eating out expense,2025-01-13,UPI
+505.3,education,Education expense,2025-01-14,UPI
+174.94,other,Other expense,2025-01-15,cash
+220.43,transport,Transport expense,2025-01-15,net banking
+791.74,money transfer,Money transfer expense,2025-01-15,credit card
+491.29,money transfer,Money transfer expense,2025-01-16,UPI
+974.7,money transfer,Money transfer expense,2025-01-17,debit card
+857.5,money transfer,Money transfer expense,2025-01-18,net banking
+249.57,eating out,Eating out expense,2025-01-19,debit card
+191.63,other,Other expense,2025-01-19,net banking
+393.16,healthcare,Healthcare expense,2025-01-20,cash
+315.51,money transfer,Money transfer expense,2025-01-21,debit card
+71.41,transport,Transport expense,2025-01-21,UPI
+294.5,transport,Transport expense,2025-01-21,net banking
+363.9,eating out,Eating out expense,2025-01-22,net banking
+206.02,eating out,Eating out expense,2025-01-22,net banking
+378.67,entertainment,Entertainment expense,2025-01-23,debit card
+459.09,money transfer,Money transfer expense,2025-01-23,credit card
+274.9,miscellaneous,Miscellaneous expense,2025-01-23,UPI
+111.98,transport,Transport expense,2025-01-23,cash
+552.99,grocery,Grocery expense,2025-01-24,debit card
+102.16,entertainment,Entertainment expense,2025-01-24,cash
+120.22,entertainment,Entertainment expense,2025-01-24,cash
+178.54,transport,Transport expense,2025-01-25,credit card
+103.56,miscellaneous,Miscellaneous expense,2025-01-25,debit card
+110.75,miscellaneous,Miscellaneous expense,2025-01-25,UPI
+128.3,entertainment,Entertainment expense,2025-01-26,UPI
+354.15,healthcare,Healthcare expense,2025-01-26,UPI
+604.02,grocery,Grocery expense,2025-01-26,cash
+441.57,grocery,Grocery expense,2025-01-26,credit card
+157.48,entertainment,Entertainment expense,2025-01-27,net banking
+268.75,eating out,Eating out expense,2025-01-28,credit card
+112.45,miscellaneous,Miscellaneous expense,2025-01-28,cash
+252.01,miscellaneous,Miscellaneous expense,2025-01-28,net banking
+62.65,transport,Transport expense,2025-01-28,net banking
+281.59,transport,Transport expense,2025-01-29,debit card
+588.51,education,Education expense,2025-01-30,debit card
+921.95,education,Education expense,2025-01-30,debit card
+791.19,grocery,Grocery expense,2025-01-31,credit card
+121.31,miscellaneous,Miscellaneous expense,2025-01-31,net banking
+88.7,miscellaneous,Miscellaneous expense,2025-01-31,credit card
+390.61,entertainment,Entertainment expense,2025-01-31,net banking
+4000.0,rent,Rent monthly expense,2025-02-01,net banking
+1500.0,loan,Loan monthly expense,2025-02-01,cash
+800.0,insurance,Insurance monthly expense,2025-02-01,credit card
+1000.0,bills,Bills monthly expense,2025-02-01,cash
+175.71,miscellaneous,Miscellaneous expense,2025-02-01,net banking
+776.47,grocery,Grocery expense,2025-02-02,cash
+127.41,eating out,Eating out expense,2025-02-02,cash
+295.91,education,Education expense,2025-02-03,net banking
+273.68,entertainment,Entertainment expense,2025-02-03,cash
+725.9,education,Education expense,2025-02-04,net banking
+283.83,money transfer,Money transfer expense,2025-02-05,credit card
+179.68,entertainment,Entertainment expense,2025-02-05,debit card
+511.5,money transfer,Money transfer expense,2025-02-05,cash
+205.29,miscellaneous,Miscellaneous expense,2025-02-06,net banking
+184.41,transport,Transport expense,2025-02-07,net banking
+473.3,eating out,Eating out expense,2025-02-08,cash
+210.86,entertainment,Entertainment expense,2025-02-08,debit card
+258.44,miscellaneous,Miscellaneous expense,2025-02-08,credit card
+73.89,other,Other expense,2025-02-09,cash
+203.89,money transfer,Money transfer expense,2025-02-10,cash
+47.98,other,Other expense,2025-02-10,credit card
+222.16,healthcare,Healthcare expense,2025-02-11,credit card
+107.94,other,Other expense,2025-02-11,cash
+863.48,education,Education expense,2025-02-12,cash
+562.67,healthcare,Healthcare expense,2025-02-13,credit card
+187.92,miscellaneous,Miscellaneous expense,2025-02-14,UPI
+21.74,other,Other expense,2025-02-14,cash
+26.49,other,Other expense,2025-02-15,credit card
+46.66,other,Other expense,2025-02-15,debit card
+428.19,money transfer,Money transfer expense,2025-02-16,cash
+304.62,entertainment,Entertainment expense,2025-02-17,cash
+568.07,healthcare,Healthcare expense,2025-02-17,UPI
+470.31,eating out,Eating out expense,2025-02-17,debit card
+452.57,eating out,Eating out expense,2025-02-18,cash
+394.63,eating out,Eating out expense,2025-02-18,credit card
+180.04,entertainment,Entertainment expense,2025-02-19,cash
+897.73,education,Education expense,2025-02-19,UPI
+159.87,entertainment,Entertainment expense,2025-02-19,UPI
+283.11,healthcare,Healthcare expense,2025-02-19,debit card
+596.02,grocery,Grocery expense,2025-02-20,UPI
+267.16,healthcare,Healthcare expense,2025-02-20,cash
+484.89,healthcare,Healthcare expense,2025-02-21,UPI
+79.61,other,Other expense,2025-02-21,cash
+269.26,transport,Transport expense,2025-02-21,credit card
+134.43,money transfer,Money transfer expense,2025-02-22,net banking
+476.55,education,Education expense,2025-02-22,credit card
+40.82,other,Other expense,2025-02-23,net banking
+176.42,entertainment,Entertainment expense,2025-02-23,UPI
+511.95,grocery,Grocery expense,2025-02-23,net banking
+209.27,entertainment,Entertainment expense,2025-02-23,cash
+498.03,healthcare,Healthcare expense,2025-02-24,cash
+556.41,money transfer,Money transfer expense,2025-02-24,UPI
+341.44,healthcare,Healthcare expense,2025-02-24,credit card
+226.13,entertainment,Entertainment expense,2025-02-25,UPI
+346.21,eating out,Eating out expense,2025-02-25,credit card
+170.07,other,Other expense,2025-02-26,credit card
+289.16,money transfer,Money transfer expense,2025-02-26,net banking
+378.99,healthcare,Healthcare expense,2025-02-26,UPI
+253.35,entertainment,Entertainment expense,2025-02-26,debit card
+563.91,money transfer,Money transfer expense,2025-02-27,net banking
+254.61,transport,Transport expense,2025-02-28,debit card
+302.18,money transfer,Money transfer expense,2025-02-28,debit card
+109.77,eating out,Eating out expense,2025-02-28,debit card
+4000.0,rent,Rent monthly expense,2025-03-01,UPI
+1500.0,loan,Loan monthly expense,2025-03-01,net banking
+800.0,insurance,Insurance monthly expense,2025-03-01,cash
+1000.0,bills,Bills monthly expense,2025-03-01,UPI
+315.5,entertainment,Entertainment expense,2025-03-01,UPI
+149.91,miscellaneous,Miscellaneous expense,2025-03-01,debit card
+735.6,grocery,Grocery expense,2025-03-01,cash
+375.07,education,Education expense,2025-03-01,net banking
+534.44,grocery,Grocery expense,2025-03-02,cash
+83.33,miscellaneous,Miscellaneous expense,2025-03-02,UPI
+197.82,other,Other expense,2025-03-02,net banking
+670.02,healthcare,Healthcare expense,2025-03-02,UPI
+100.26,other,Other expense,2025-03-03,debit card
+162.52,miscellaneous,Miscellaneous expense,2025-03-03,debit card
+789.23,money transfer,Money transfer expense,2025-03-03,net banking
+206.69,miscellaneous,Miscellaneous expense,2025-03-03,credit card
+228.39,transport,Transport expense,2025-03-04,debit card
+402.26,money transfer,Money transfer expense,2025-03-04,net banking
+84.59,transport,Transport expense,2025-03-04,debit card
+755.16,education,Education expense,2025-03-04,debit card
+526.08,education,Education expense,2025-03-05,net banking
+249.81,education,Education expense,2025-03-06,UPI
+923.87,education,Education expense,2025-03-06,net banking
+714.04,grocery,Grocery expense,2025-03-06,net banking
+581.58,education,Education expense,2025-03-06,credit card
+882.76,education,Education expense,2025-03-07,UPI
+154.55,other,Other expense,2025-03-07,net banking
+246.47,entertainment,Entertainment expense,2025-03-07,credit card
+57.26,miscellaneous,Miscellaneous expense,2025-03-08,credit card
+779.35,education,Education expense,2025-03-08,UPI
+492.29,eating out,Eating out expense,2025-03-08,net banking
+744.16,grocery,Grocery expense,2025-03-08,net banking
+210.69,transport,Transport expense,2025-03-09,debit card
+120.11,eating out,Eating out expense,2025-03-10,UPI
+227.0,healthcare,Healthcare expense,2025-03-10,credit card
+556.74,healthcare,Healthcare expense,2025-03-10,UPI
+776.81,money transfer,Money transfer expense,2025-03-10,UPI
+167.58,transport,Transport expense,2025-03-11,net banking
+799.94,grocery,Grocery expense,2025-03-11,credit card
+295.04,entertainment,Entertainment expense,2025-03-11,cash
+159.81,entertainment,Entertainment expense,2025-03-12,cash
+137.87,entertainment,Entertainment expense,2025-03-13,cash
+239.51,entertainment,Entertainment expense,2025-03-13,credit card
+342.36,eating out,Eating out expense,2025-03-14,cash
+485.89,eating out,Eating out expense,2025-03-14,cash
+757.33,grocery,Grocery expense,2025-03-14,net banking
+953.18,education,Education expense,2025-03-15,debit card
+198.02,transport,Transport expense,2025-03-15,debit card
+224.3,transport,Transport expense,2025-03-15,credit card
+249.06,transport,Transport expense,2025-03-15,net banking
+419.65,healthcare,Healthcare expense,2025-03-16,credit card
+136.56,other,Other expense,2025-03-17,cash
+76.38,miscellaneous,Miscellaneous expense,2025-03-18,credit card
+226.83,miscellaneous,Miscellaneous expense,2025-03-18,UPI
+393.52,eating out,Eating out expense,2025-03-18,credit card
+159.44,other,Other expense,2025-03-18,UPI
+390.07,money transfer,Money transfer expense,2025-03-19,debit card
+119.73,transport,Transport expense,2025-03-19,UPI
+325.14,entertainment,Entertainment expense,2025-03-19,net banking
+469.12,education,Education expense,2025-03-19,UPI
+295.02,eating out,Eating out expense,2025-03-20,credit card
+406.3,money transfer,Money transfer expense,2025-03-20,net banking
+600.21,money transfer,Money transfer expense,2025-03-20,net banking
+110.34,transport,Transport expense,2025-03-21,UPI
+188.79,miscellaneous,Miscellaneous expense,2025-03-21,debit card
+162.04,miscellaneous,Miscellaneous expense,2025-03-22,cash
+123.56,transport,Transport expense,2025-03-22,UPI
+191.86,entertainment,Entertainment expense,2025-03-22,net banking
+383.96,healthcare,Healthcare expense,2025-03-22,net banking
+997.31,education,Education expense,2025-03-23,net banking
+311.09,healthcare,Healthcare expense,2025-03-23,UPI
+375.96,money transfer,Money transfer expense,2025-03-23,debit card
+194.66,entertainment,Entertainment expense,2025-03-24,net banking
+164.92,entertainment,Entertainment expense,2025-03-25,UPI
+752.13,money transfer,Money transfer expense,2025-03-25,net banking
+258.16,transport,Transport expense,2025-03-26,credit card
+208.26,entertainment,Entertainment expense,2025-03-26,credit card
+624.81,grocery,Grocery expense,2025-03-26,debit card
+784.58,grocery,Grocery expense,2025-03-27,net banking
+727.68,money transfer,Money transfer expense,2025-03-27,debit card
+75.65,miscellaneous,Miscellaneous expense,2025-03-27,cash
+169.68,miscellaneous,Miscellaneous expense,2025-03-28,credit card
+486.2,eating out,Eating out expense,2025-03-28,credit card
+78.52,miscellaneous,Miscellaneous expense,2025-03-28,cash
+68.52,miscellaneous,Miscellaneous expense,2025-03-29,cash
+159.68,eating out,Eating out expense,2025-03-29,net banking
+176.66,money transfer,Money transfer expense,2025-03-29,debit card
+189.52,transport,Transport expense,2025-03-29,UPI
+88.47,other,Other expense,2025-03-30,UPI
+874.15,money transfer,Money transfer expense,2025-03-30,UPI
+565.78,grocery,Grocery expense,2025-03-31,cash
+287.65,entertainment,Entertainment expense,2025-03-31,credit card
+89.26,transport,Transport expense,2025-03-31,debit card
+4000.0,rent,Rent monthly expense,2025-04-01,net banking
+1500.0,loan,Loan monthly expense,2025-04-01,cash
+800.0,insurance,Insurance monthly expense,2025-04-01,debit card
+1000.0,bills,Bills monthly expense,2025-04-01,cash
+222.34,miscellaneous,Miscellaneous expense,2025-04-01,UPI
+129.38,money transfer,Money transfer expense,2025-04-01,credit card
+732.69,money transfer,Money transfer expense,2025-04-01,UPI
+221.85,transport,Transport expense,2025-04-01,credit card
+291.82,education,Education expense,2025-04-02,debit card
+463.36,eating out,Eating out expense,2025-04-02,debit card
+299.55,grocery,Grocery expense,2025-04-03,credit card
+81.09,miscellaneous,Miscellaneous expense,2025-04-04,credit card
+954.14,education,Education expense,2025-04-04,net banking
+108.88,other,Other expense,2025-04-04,cash
+787.63,education,Education expense,2025-04-05,net banking
+254.8,grocery,Grocery expense,2025-04-06,net banking
+799.74,grocery,Grocery expense,2025-04-06,credit card
+657.87,grocery,Grocery expense,2025-04-06,debit card
+137.27,other,Other expense,2025-04-07,credit card
+498.78,eating out,Eating out expense,2025-04-07,UPI
+292.26,miscellaneous,Miscellaneous expense,2025-04-07,UPI
+345.01,healthcare,Healthcare expense,2025-04-07,credit card
+231.92,eating out,Eating out expense,2025-04-08,UPI
+850.85,education,Education expense,2025-04-09,net banking
+472.9,grocery,Grocery expense,2025-04-09,credit card
+390.95,money transfer,Money transfer expense,2025-04-09,UPI
+103.16,other,Other expense,2025-04-10,cash
+85.12,other,Other expense,2025-04-11,UPI
+240.0,miscellaneous,Miscellaneous expense,2025-04-11,debit card
+43.58,other,Other expense,2025-04-12,credit card
+270.21,miscellaneous,Miscellaneous expense,2025-04-12,UPI
+57.22,transport,Transport expense,2025-04-12,net banking
+224.3,eating out,Eating out expense,2025-04-13,cash
+93.44,other,Other expense,2025-04-13,debit card
+286.77,miscellaneous,Miscellaneous expense,2025-04-14,debit card
+557.98,money transfer,Money transfer expense,2025-04-15,credit card
+867.78,education,Education expense,2025-04-15,UPI
+237.04,entertainment,Entertainment expense,2025-04-15,debit card
+352.49,education,Education expense,2025-04-15,net banking
+119.06,transport,Transport expense,2025-04-16,UPI
+660.55,healthcare,Healthcare expense,2025-04-16,net banking
+369.7,grocery,Grocery expense,2025-04-17,credit card
+266.32,miscellaneous,Miscellaneous expense,2025-04-17,UPI
+107.18,other,Other expense,2025-04-17,credit card
+283.21,miscellaneous,Miscellaneous expense,2025-04-18,debit card
+271.54,entertainment,Entertainment expense,2025-04-18,debit card
+234.92,education,Education expense,2025-04-18,UPI
+508.86,education,Education expense,2025-04-18,debit card
+275.75,grocery,Grocery expense,2025-04-19,net banking
+621.82,healthcare,Healthcare expense,2025-04-19,UPI
+181.49,transport,Transport expense,2025-04-19,UPI
+633.47,grocery,Grocery expense,2025-04-19,UPI
+167.37,transport,Transport expense,2025-04-20,credit card
+473.96,healthcare,Healthcare expense,2025-04-20,UPI
+611.4,healthcare,Healthcare expense,2025-04-21,net banking
+476.08,healthcare,Healthcare expense,2025-04-22,UPI
+26.46,other,Other expense,2025-04-22,cash
+289.35,entertainment,Entertainment expense,2025-04-22,credit card
+324.03,entertainment,Entertainment expense,2025-04-22,UPI
+160.92,transport,Transport expense,2025-04-23,credit card
+394.62,grocery,Grocery expense,2025-04-24,cash
+324.9,healthcare,Healthcare expense,2025-04-25,debit card
+259.35,entertainment,Entertainment expense,2025-04-25,net banking
+167.99,eating out,Eating out expense,2025-04-25,cash
+249.3,entertainment,Entertainment expense,2025-04-26,net banking
+192.88,eating out,Eating out expense,2025-04-26,credit card
+113.83,miscellaneous,Miscellaneous expense,2025-04-26,cash
+275.3,miscellaneous,Miscellaneous expense,2025-04-26,net banking
+160.43,transport,Transport expense,2025-04-27,credit card
+675.04,money transfer,Money transfer expense,2025-04-27,UPI
+261.33,miscellaneous,Miscellaneous expense,2025-04-28,debit card
+882.67,education,Education expense,2025-04-28,cash
+214.41,entertainment,Entertainment expense,2025-04-28,credit card
+119.75,money transfer,Money transfer expense,2025-04-29,UPI
+107.29,money transfer,Money transfer expense,2025-04-29,cash
+258.21,miscellaneous,Miscellaneous expense,2025-04-29,credit card
+231.4,healthcare,Healthcare expense,2025-04-30,debit card
+709.99,money transfer,Money transfer expense,2025-04-30,debit card

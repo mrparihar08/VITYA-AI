@@ -129,6 +129,17 @@ def login():
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return jsonify({'token': token}), 200
+# -------------------------------
+# PROFILE ROUTE
+# -------------------------------
+@app.route('/api/profile', methods=['GET'])
+@token_required
+def get_profile(current_user):
+    return jsonify({
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }), 200
 
 # -------------------------------
 # INCOME ROUTES
