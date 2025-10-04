@@ -38,7 +38,7 @@ export default function Login() {
   };
 
   return (
-          <div className="card login-form-card">
+          <div className="cards form-card">
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
               <input type="text" placeholder="Username" value={username}
@@ -48,7 +48,7 @@ export default function Login() {
               <button type="submit" className='button-8b' disabled={loading}>
                {loading ? "Logging in..." : "Login"}
               </button>
-              <button type="button" onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>
+              <button type="button" className='button-8b' onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>
             </form>
           </div>
   );

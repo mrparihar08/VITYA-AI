@@ -1,10 +1,27 @@
-/* 🌍 GLOBAL STYLES */
+/* 🌍 GLOBAL STYLES (Optimized) */
+:root {
+  --primary: #6b46ff;
+  --primary-light: #9d77ff;
+  --accent-green: #22c55e;
+  --accent-red: #ef4444;
+  --bg-main: #f8f9fc;
+  --bg-dark: #17333a;
+  --text-dark: #1f2937;
+  --text-muted: #6b7280;
+  --radius: 10px;
+  --transition: 0.3s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body, html {
   margin: 0;
   padding: 0;
   font-family: "Inter", sans-serif;
-  background: #f8f9fc;
-  color: #1f2937;
+  background: var(--bg-main);
+  color: var(--text-dark);
   overflow-x: hidden;
 }
 
@@ -32,7 +49,7 @@ body, html {
 ======================= */
 .sidebar {
   width: 250px;
-  background: #17333a;
+  background: var(--bg-dark);
   color: #fff;
   padding: 25px 20px;
   display: flex;
@@ -42,7 +59,6 @@ body, html {
   order: -1;
 }
 
-/* Logo area */
 .mobile-logo {
   display: flex;
   align-items: center;
@@ -54,7 +70,7 @@ body, html {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,6 +83,7 @@ body, html {
   margin: 0;
   font-size: 18px;
 }
+
 .logo-text p {
   margin: 0;
   font-size: 12px;
@@ -89,12 +106,12 @@ body, html {
   text-align: left;
   cursor: pointer;
   font-size: 15px;
-  transition: background 0.3s, color 0.3s;
+  transition: background var(--transition), color var(--transition);
 }
 
 .sidebar-btn.active,
 .sidebar-btn:hover {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
   color: white;
 }
 
@@ -102,7 +119,7 @@ body, html {
 .pro-card {
   background: #2c3242;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -111,13 +128,13 @@ body, html {
 }
 
 .pro-icon {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
   padding: 6px 10px;
   border-radius: 8px;
 }
 
 .pro-badge {
-  background: #22c55e;
+  background: var(--accent-green);
   color: white;
   padding: 3px 6px;
   font-size: 11px;
@@ -149,12 +166,13 @@ body, html {
   position: fixed;
   font-size: 26px;
   border: none;
-  background: #17333a;
+  background: var(--bg-dark);
   color: white;
   padding: 12px 20px 0px 12px;
   width:100%;
   z-index: 999;
 }
+
 .open-options-btn {
   display: none;
   position: fixed;
@@ -162,13 +180,14 @@ body, html {
   right: 15px;
   font-size: 26px;
   border: none;
-  background: #17333a;
+  background: var(--bg-dark);
   color: white;
   padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
   z-index: 1000;
 }
+
 /* =======================
    DRAWER (MOBILE SIDEBAR)
 ======================= */
@@ -189,7 +208,7 @@ body, html {
   right: 0;
   height: 100vh;
   width: 70%;
-  max-width: 300px;
+  max-width: 200px;
   background: #1f2430;
   color: white;
   padding: 20px;
@@ -197,6 +216,12 @@ body, html {
   flex-direction: column;
   gap: 10px;
   z-index: 200;
+  transform: translateX(100%);
+  transition: transform var(--transition);
+}
+
+.drawer.open {
+  transform: translateX(0);
 }
 
 .drawer-title {
@@ -217,7 +242,7 @@ body, html {
 }
 
 .drawer-btn:hover {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
   color: white;
 }
 
@@ -229,9 +254,7 @@ body, html {
     display: none;
   }
 
-  .open-options-btn {
-    display: block;
-  }
+  .open-options-btn,
   .open-options-mo {
     display: block;
   }
@@ -246,17 +269,14 @@ body, html {
   }
 }
 
-
 /* ===============================
    HOME DASHBOARD MAIN STYLES
 =============================== */
 .home-card {
   width: 100%;
-  max-width: auto;
   padding: 20px;
-  box-sizing: border-box;
   min-height: 100vh;
-  background: #f8f9fc;
+  background: var(--bg-main);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -267,6 +287,7 @@ body, html {
   flex-direction: column;
   gap: 20px;
 }
+
 /* ==============================
    HEADER (TOP BAR)
 ============================== */
@@ -274,23 +295,19 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
   padding: 16px 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  margin: 0;
 }
 
 .top-h-h h1 {
   font-size: 24px;
   margin: 0;
-  color: #1f2937;
+  color: var(--text-dark);
 }
 
 .top-h-h p {
   font-size: 14px;
   margin: 0;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .profile-field {
@@ -314,658 +331,225 @@ body, html {
 
 .profile-role {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 /* ===============================
-   CARD BASE STYLE
+   ACCESSIBILITY FOCUS STYLES
 =============================== */
-.card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
+.button-8b{
+  background: linear-gradient(90deg, #6b46ff, #9d77ff); 
+  color: white; 
+  border: none; 
+  padding: 10px 16px; 
+  border-radius: 8px; 
+  font-size: 14px; 
+  cursor: pointer; 
+  transition: background 0.3s;
+ } 
+
+ .button-8b:hover{ 
+    background: linear-gradient(90deg, #9d77ff,#6b46ff); 
+  }
+
+button:focus,
+input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  transition: outline var(--transition);
 }
 
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+/* ===============================
+   DARK MODE SUPPORT
+=============================== */
+@media (prefers-color-scheme: dark) {
+
+  .settings-card,
+  .help-card,
+  .graph-card,
+  .advice-card {
+    color: #1e293b;
+  }
+
+  .sidebar {
+    background: #111827;
+  }
+
+  .drawer {
+    background: #1f2937;
+  }
 }
-/*==================================*/
+/* ======= Responsive 12-Column Grid System ======= */
+.container-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -0.5rem; /* gutter space */
+}
+
+.col {
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Default (Desktop) – 3 cards per row (4+4+4 = 12) */
+.col-4 {
+  flex: 0 0 33.3333%;
+  max-width: 33.3333%;
+}
+
+/* Tablet – 2 cards per row (6+6 = 12) */
+@media (max-width: 992px) {
+  .col-4 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+/* Mobile – 1 card per row (12 = full width) */
+@media (max-width: 576px) {
+  .col-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* ===== Optional: Card alignment + spacing ===== */
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* =======================
+   Income Card Styling
+======================= */
 
 .cards {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  height: 90%;
+}
+.card- {
+  background: linear-gradient(90deg, #6b46ff, #9d77ff);
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  color: #ffffff;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  height: 100%;
 
-  display:inline-table;
-  min-width: 30%;
-  max-width: auto;
-  margin: 13px;
-  background-color: aliceblue;
-  border-radius: 8px;
-  padding: 5px;
-  min-height: 50vh;
-  
 }
 
 .cards:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.card-title {
-  font-size: 18px;
+/* ===== Title ===== */
+.cards h2, .cards .card-title {
+  font-size: 1.3rem;
   font-weight: 600;
   color: #1f2937;
+  margin-bottom: 0.8rem;
+  border-bottom: 2px solid #f1f1f1;
+  padding-bottom: 0.5rem;
 }
 
-.card-link {
-  font-size: 14px;
-  color: #6b46ff;
-  cursor: pointer;
+/* ===== Labels ===== */
+.cards label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
 }
-/* ===============================
-   INPUT FIELDS + BUTTONS
-=============================== */
+
+/* ===== Inputs ===== */
 .cards input {
-  width: 75%;
-  padding: 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  font-size: 10px;
-  margin-bottom: 10px;
-  transition: border-color 0.2s;
+  width: 95%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.25s ease;
+  color: #111827;
+  background-color: #f9fafb;
 }
 
 .cards input:focus {
-  outline: none;
   border-color: #6b46ff;
+  box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.15);
+  background-color: #fff;
 }
 
-.cards label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.cards button {
-  background: linear-gradient(90deg, #9d77ff,#6b46ff);
+/* ===== Button ===== */
+.btn-income {
+  background: linear-gradient(90deg, #6b46ff, #9d77ff);
   color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.3s;
-  width: 95%;
-}
-
-.cards button:hover {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-}
-
-/* ===============================
-   GRID FOR CARDS
-=============================== */
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-/* ===============================
-   TRANSACTIONS
-=============================== */
-.transaction-card h2 {
-  margin-bottom: 10px;
-  font-size: 18px;
-  color: #1f2937;
-}
-
-.transaction-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.transaction-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.transaction-item.expense {
-  border-left: 4px solid #ef4444;
-}
-.transaction-item.income {
-  border-left: 4px solid #22c55e;
-}
-
-.tx-date {
-  color: #6b7280;
-  font-size: 13px;
-}
-.tx-category {
-  flex: 1;
-  text-align: center;
-  color: #374151;
-}
-.tx-amount {
   font-weight: 600;
-}
-.tx-amount.positive {
-  color: #22c55e;
-}
-.tx-amount.negative {
-  color: #ef4444;
-}
-
-/* ===============================
-   GOALS SECTION
-=============================== */
-.goals-card h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-.goal-item {
-  margin-bottom: 10px;
+.btn-income:hover {
+  background: linear-gradient(90deg, #5938d8, #8a5df7);
+  transform: translateY(-2px);
 }
 
-.goal-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  margin-bottom: 5px;
+.btn-income:active {
+  transform: translateY(0);
 }
 
-.goal-bar {
-  width: 100%;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.goal-progress {
-  height: 100%;
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  border-radius: 4px;
-}
-
-/* ===============================
-   SMALL TEXTS
-=============================== */
-.small-note {
-  color: #9ca3af;
-  font-size: 13px;
-  margin-top: 5px;
-  text-align: center;
-}
-
-/* ===============================
-   RESPONSIVE
-=============================== */
+/* ===== Responsive Layout ===== */
 @media (max-width: 768px) {
-  .cards-grid {
-    grid-template-columns: 1fr;
+  .cards {
+    padding: 1.2rem;
   }
 
-  .card {
-    padding: 16px;
+  .cards input {
+    font-size: 0.9rem;
   }
 
-  .card-title {
-    font-size: 16px;
+  .btn-income {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
   }
 }
-/*======================================
-className='button-8b'
-=========================================*/
-.button-8b{
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  color: white;
-  border: none;
-  padding: 10px 16px;
+/*=============================================
+
+========================================*/
+.form-card input {
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #d1d5db;
   border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.3s;
+  margin: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.25s ease;
+  color: #111827;
+  background-color: #f9fafb;
 }
-.button-8b:hover {
-  background: linear-gradient(90deg, #9d77ff,#6b46ff);
-}
-
-/* ===============================
-   SETTINGS CARD
-=============================== */
-.settings-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 420px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-  margin: 20px auto;
-}
-
-.settings-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-.settings-title {
-  font-size: 22px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-/* ===============================
-   OPTION ROW
-=============================== */
-.settings-option {
-  display: flex;
-  align-items: center;
-  padding: 14px 10px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.settings-option:last-child {
-  border-bottom: none;
-}
-
-.toggle-label {
-  font-size: 15px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-/* ===============================
-   TOGGLE SWITCH
-=============================== */
-.toggle-label input {
-  display: none; /* hide native checkbox */
-}
-
-.toggle-custom {
-  position: relative;
-  width: 42px;
-  height: 22px;
-  background: #d1d5db;
-  border-radius: 22px;
-  transition: background 0.3s;
-}
-
-.toggle-custom::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.3s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* When checked */
-.toggle-label input:checked + .toggle-custom {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-}
-
-.toggle-label input:checked + .toggle-custom::before {
-  transform: translateX(20px);
-}
-
-/* ===============================
-   RESPONSIVE
-=============================== */
-@media (max-width: 600px) {
-  .settings-card {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .settings-title {
-    font-size: 20px;
-  }
-
-  .toggle-label {
-    font-size: 14px;
-  }
-}
-
-
-/* ===============================
-   HELP & SUPPORT CARD
-=============================== */
-.help-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 500px;
-  margin: 20px auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.help-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-.help-card h3 {
-  font-size: 22px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.help-card p {
-  font-size: 15px;
-  color: #374151;
-  margin-bottom: 14px;
-  text-align: center;
-}
-
-/* ===============================
-   CONTACT LIST
-=============================== */
-.help-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.help-card li {
-  font-size: 15px;
-  color: #374151;
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-left: 4px solid #6b46ff; /* accent stripe */
-  transition: background 0.3s ease;
-}
-
-.help-card li:hover {
-  background: #f3f4f6;
-}
-
-.help-card a {
-  color: #6b46ff;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.help-card a:hover {
-  color: #9d77ff;
-  text-decoration: underline;
-}
-
-/* ===============================
-   RESPONSIVE
-=============================== */
-@media (max-width: 600px) {
-  .help-card {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .help-card h3 {
-    font-size: 20px;
-  }
-
-  .help-card li {
-    font-size: 14px;
-  }
-}
-
-/* ===============================
-   ADVICE CARD
-=============================== */
-.advice-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 700px;
-  margin: 20px auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.advice-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-.advice-card h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-/* ===============================
-   BUTTON
-=============================== */
-.advice-card .button-8b {
-  display: block;
-  margin: 0 auto 20px auto;
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.advice-card .button-8b:hover {
-  background: linear-gradient(90deg, #9d77ff, #6b46ff);
-}
-
-/* ===============================
-   ADVICE GRID
-=============================== */
-.advice-grid {
+.login-form-card button {
   margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  margin-left: 10p;
 }
-
-.advice-grid h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 10px;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 6px;
-}
-
-/* ===============================
-   ADVICE ITEM
-=============================== */
-.advice-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: #f9fafb;
-  border-radius: 8px;
-  font-size: 15px;
-  border-left: 4px solid #6b46ff;
-  transition: background 0.3s ease;
-}
-
-.advice-item:hover {
-  background: #f3f4f6;
-}
-
-.advice-item .category {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.advice-item .value {
-  flex: 1;
-  color: #374151;
-}
-
-.advice-item .prediction {
-  font-size: 14px;
-  color: #6b7280;
-}
-
-/* ===============================
-   RESPONSIVE
-=============================== */
-@media (max-width: 600px) {
-  .advice-card {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .advice-card h2 {
-    font-size: 22px;
-  }
-
-  .advice-grid h3 {
-    font-size: 18px;
-  }
-
-  .advice-item {
-    font-size: 14px;
-    padding: 10px;
-  }
-}
-/* ===============================
-   GRAPH CARD
-=============================== */
-.graph-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 800px;
-  margin: 20px auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.graph-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-.graph-card h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-/* ===============================
-   BUTTON
-=============================== */
-.graph-card .button-8b {
-  display: block;
-  margin: 0 auto 20px auto;
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.graph-card .button-8b:hover {
-  background: linear-gradient(90deg, #9d77ff, #6b46ff);
-}
-
-/* ===============================
-   GRAPH SECTIONS
-=============================== */
-.graph-card div {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.graph-card h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 10px;
-  border-bottom: 2px solid #e5e7eb;
-  display: inline-block;
-  padding-bottom: 4px;
-}
-
-/* ===============================
-   GRAPH IMAGES
-=============================== */
-.graph-card img {
-  max-width: 100%;
-  height: auto;
-  margin-top: 10px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease;
-}
-
-.graph-card img:hover {
-  transform: scale(1.02);
-}
-
-/* ===============================
-   RESPONSIVE
-=============================== */
-@media (max-width: 768px) {
-  .graph-card {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .graph-card h2 {
-    font-size: 22px;
-  }
-
-  .graph-card h3 {
-    font-size: 18px;
-  }
-}
-

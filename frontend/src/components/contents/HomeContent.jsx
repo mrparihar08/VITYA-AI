@@ -144,62 +144,73 @@ export default function Home() {
               </div>
             </div>
       </div>
-      <div className='from-al'>
-        <Card title= 'Recent expense'>
-          <div className="overview income-ov">
-               {overview && (
-            <div>
-              <p>Total Income: ₹{overview.total_income}</p>
-              <p>Total Expenses: ₹{overview.total_expenses}</p>
-              <p>Available Balance: ₹{overview.available_balance}</p>
-              <strong>Expense Breakdown:</strong>
-              <ul>
-                {Object.entries(overview.expense_distribution || {}).map(([cat, val]) => (
-                  <li key={cat}>{cat}: ₹{val}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-            </div>
-        </Card>
-       <Card title= 'Expense' className='expense'>
-                <label>Amount:</label>
-                <input type="number" placeholder="Amount" value={expenseAmount}
-                  onChange={(e) => setExpenseAmount(e.target.value)} />
-                <label>Category:</label>
-                <input type="text" placeholder="Category" value={expenseCategory}
-                  onChange={(e) => setExpenseCategory(e.target.value)} />
-                <label>Payment Type:</label>
-                <input type="text" placeholder="Payment Type" value={expensepayment_type}
-                  onChange={(e) => setExpensePaymentType(e.target.value)} />
-                <label>Description:</label>
-                <input type="text" placeholder="Description" value={expenseDescription}
-                  onChange={(e) => setExpenseDescription(e.target.value)} />
-                <label>Date:</label>
-                <input type="date" value={expenseDate}
-                  onChange={(e) => setExpenseDate(e.target.value)} />
-                <button className="btn-expense" onClick={viewExpense}>Add Expense</button>
-       </Card>
-        <Card title='Income' className='income'>
-                <label>Amount:</label>
-                <input type="number" placeholder="Amount" value={IncomeAmount}
-                  onChange={(e) => setIncomeAmount(e.target.value)} />
-                <label>Source:</label>
-                <input type="text" placeholder="Source" value={IncomeSource}
-                  onChange={(e) => setIncomeSource(e.target.value)} />
-                <label>City:</label>
-                <input type="text" placeholder="City" value={IncomeCity}
-                  onChange={(e) => setIncomeCity(e.target.value)} />
-                <label>Date:</label>
-                <input type="date" value={IncomeDate}
-                  onChange={(e) => setIncomeDate(e.target.value)} />
-                <button  className="btn-income" onClick={viewIncome}>Set Income</button>          
-       </Card>
+<div className="form-al container-grid">
+  {/* ===== Expense Card ===== */}
+  <div className="col col-4">
+    <Card title="Expense" className="expense">
+      <label>Amount:</label>
+      <input type="number" placeholder="Amount" value={expenseAmount}
+        onChange={(e) => setExpenseAmount(e.target.value)} />
+      <label>Category:</label>
+      <input type="text" placeholder="Category" value={expenseCategory}
+        onChange={(e) => setExpenseCategory(e.target.value)} />
+      <label>Payment Type:</label>
+      <input type="text" placeholder="Payment Type" value={expensepayment_type}
+        onChange={(e) => setExpensePaymentType(e.target.value)} />
+      <label>Description:</label>
+      <input type="text" placeholder="Description" value={expenseDescription}
+        onChange={(e) => setExpenseDescription(e.target.value)} />
+      <label>Date:</label>
+      <input type="date" value={expenseDate}
+        onChange={(e) => setExpenseDate(e.target.value)} />
+      <button className="btn-income" onClick={viewExpense}>Add Expense</button>
+    </Card>
+  </div>
+
+  {/* ===== Income Card ===== */}
+  <div className="col col-4">
+    <Card title="Income" className="income">
+      <label>Amount:</label>
+      <input type="number" placeholder="Amount" value={IncomeAmount}
+        onChange={(e) => setIncomeAmount(e.target.value)} />
+      <label>Source:</label>
+      <input type="text" placeholder="Source" value={IncomeSource}
+        onChange={(e) => setIncomeSource(e.target.value)} />
+      <label>City:</label>
+      <input type="text" placeholder="City" value={IncomeCity}
+        onChange={(e) => setIncomeCity(e.target.value)} />
+      <label>Date:</label>
+      <input type="date" value={IncomeDate}
+        onChange={(e) => setIncomeDate(e.target.value)} />
+      <button className="btn-income" onClick={viewIncome}>Set Income</button>
+    </Card>
+  </div>
+
+  {/* ===== Recent Expense Card ===== */}
+  <div className="col col-4">
+    <Card title="Recent Expense" className="recent">
+      <div className="overview income-ov">
+        {overview && (
+          <div>
+            <p>Total Income: ₹{overview.total_income}</p>
+            <p>Total Expenses: ₹{overview.total_expenses}</p>
+            <p>Available Balance: ₹{overview.available_balance}</p>
+            <strong>Expense Breakdown:</strong>
+            <ul>
+              {Object.entries(overview.expense_distribution || {}).map(([cat, val]) => (
+                <li key={cat}>{cat}: ₹{val}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
             {loading && <p>Loading data...</p>}
             {error && <p className="error">{error}</p>}
-      </div>
+    </Card>
+  </div>
+</div>
             {/* === Recent Transactions === */}
-            <div className="card transaction-card">
+            <div className="card- transaction-card">
               <h2>🧾 Recent Transactions</h2>
               {recentTransactions.length > 0 ? (
                 <ul className="transaction-list">
@@ -219,7 +230,7 @@ export default function Home() {
             </div>
             {/* === Budget Goals === */}
             {goals.length > 0 && (
-              <div className="card goals-card">
+              <div className="card- goals-card">
                 <h2>🎯 Your Financial Goals</h2>
                 <ul className="goals-list">
                   {goals.map(goal => (

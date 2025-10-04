@@ -42,7 +42,7 @@ export default function Register() {
     }
   };
   return (
-          <div className="card  regicter-form-card">
+          <div className="cards form-card">
             <h2>Register</h2>
             <form onSubmit={handleRegister}>
               <input type="text" placeholder="Username" value={username}
