@@ -1,8 +1,6 @@
 import React from "react";
 
 import ProfileContent from "./ProfileContent";
-import IncomeContent from "./IncomeContent";
-import ExpenseContent from "./ExpenseContent";
 import GraphsContent from "./GraphsContent";
 import TrendGraphsContent from "./TrendGraphsContent";
 import AdviceContent from "./AdviceContent";
@@ -16,8 +14,6 @@ export default function ActiveContent({ id }) {
     case "profile": return <ProfileContent />;
     case "settings": return <SettingsContent />;
     case "advice": return <AdviceContent />;
-    case "income": return <IncomeContent />;
-    case "expense": return <ExpenseContent />;
     case "graphs": return <GraphsContent />;
     case "trendGraphs": return <TrendGraphsContent />;
     case "help": return <HelpContent />;

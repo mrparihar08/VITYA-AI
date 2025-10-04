@@ -12,26 +12,14 @@ export default function Dashboard() {
     { id: 'profile', title: 'Profile', desc: 'User profile settings' },
     { id: 'settings', title: 'Settings', desc: 'Application settings' },
     { id: 'advice', title: 'Advice', desc: 'AI-driven advice' },
-    { id: 'income', title: 'Income', desc: 'Track income records' },
-    { id: 'expense', title: 'Expense', desc: 'Manage expenses' },
     { id: 'graphs', title: 'Graphs', desc: 'Visualize data' },
     { id: 'trendGraphs', title: 'Trend Graphs', desc: 'Show trends over time' },
     { id: 'help', title: 'Help', desc: 'Get help & support' },
   ];
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard">
       <div className="dashboard-wrapper">
-        
-        {/* Header */}
-        <header className="dashboard-header">
-          <h1 className="dashboard-title">VITYA.AI</h1>
-          <button 
-            onClick={() => setOpen(true)} 
-            className="open-options-btn"
-          > ☰
-          </button>
-        </header>
 {/*========================================================= */}
         {/* Main Section */}
         <main className="dashboard-main">
@@ -44,6 +32,14 @@ export default function Dashboard() {
 
           {/* Sidebar (Desktop) */}
           <aside className="sidebar">
+           <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
+                <div className="logo-circle">V</div>
+                <div className="logo-text">
+                   <h2>VITYA.AI</h2>
+                    <p>Expense Dashboard</p>
+                </div>
+                </div>    
+            <nav className="menu">      
             {options.map((o) => (
               <button
                 key={o.id}
@@ -53,9 +49,29 @@ export default function Dashboard() {
                 {o.title}
               </button>
             ))}
+            </nav>
+          <div className="pro-card">
+          <div className="pro-icon">E</div>
+          <span>Expensio Pro</span>
+          <span className="pro-badge">Pro</span>
+        </div>
           </aside>
         </main>
-
+        <div className="open-options-mo">
+           <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
+                <div className="logo-circle">V</div>
+                <div className="logo-text">
+                   <h2>VITYA.AI</h2>
+                    <p>Expense Dashboard</p>
+                </div>
+                </div>           
+          <button 
+            onClick={() => setOpen(true)}
+            className="open-options-btn" 
+          > ☰
+          </button>
+        </div>
+  
         {/* Drawer (Mobile) */}
         <AnimatePresence>
           {open && (

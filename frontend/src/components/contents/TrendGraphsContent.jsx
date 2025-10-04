@@ -28,7 +28,7 @@ export default function TrendGraphs() {
   return (
     <div className="card graph-card">
       <h2>Expenses And Income Trend</h2>
-      <button onClick={handleGetGraphTrend}>View Trend</button>
+      <button className='button-8b' onClick={handleGetGraphTrend}>View Trend</button>
 
       {incomeGraph64 && <div><h3>Income Trend</h3><img src={`data:image/png;base64,${incomeGraph64}`} alt="Income Trend" /></div>}
       {expenseGraph64 && <div><h3>Expense Trend</h3><img src={`data:image/png;base64,${expenseGraph64}`} alt="Expense Trend" /></div>}

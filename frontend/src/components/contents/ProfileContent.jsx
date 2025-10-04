@@ -111,11 +111,11 @@ export default function Profile() {
       <div className="profile-actions">
         {editing ? (
           <>
-            <button onClick={handleUpdateProfile}>Save</button>
-            <button onClick={() => setEditing(false)}>Cancel</button>
+            <button className='button-8b' onClick={handleUpdateProfile}>Save</button>
+            <button  className='button-8b' onClick={() => setEditing(false)}>Cancel</button>
           </>
         ) : (
-          <button onClick={() => setEditing(true)}>Edit Profile</button>
+          <button className='button-8b' onClick={() => setEditing(true)}>Edit Profile</button>
         )}
       </div>
 
@@ -143,7 +143,7 @@ export default function Profile() {
         />
       </div>
 
-      <button onClick={handleChangePassword}>Update Password</button>
+      <button className='button-8b' onClick={handleChangePassword}>Update Password</button>
     </div>
   );
 }

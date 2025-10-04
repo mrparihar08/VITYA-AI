@@ -42,7 +42,7 @@ export default function Register() {
     }
   };
   return (
-          <div className="card form-card">
+          <div className="card  regicter-form-card">
             <h2>Register</h2>
             <form onSubmit={handleRegister}>
               <input type="text" placeholder="Username" value={username}
@@ -51,7 +51,7 @@ export default function Register() {
                 onChange={(e) => setEmail(e.target.value)} required />
               <input type="password" placeholder="Password" value={password}
                 onChange={(e) => setPassword(e.target.value)} required />
-              <button type="submit" disabled={loading}>
+              <button type="submit" className='button-8b' disabled={loading}>
               {loading ? "Registering..." : "Register"}
               </button>
 

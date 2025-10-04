@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -21,11 +21,11 @@ export default function Login() {
 
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
-        alert("Login successful!");
+        alert("login successful!");
         navigate("/dashboard"); // redirect after login
       }
     } catch (err) {
-      alert(err.response?.data?.error || "Login failed");
+      alert(err.response?.data?.error || "login failed");
     } finally {
       setLoading(false);
     }
@@ -38,14 +38,14 @@ export default function Login() {
   };
 
   return (
-          <div className="card form-card">
+          <div className="card login-form-card">
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
               <input type="text" placeholder="Username" value={username}
                 onChange={(e) => setUsername(e.target.value)} required />
               <input type="password" placeholder="Password" value={password}
                 onChange={(e) => setPassword(e.target.value)} required />
-              <button type="submit" disabled={loading}>
+              <button type="submit" className='button-8b' disabled={loading}>
                {loading ? "Logging in..." : "Login"}
               </button>
               <button type="button" onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>

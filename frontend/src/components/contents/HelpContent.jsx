@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function HelpContent() {
   return (
-  <div className="help-card">
+  <div className=" card help-card">
   <h3>Help & Support</h3>
   <p>For assistance, please contact:</p>
   <ul>
