@@ -1,149 +1,160 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
-export default function Profile() {
-  const [token, setToken] = useState("");
-  const [profile, setProfile] = useState({ username: "", email: "" });
-
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-
-  // Password fields
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+export function Register() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) setToken(savedToken);
-  }, []);
-
-  const authHeaders = () => ({
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  // -------- Fetch Profile --------
-  const fetchProfile = async () => {
-    if (!token) return;
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await axios.get(`${API_URL}/api/profile`, authHeaders());
-      setProfile({
-        username: res.data.username || "",
-        email: res.data.email || "",
+      const res = await axios.post(`${API_URL}/api/register`, {
+        username,
+        email,
+        password,
       });
+
+      alert(res.data.message || "Registration successful!");
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        navigate("/profile"); // redirect after signup
+      } else {
+        navigate("/login"); // fallback → go login page
+      }
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to load profile.");
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Registration failed"
+      );
     } finally {
       setLoading(false);
     }
   };
+  return (
+          <div className="cards form-card">
+            <h2>Register</h2>
+            <form onSubmit={handleRegister}>
+              <input type="text" placeholder="Username" value={username}
+                onChange={(e) => setUsername(e.target.value)} required />
+              <input type="email" placeholder="Email" value={email}
+                onChange={(e) => setEmail(e.target.value)} required />
+              <input type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)} required />
+              <button type="submit" className='button-8b' disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+              </button>
 
-  useEffect(() => {
-    fetchProfile();
-  }, [token]);
+            </form>
+              <div>Already registered? <Link to='/login'>Login</Link></div>
+          </div>
+  );
+}
 
-  // -------- Update Profile --------
-  const handleUpdateProfile = async () => {
+export function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      const res = await axios.put(`${API_URL}/api/profile`, profile, authHeaders());
-      alert(res.data.message || "Profile updated successfully!");
-      setEditing(false);
-      fetchProfile();
+      const res = await axios.post(`${API_URL}/api/login`, {
+        username,
+        password,
+      });
+
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        alert("login successful!");
+        navigate("/profile"); // redirect after login
+      }else{
+        alert("invalid login response!");
+      }
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to update profile.");
+      alert(err.response?.data?.error || "login failed");
+    } finally {
+      setLoading(false);
     }
   };
+  return (
+          <div className="cards form-card">
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
+              <input type="text" placeholder="Username" value={username}
+                onChange={(e) => setUsername(e.target.value)} required />
+              <input type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)} required />
+              <button type="submit" className='button-8b' disabled={loading}>
+               {loading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+            <div>Not registered yet? <Link to='/register'>Register</Link></div>
+          </div>
+  );
+}
 
-  // -------- Change Password --------
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword) {
-      return alert("Please fill in both password fields.");
+
+export function Profile() {
+  const [profile, setProfile] = useState({ username: "", email: "" });
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
     }
-    try {
-      const res = await axios.put(
-        `${API_URL}/api/profile/password`,
-        { currentPassword, newPassword },
-        authHeaders()
-      );
-      alert(res.data.message || "Password updated successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
-    } catch (err) {
-      alert(err.response?.data?.error || "Failed to update password.");
-    }
+
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/profile`, {
+          headers: { Authorization:`Bearer ${token}`},
+        });
+        setProfile({
+          username: res.data.username,
+          email: res.data.email,
+        });
+      } catch (err) {
+        alert(err.response?.data?.message || "Session expired, please login again!");
+        localStorage.removeItem("token");
+        navigate("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [token, navigate, API_URL]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    alert("Logged out successfully!");
+    navigate("/login");
   };
 
   if (loading) return <p>Loading profile...</p>;
 
   return (
     <div className="card profile-card">
-      <h2>User Profile</h2>
-
-      {/* Profile Section */}
-      <div className="profile-field">
-        <label>Username:</label>
-        {editing ? (
-          <input
-            type="text"
-            value={profile.username}
-            onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-          />
-        ) : (
-          <p>{profile.username}</p>
-        )}
-      </div>
-
-      <div className="profile-field">
-        <label>Email:</label>
-        {editing ? (
-          <input
-            type="email"
-            value={profile.email}
-            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-          />
-        ) : (
-          <p>{profile.email}</p>
-        )}
-      </div>
-
-      <div className="profile-actions">
-        {editing ? (
-          <>
-            <button className='button-8b' onClick={handleUpdateProfile}>Save</button>
-            <button  className='button-8b' onClick={() => setEditing(false)}>Cancel</button>
-          </>
-        ) : (
-          <button className='button-8b' onClick={() => setEditing(true)}>Edit Profile</button>
-        )}
-      </div>
-
-      <hr />
-
-      {/* Password Section */}
-      <h3>Change Password</h3>
-      <div className="profile-field">
-        <label>Current Password:</label>
-        <input
-          type="password"
-          placeholder="Enter current password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-        />
-      </div>
-
-      <div className="profile-field">
-        <label>New Password:</label>
-        <input
-          type="password"
-          placeholder="Enter new password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-        />
-      </div>
-
-      <button className='button-8b' onClick={handleChangePassword}>Update Password</button>
+      <h2>Welcome!</h2>
+      <p><strong>Username:</strong> {profile.username}</p>
+      <p><strong>Email:</strong> {profile.email}</p>
+      <button type="button" className='button-8b' onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>
     </div>
   );
 }

@@ -28,6 +28,7 @@ body, html {
 .dashboard {
   display: flex;
   min-height: 100vh;
+  max-height: auto;
 }
 
 /* =======================
@@ -52,7 +53,7 @@ body, html {
   background: var(--bg-dark);
   color: #fff;
   padding: 25px 20px;
-  display: flex;
+  display:flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;

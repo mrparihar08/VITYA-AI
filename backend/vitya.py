@@ -189,26 +189,6 @@ def get_profile(current_user):
         "email": current_user.email
     }), 200
 
-
-@app.route('/api/profile', methods=['PUT'])
-@token_required
-def update_profile(current_user):
-    data = request.get_json() or {}
-    # Basic validation: don't allow empty username/email
-    new_username = data.get('username', current_user.username)
-    new_email = data.get('email', current_user.email)
-
-    if new_username != current_user.username and User.query.filter_by(username=new_username).first():
-        return jsonify({'error': 'Username already taken'}), 400
-    if new_email != current_user.email and User.query.filter_by(email=new_email).first():
-        return jsonify({'error': 'Email already taken'}), 400
-
-    current_user.username = new_username
-    current_user.email = new_email
-    db.session.commit()
-    return jsonify({'message': 'Profile updated successfully'}), 200
-
-
 @app.route('/api/profile/password', methods=['PUT'])
 @token_required
 def change_password(current_user):

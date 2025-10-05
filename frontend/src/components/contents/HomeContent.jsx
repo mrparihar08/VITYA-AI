@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo} from 'react';
 import axios from 'axios';
 
 export default function Home() {
-  const [user, setUser] = useState(null);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +45,7 @@ export default function Home() {
   const authHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
 
   const postWithAuth = async (endpoint, data, successMessage) => {
-    if (!token) return alert('Please signin first.');
+    if (!token) return alert('Please login first.');
     try {
       const res = await axios.post(`${API_URL}${endpoint}`, data, authHeaders());
       alert(res.data.message || successMessage);
@@ -106,7 +105,7 @@ export default function Home() {
     if (token) {
       fetchDashboardData();
       axiosAuth.get('/api/profile')
-        .then(res => setUser(res.data))
+
         .catch(err => console.error(err));
     }
   }, [token, axiosAuth]);
@@ -135,14 +134,7 @@ export default function Home() {
            <div className='top-h-h'>
              <h1>Home</h1>
              <p>welcome back, here's your dashboard</p>
-      </div>
-          <div className="top-h-h profile-field">
-               <img src="/avatar.png" alt="avatar" className="avatar" />
-              <div>
-                <div className="profile-name">{user ? user.username : 'Guest User'}</div>
-                <div className="profile-role">{user ? user.role || 'Member' : 'Not logged in'}</div>
-              </div>
-            </div>
+      </div>      
       </div>
 <div className="form-al container-grid">
   {/* ===== Expense Card ===== */}
@@ -259,8 +251,6 @@ function Card({ title, children }) {
     <div className="cards">
       <div className="card-header">
         <div className="card-title">{title}</div>
-        
-        <div className="card-link">View all</div>
       </div>
       <div className='card-body'>{children}</div>
     </div>
