@@ -11,9 +11,6 @@ import io
 import jwt
 import base64
 import requests
-import matplotlib
-# Use non-interactive backend for server environments
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
@@ -23,34 +20,20 @@ from passlib.context import CryptContext
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
 
-# CORS - allow production origin and localhost for dev (you can override via env)
-DEFAULT_ORIGINS = [
-    "https://vitya-ai-re.onrender.com",
-    "http://localhost:3000"
-]
-cors_origins = os.environ.get("CORS_ORIGINS")
-if cors_origins:
-    # allow comma-separated override from env
-    cors_list = [o.strip() for o in cors_origins.split(",") if o.strip()]
-else:
-    cors_list = DEFAULT_ORIGINS
-
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": cors_list}})
-
-# Database setup
+load_dotenv()
 raw_db_url = os.environ.get('DATABASE_URL')
 if raw_db_url and raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url or os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///vitya.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-secret')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-ML_API_BASE = os.environ.get("ML_API_BASE")  # e.g. https://ml-service.example.com
-ML_REQUEST_TIMEOUT = int(os.environ.get("ML_REQUEST_TIMEOUT", "15"))  # seconds
-
+ML_API_BASE = os.environ.get("ML_API_BASE")
 db = SQLAlchemy(app)
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto")
+
+
 
 
 # -------------------------------
@@ -89,7 +72,7 @@ class Expense(db.Model):
 # -------------------------------
 @app.route("/", methods=["GET"])
 def index():
-    return jsonify({"message": "Welcome to VITYA-AI backend! 🚀"}), 200
+    return jsonify({"message": "Welcome to VITYA-AI backend!"}), 200
 
 
 # -------------------------------
@@ -98,25 +81,22 @@ def index():
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth = request.headers.get('Authorization', '') or request.headers.get('authorization', '')
-        if not auth or not isinstance(auth, str) or not auth.strip():
-            return jsonify({'message': 'Authorization header missing!'}), 401
-        parts = auth.split()
-        if len(parts) != 2 or parts[0].lower() != 'bearer':
-            return jsonify({'message': 'Token is missing or invalid format! Use: Bearer <token>'}), 401
-        token = parts[1]
+        auth = request.headers.get('Authorization', '')
+        if not auth.startswith('Bearer '):
+            return jsonify({'message': 'Token is missing or invalid format!'}), 401
+        token = auth.split(' ')[1]
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = db.session.get(vitya_User, data.get('user_id'))
+            current_user = db.session.get(vitya_User, data['user_id'])
             if not current_user:
-                return jsonify({'message': 'User not found'}), 401
+                raise RuntimeError("User not found")
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired!'}), 401
         except Exception as e:
-            current_app.logger.exception("JWT decode error")
-            return jsonify({'message': 'Invalid Token!'}), 401
+            return jsonify({'message': 'Invalid Token!', 'error': str(e)}), 401
         return f(current_user, *args, **kwargs)
     return decorated
+
 
 
 # -------------------------------
@@ -143,20 +123,7 @@ def register():
     except IntegrityError:
         db.session.rollback()
         return jsonify({'error': 'Username or email already exists'}), 400
-
-    # Optionally return token to auto-login after register
-    try:
-        payload = {
-            'user_id': user.id,
-            'exp': datetime.utcnow() + timedelta(hours=48)
-        }
-        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-        if isinstance(token, bytes):
-            token = token.decode('utf-8')
-        return jsonify({'message': 'User registered successfully!', 'token': token}), 201
-    except Exception:
-        # If something goes wrong with token creation, still return success message.
-        return jsonify({'message': 'User registered successfully!'}), 201
+    return jsonify({'message': 'User registered successfully!'}), 201
 
 
 @app.route('/api/login', methods=['POST'])
@@ -172,8 +139,6 @@ def login():
         'exp': datetime.utcnow() + timedelta(hours=48)
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-    if isinstance(token, bytes):
-        token = token.decode('utf-8')
     return jsonify({'token': token}), 200
 
 
@@ -189,47 +154,30 @@ def get_profile(current_user):
         "email": current_user.email
     }), 200
 
-@app.route('/api/profile/password', methods=['PUT'])
-@token_required
-def change_password(current_user):
-    data = request.get_json() or {}
-    cur = data.get('currentPassword')
-    new = data.get('newPassword')
-    if not cur or not new:
-        return jsonify({'error': 'Both currentPassword and newPassword are required'}), 400
-    if not pwd_context.verify(cur, current_user.password):
-        return jsonify({'error': 'Current password incorrect'}), 400
-    current_user.password = pwd_context.hash(new)
-    db.session.commit()
-    return jsonify({'message': 'Password updated'}), 200
-
-
 # -------------------------------
 # INCOME ROUTES
 # -------------------------------
 @app.route('/api/incomes', methods=['POST'])
 @token_required
 def set_income(current_user):
-    data = request.get_json() or {}
-    if 'amount' not in data or 'source' not in data:
+    data = request.json
+    if not data or 'amount' not in data or 'source' not in data:
         return jsonify({"error": "Amount and source are required"}), 400
     try:
-        income_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
+        expense_date = datetime.strptime(data['date'], '%Y-%m-%d') if 'date' in data else datetime.utcnow()
     except ValueError:
         return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
 
     new_income = Income(
-        amount=float(data['amount']),
-        source=data.get('source', ''),
+        amount=data['amount'],
+        source=data['source'],
         city=data.get('city', ''),
-        date=income_date,
+        date=expense_date,
         user_id=current_user.id
     )
     db.session.add(new_income)
     db.session.commit()
     return jsonify({"message": "Income added successfully!"}), 201
-
-
 # -------------------------------
 # EXPENSE ROUTES
 # -------------------------------
@@ -245,7 +193,7 @@ def add_expense(current_user):
         return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
 
     exp = Expense(
-        amount=float(data['amount']),
+        amount=data['amount'],
         category=data.get('category', 'Uncategorized'),
         description=data.get('description', ''),
         date=expense_date,
@@ -256,7 +204,6 @@ def add_expense(current_user):
     db.session.commit()
     return jsonify({"message": "Expense added successfully!"}), 201
 
-
 # -------------------------------
 # ANALYTICS OVERVIEW
 # -------------------------------
@@ -264,22 +211,22 @@ def add_expense(current_user):
 @token_required
 def get_financial_overview(current_user):
     try:
-        total_income = sum(float(inc.amount) for inc in current_user.incomes)
-        total_expenses = sum(float(e.amount) for e in current_user.expenses)
-        dist = {}
-        for e in current_user.expenses:
-            dist[e.category] = dist.get(e.category, 0) + float(e.amount)
-        return jsonify({
-            "total_income": total_income,
-            "total_expenses": total_expenses,
-            "expense_distribution": dist,
-            "available_balance": total_income - total_expenses
-        }), 200
+         total_income = sum(inc.amount for inc in current_user.incomes)
+         total_expenses = sum(e.amount for e in current_user.expenses)
+         dist = {}
+         for e in current_user.expenses:
+             dist[e.category] = dist.get(e.category, 0) + e.amount
+         return jsonify({
+             "total_income": total_income,
+             "total_expenses": total_expenses,
+             "expense_distribution": dist,
+             "available_balance": total_income - total_expenses
+       }), 200
     except Exception as e:
+        # isse aapko Render logs me full traceback mil jaayega
         current_app.logger.exception("analytics_overview failed")
         return jsonify(error=str(e)), 500
-
-
+    
 # -------------------------------
 # EXPENSE PIE GRAPH
 # -------------------------------
@@ -288,10 +235,10 @@ def get_financial_overview(current_user):
 def get_expense_graph(current_user):
     expenses = Expense.query.filter_by(user_id=current_user.id).all()
     if not expenses:
-        return jsonify({"message": "No expenses found!", "graph": None}), 200
+        return jsonify({"message": "No expenses found!"}), 404
     categories = {}
     for exp in expenses:
-        categories[exp.category] = categories.get(exp.category, 0) + float(exp.amount)
+        categories[exp.category] = categories.get(exp.category, 0) + exp.amount
     plt.figure(figsize=(5, 5))
     plt.pie(categories.values(), labels=categories.keys(), autopct='%1.1f%%')
     plt.title("Expense Distribution")
@@ -309,14 +256,14 @@ def get_expense_graph(current_user):
 @app.route('/api/expenses_income_trend', methods=['GET'])
 @token_required
 def get_expense_income_trend(current_user):
-    income_data = [{'amount': float(inc.amount), 'date': inc.date} for inc in current_user.incomes]
-    expense_data = [{'amount': float(exp.amount), 'date': exp.date} for exp in current_user.expenses]
+   income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.incomes]
+   expense_data = [{'amount': exp.amount, 'date': exp.date} for exp in current_user.expenses]
 
     income_df = pd.DataFrame(income_data)
     expense_df = pd.DataFrame(expense_data)
 
     if income_df.empty and expense_df.empty:
-        return jsonify({"message": "No data to show"}), 200
+        return jsonify({"message": "No data to show"}), 404
 
     if not income_df.empty:
         income_df['date'] = pd.to_datetime(income_df['date'])
@@ -340,10 +287,9 @@ def get_expense_income_trend(current_user):
     }).fillna(0)
     df.sort_index(inplace=True)
 
-    # Income graph
     buf_income = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Income'], marker='o')
+    plt.plot(df.index, df['Income'], marker='o', color='green')
     plt.title("Monthly Income")
     plt.xlabel("Month")
     plt.ylabel("Income (₹)")
@@ -355,10 +301,9 @@ def get_expense_income_trend(current_user):
     buf_income.seek(0)
     graph_income_b64 = base64.b64encode(buf_income.getvalue()).decode()
 
-    # Expense graph
     buf_expense = io.BytesIO()
     plt.figure(figsize=(12, 5))
-    plt.plot(df.index, df['Expenses'], marker='o')
+    plt.plot(df.index, df['Expenses'], marker='o', color='red')
     plt.title("Monthly Expenses")
     plt.xlabel("Month")
     plt.ylabel("Expenses (₹)")
@@ -382,22 +327,20 @@ def get_expense_income_trend(current_user):
 @app.route('/api/advice', methods=['GET'])
 @token_required
 def get_expense_advice(current_user):
-    if not ML_API_BASE:
-        return jsonify({"error": "ML service not configured (ML_API_BASE missing)"}), 500
     try:
         user_data = {
             "user_id": current_user.id,
             "income": [
                 {
-                    "amount": float(inc.amount),
+                    "amount": inc.amount,
                     "source": inc.source,
                     "city": inc.city,
                     "date": inc.date.strftime('%Y-%m-%d')
                 } for inc in current_user.incomes
-            ],
+           ],
             "expenses": [
                 {
-                    "amount": float(exp.amount),
+                    "amount": exp.amount,
                     "category": exp.category,
                     "description": exp.description,
                     "payment_type": exp.payment_type,
@@ -405,29 +348,14 @@ def get_expense_advice(current_user):
                 } for exp in current_user.expenses
             ]
         }
-        # train
-        try:
-            train_resp = requests.post(f"{ML_API_BASE.rstrip('/')}/train/", json=user_data, timeout=ML_REQUEST_TIMEOUT)
-            if train_resp.status_code != 200:
-                current_app.logger.error("ML train failed: %s", train_resp.text)
-                return jsonify({"error": "Training failed"}), 500
-        except requests.RequestException as re:
-            current_app.logger.exception("ML train request failed")
-            return jsonify({"error": f"ML train request failed: {str(re)}"}), 500
-
-        # predict
-        try:
-            predict_resp = requests.post(f"{ML_API_BASE.rstrip('/')}/predict/", json=user_data, timeout=ML_REQUEST_TIMEOUT)
-            if predict_resp.status_code != 200:
-                current_app.logger.error("ML predict failed: %s", predict_resp.text)
-                return jsonify({"error": "Prediction failed"}), 500
-        except requests.RequestException as re:
-            current_app.logger.exception("ML predict request failed")
-            return jsonify({"error": f"ML predict request failed: {str(re)}"}), 500
-
+        train_resp = requests.post(f"{ML_API_BASE}/train/", json=user_data)
+        if train_resp.status_code != 200:
+            return jsonify({"error": "Training failed"}), 500
+        predict_resp = requests.post(f"{ML_API_BASE}/predict/", json=user_data)
+        if predict_resp.status_code != 200:
+            return jsonify({"error": "Prediction failed"}), 500
         return jsonify(predict_resp.json()), 200
     except Exception as e:
-        current_app.logger.exception("get_expense_advice failed")
         return jsonify({"error": f"Internal error: {str(e)}"}), 500
 
 
@@ -463,11 +391,7 @@ def get_recent_transactions(current_user):
 # ONE-TIME FIX FOR BAD DATES
 # -------------------------------
 def fix_expense_dates():
-    try:
-        rows = db.session.execute(text("SELECT id, date FROM expense")).fetchall()
-    except Exception:
-        current_app.logger.exception("fix_expense_dates: could not fetch rows")
-        return
+    rows = db.session.execute(text("SELECT id, date FROM expense")).fetchall()
     fixed = 0
     skipped = 0
     possible_formats = ['%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
@@ -489,7 +413,6 @@ def fix_expense_dates():
                 skipped += 1
     db.session.commit()
     print(f" Fixed: {fixed},  Skipped (unrecognized format): {skipped}")
-
 
 # -------------------------------
 # ENTRY POINT
