@@ -56,7 +56,7 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto
 # -------------------------------
 # MODELS
 # -------------------------------
-class User(db.Model):
+class vitya_User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(500), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
@@ -107,7 +107,7 @@ def token_required(f):
         token = parts[1]
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = db.session.get(User, data.get('user_id'))
+            current_user = db.session.get(vitya_User, data.get('user_id'))
             if not current_user:
                 return jsonify({'message': 'User not found'}), 401
         except jwt.ExpiredSignatureError:
@@ -127,12 +127,12 @@ def register():
     data = request.get_json() or {}
     if not all(k in data for k in ('username', 'email', 'password')):
         return jsonify({'error': 'username, email, and password are required'}), 400
-    if User.query.filter_by(username=data['username']).first():
+    if vitya_User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username already taken'}), 400
-    if User.query.filter_by(email=data['email']).first():
+    if vitya_User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already taken'}), 400
 
-    user = User(
+    user = vitya_User(
         username=data['username'],
         email=data['email'],
         password=pwd_context.hash(data['password'])
@@ -164,7 +164,7 @@ def login():
     data = request.get_json() or {}
     if not all(k in data for k in ('username', 'password')):
         return jsonify({'error': 'Username and password are required'}), 400
-    user = User.query.filter_by(username=data['username']).first()
+    user = vitya_User.query.filter_by(username=data['username']).first()
     if not user or not pwd_context.verify(data['password'], user.password):
         return jsonify({'error': 'Invalid username or password'}), 401
     payload = {

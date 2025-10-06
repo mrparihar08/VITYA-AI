@@ -17,7 +17,7 @@ export default function Home() {
   const [expensepayment_type, setExpensePaymentType] = useState('');
   const [overview, setOverview] = useState();
   const [token, setToken] = useState('');
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
   
   const axiosAuth = useMemo(() => {
     const instance = axios.create({

@@ -9,7 +9,7 @@ export function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -64,7 +64,7 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -111,7 +111,7 @@ export function Profile() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
   const token = localStorage.getItem("token");
 
   useEffect(() => {

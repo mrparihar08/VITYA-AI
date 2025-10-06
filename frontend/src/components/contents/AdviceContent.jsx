@@ -6,7 +6,7 @@ export default function AdviceContent() {
   const [advice, setAdvice] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
