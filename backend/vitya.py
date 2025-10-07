@@ -256,8 +256,9 @@ def get_expense_graph(current_user):
 @app.route('/api/expenses_income_trend', methods=['GET'])
 @token_required
 def get_expense_income_trend(current_user):
-   income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.incomes]
-   expense_data = [{'amount': exp.amount, 'date': exp.date} for exp in current_user.expenses]
+
+    income_data = [{'amount': inc.amount, 'date': inc.date} for inc in current_user.incomes]
+    expense_data = [{'amount': exp.amount, 'date': exp.date} for exp in current_user.expenses]
 
     income_df = pd.DataFrame(income_data)
     expense_df = pd.DataFrame(expense_data)
