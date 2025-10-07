@@ -17,7 +17,6 @@ import os
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 
-load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://vitya-ai-re.onrender.com"}})
@@ -39,7 +38,8 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto
 # -------------------------------
 # MODELS
 # -------------------------------
-class vitya_User(db.Model):
+class User(db.Model):
+    __tablename__ ='vitya_user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(500), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
@@ -49,22 +49,24 @@ class vitya_User(db.Model):
 
 
 class Income(db.Model):
+    __tablename__ = 'incomes'
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, default=0.0)
     source = db.Column(db.String(1000))
     city = db.Column(db.String(1000))
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('vitya_user.id'), nullable=False)
 
 
 class Expense(db.Model):
+    __tablename__ = 'expenses'
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, default=0.0)
     category = db.Column(db.String(500), nullable=False)
     description = db.Column(db.String(2000))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     payment_type = db.Column(db.String(2000))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('vitya_user.id'), nullable=False)
 
 
 # -------------------------------
@@ -87,7 +89,7 @@ def token_required(f):
         token = auth.split(' ')[1]
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = db.session.get(vitya_User, data['user_id'])
+            current_user = db.session.get(User, data['user_id'])
             if not current_user:
                 raise RuntimeError("User not found")
         except jwt.ExpiredSignatureError:
@@ -107,12 +109,12 @@ def register():
     data = request.get_json() or {}
     if not all(k in data for k in ('username', 'email', 'password')):
         return jsonify({'error': 'username, email, and password are required'}), 400
-    if vitya_User.query.filter_by(username=data['username']).first():
+    if User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username already taken'}), 400
-    if vitya_User.query.filter_by(email=data['email']).first():
+    if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already taken'}), 400
 
-    user = vitya_User(
+    user = User(
         username=data['username'],
         email=data['email'],
         password=pwd_context.hash(data['password'])
@@ -131,7 +133,7 @@ def login():
     data = request.get_json() or {}
     if not all(k in data for k in ('username', 'password')):
         return jsonify({'error': 'Username and password are required'}), 400
-    user = vitya_User.query.filter_by(username=data['username']).first()
+    user = User.query.filter_by(username=data['username']).first()
     if not user or not pwd_context.verify(data['password'], user.password):
         return jsonify({'error': 'Invalid username or password'}), 401
     payload = {
