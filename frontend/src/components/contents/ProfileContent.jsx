@@ -108,22 +108,29 @@ export function Login() {
 
 export function Profile() {
   const [profile, setProfile] = useState({ username: "", email: "" });
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [overview, setOverview] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingOverview, setLoadingOverview] = useState(true);
 
+  const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
   const token = localStorage.getItem("token");
 
+  // Redirect if no token
   useEffect(() => {
     if (!token) {
       navigate("/login");
-      return;
     }
+  }, [token, navigate]);
+
+  // Fetch Profile
+  useEffect(() => {
+    if (!token) return;
 
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/profile`, {
-          headers: { Authorization:`Bearer ${token}`},
+          headers: { Authorization: `Bearer ${token}` },
         });
         setProfile({
           username: res.data.username,
@@ -134,11 +141,33 @@ export function Profile() {
         localStorage.removeItem("token");
         navigate("/login");
       } finally {
-        setLoading(false);
+        setLoadingProfile(false);
       }
     };
 
     fetchProfile();
+  }, [token, navigate, API_URL]);
+
+  // Fetch Overview
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchOverview = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/analytics_overview`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setOverview(res.data);
+      } catch (err) {
+        alert(err.response?.data?.message || "Session expired, please login again!");
+        localStorage.removeItem("token");
+        navigate("/login");
+      } finally {
+        setLoadingOverview(false);
+      }
+    };
+
+    fetchOverview();
   }, [token, navigate, API_URL]);
 
   const handleLogout = () => {
@@ -147,14 +176,25 @@ export function Profile() {
     navigate("/login");
   };
 
-  if (loading) return <p>Loading profile...</p>;
+  if (loadingProfile || loadingOverview) return <p>Loading profile...</p>;
 
   return (
     <div className="card profile-card">
       <h2>Welcome!</h2>
       <p><strong>Username:</strong> {profile.username}</p>
       <p><strong>Email:</strong> {profile.email}</p>
-      <button type="button" className='button-8b' onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button>
+
+      {overview && (
+        <div>
+          <p><strong>Total Income:</strong> ₹{overview.total_income}</p>
+          <p><strong>Total Expenses:</strong> ₹{overview.total_expenses}</p>
+          <p><strong>Available Balance:</strong> ₹{overview.available_balance}</p>
+        </div>
+      )}
+
+      <button type="button" className="button-8b" onClick={handleLogout} style={{ marginLeft: "10px" }}>
+        Logout
+      </button>
     </div>
   );
 }

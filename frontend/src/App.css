@@ -550,7 +550,26 @@ input:focus {
   color: #111827;
   background-color: #f9fafb;
 }
-.login-form-card button {
-  margin-top: 20px;
-  margin-left: 10p;
+
+.reset{
+ background-color: transparent;
+ border: transparent;
+ color: #fff;
+ padding: 0px;
+ margin: 0px;
+}
+
+.form-card{
+  width: 60%;
+  margin: 20%;
+  margin-top: 10%;
+}
+
+.form-card input{
+  padding: 5px;
+}
+
+.graph-card .advice-card{
+  width: 100%;
+  
 }

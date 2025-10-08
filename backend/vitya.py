@@ -52,11 +52,6 @@ ML_REQUEST_TIMEOUT = int(os.environ.get("ML_REQUEST_TIMEOUT", "15"))  # seconds
 db = SQLAlchemy(app)
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "scrypt"], deprecated="auto")
 
-
-# -------------------------------
-# MODELS
-# -------------------------------
-
 # -------------------------------
 # MODELS
 # -------------------------------
@@ -69,7 +64,6 @@ class User(db.Model):
     expenses = db.relationship('Expense', backref='user', lazy=True)
     incomes = db.relationship('Income', backref='user', lazy=True)
 
-
 class Income(db.Model):
     __tablename__ = 'incomes'
     id = db.Column(db.Integer, primary_key=True)
@@ -78,7 +72,6 @@ class Income(db.Model):
     city = db.Column(db.String(1000))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('vitya_user.id'), nullable=False)
-
 
 class Expense(db.Model):
     __tablename__ = 'expenses'
@@ -96,7 +89,6 @@ class Expense(db.Model):
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "Welcome to VITYA-AI backend! 🚀"}), 200
-
 
 # -------------------------------
 # TOKEN REQUIRED DECORATOR
@@ -123,7 +115,6 @@ def token_required(f):
             return jsonify({'message': 'Invalid Token!'}), 401
         return f(current_user, *args, **kwargs)
     return decorated
-
 
 # -------------------------------
 # REGISTER AND login
@@ -374,14 +365,12 @@ def get_expense_income_trend(current_user):
 @app.route('/api/advice', methods=['GET'])
 @token_required
 def get_expense_advice(current_user):
-    if not ML_API_BASE:
-        return jsonify({"error": "ML service not configured (ML_API_BASE missing)"}), 500
     try:
         user_data = {
             "user_id": current_user.id,
             "income": [
                 {
-                    "amount": float(inc.amount),
+                    "amount": inc.amount,
                     "source": inc.source,
                     "city": inc.city,
                     "date": inc.date.strftime('%Y-%m-%d')
@@ -389,7 +378,7 @@ def get_expense_advice(current_user):
             ],
             "expenses": [
                 {
-                    "amount": float(exp.amount),
+                    "amount": exp.amount,
                     "category": exp.category,
                     "description": exp.description,
                     "payment_type": exp.payment_type,
@@ -397,31 +386,15 @@ def get_expense_advice(current_user):
                 } for exp in current_user.expenses
             ]
         }
-        # train
-        try:
-            train_resp = requests.post(f"{ML_API_BASE.rstrip('/')}/train/", json=user_data, timeout=ML_REQUEST_TIMEOUT)
-            if train_resp.status_code != 200:
-                current_app.logger.error("ML train failed: %s", train_resp.text)
-                return jsonify({"error": "Training failed"}), 500
-        except requests.RequestException as re:
-            current_app.logger.exception("ML train request failed")
-            return jsonify({"error": f"ML train request failed: {str(re)}"}), 500
-
-        # predict
-        try:
-            predict_resp = requests.post(f"{ML_API_BASE.rstrip('/')}/predict/", json=user_data, timeout=ML_REQUEST_TIMEOUT)
-            if predict_resp.status_code != 200:
-                current_app.logger.error("ML predict failed: %s", predict_resp.text)
-                return jsonify({"error": "Prediction failed"}), 500
-        except requests.RequestException as re:
-            current_app.logger.exception("ML predict request failed")
-            return jsonify({"error": f"ML predict request failed: {str(re)}"}), 500
-
+        train_resp = requests.post(f"{ML_API_BASE}/train/", json=user_data)
+        if train_resp.status_code != 200:
+            return jsonify({"error": "Training failed"}), 500
+        predict_resp = requests.post(f"{ML_API_BASE}/predict/", json=user_data)
+        if predict_resp.status_code != 200:
+            return jsonify({"error": "Prediction failed"}), 500
         return jsonify(predict_resp.json()), 200
     except Exception as e:
-        current_app.logger.exception("get_expense_advice failed")
         return jsonify({"error": f"Internal error: {str(e)}"}), 500
-
 
 # -------------------------------
 # RECENT TRANSACTIONS (combined)

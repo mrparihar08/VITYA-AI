@@ -3,7 +3,6 @@ import axios from 'axios';
 
 export default function Home() {
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [IncomeAmount, setIncomeAmount] = useState('');
@@ -82,24 +81,21 @@ export default function Home() {
     }
   };
 
-   const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [txRes, goalsRes] = await Promise.all([
-        axiosAuth.get('/api/transactions/recent'),
-        axiosAuth.get('/api/goals'),
-      ]);
+ 
+     const fetchDashboardData = async () => {
+  try {
+    setLoading(true);
+    setError('');
 
-      setRecentTransactions(txRes.data || []);
-      setGoals(goalsRes.data || []);
-      setError('');
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Failed to fetch dashboard data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await axiosAuth.get('/api/transactions/recent');
+    setRecentTransactions(res.data || []);
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.error || 'Failed to fetch dashboard data.');
+  } finally {
+    setLoading(false);
+  }
+};
 
     useEffect(() => {
     if (token) {
@@ -180,13 +176,38 @@ export default function Home() {
 
   {/* ===== Recent Expense Card ===== */}
   <div className="col col-4">
-    <Card title="Recent Expense" className="recent">
+    <Card title="Recent Transactions" className="recent">
       <div className="overview income-ov">
+  {loading ? (
+    <p>Loading recent transactions...</p>
+  ) : error ? (
+    <p className="error-msg">{error}</p>
+  ) : recentTransactions.length > 0 ? (
+    <ul className="transaction-list">
+      {recentTransactions.slice(0, 5).map(tx => (
+        <li key={tx._id} className={`transaction-item ${tx.type}`}>
+          <span className="tx-date">{new Date(tx.date).toLocaleDateString()}</span>
+          <span className="tx-category">{tx.category}</span>
+          <span className={`tx-amount ${tx.type === 'expense' ? 'negative' : 'positive'}`}>
+            {tx.type === 'expense' ? '-' : '+'}₹{tx.amount.toFixed(2)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="small-note">No recent transactions available.</p>
+  )}
+</div>
+
+
+    </Card>
+  </div>
+</div>
+            {/* === Recent Transactions === */}
+      <div className="card- transaction-card">
+      <button className="reset" onClick={getOverview}><h2>🧾Expense Transactions</h2></button>
         {overview && (
           <div>
-            <p>Total Income: ₹{overview.total_income}</p>
-            <p>Total Expenses: ₹{overview.total_expenses}</p>
-            <p>Available Balance: ₹{overview.available_balance}</p>
             <strong>Expense Breakdown:</strong>
             <ul>
               {Object.entries(overview.expense_distribution || {}).map(([cat, val]) => (
@@ -197,51 +218,7 @@ export default function Home() {
         )}
       </div>
             {loading && <p>Loading data...</p>}
-            {error && <p className="error">{error}</p>}
-    </Card>
-  </div>
-</div>
-            {/* === Recent Transactions === */}
-            <div className="card- transaction-card">
-              <h2>🧾 Recent Transactions</h2>
-              {recentTransactions.length > 0 ? (
-                <ul className="transaction-list">
-                  {recentTransactions.slice(0, 5).map(tx => (
-                    <li key={tx._id} className={`transaction-item ${tx.type}`}>
-                      <span className="tx-date">{new Date(tx.date).toLocaleDateString()}</span>
-                      <span className="tx-category">{tx.category}</span>
-                      <span className={`tx-amount ${tx.type === 'expense' ? 'negative' : 'positive'}`}>
-                        {tx.type === 'expense' ? '-' : '+'}₹{tx.amount.toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="small-note">No recent transactions available.</p>
-              )}
-            </div>
-            {/* === Budget Goals === */}
-            {goals.length > 0 && (
-              <div className="card- goals-card">
-                <h2>🎯 Your Financial Goals</h2>
-                <ul className="goals-list">
-                  {goals.map(goal => (
-                    <li key={goal._id} className="goal-item">
-                      <div className="goal-info">
-                        <strong>{goal.name}</strong>
-                        <span>{Math.min(goal.progress, 100)}% complete</span>
-                      </div>
-                      <div className="goal-bar">
-                        <div
-                          className="goal-progress"
-                          style={{ width: `${Math.min(goal.progress, 100)}%` }}
-                        ></div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}             
+            {error && <p className="error">{error}</p>}          
     </div>
   );
 }
