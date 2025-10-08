@@ -186,11 +186,20 @@ export default function Home() {
     <ul className="transaction-list">
       {recentTransactions.slice(0, 5).map(tx => (
         <li key={tx._id} className={`transaction-item ${tx.type}`}>
-          <span className="tx-date">{new Date(tx.date).toLocaleDateString()}</span>
-          <span className="tx-category">{tx.category}</span>
-          <span className={`tx-amount ${tx.type === 'expense' ? 'negative' : 'positive'}`}>
+          <table>
+            <tr className='row-1'>
+              <td>Date</td>
+              <td>Category</td>
+              <td>Amount</td>
+            </tr>
+            <tr className='row-n'>
+          <td className="tx-date">{new Date(tx.date).toLocaleDateString()}</td>
+          <td className="tx-category">{tx.category}</td>
+          <td className={`tx-amount ${tx.type === 'expense' ? 'negative' : 'positive'}`}>
             {tx.type === 'expense' ? '-' : '+'}₹{tx.amount.toFixed(2)}
-          </span>
+          </td>
+          </tr>
+          </table>
         </li>
       ))}
     </ul>

@@ -573,3 +573,11 @@ input:focus {
   width: 100%;
   
 }
+.row-1{
+  border: #0000 bold 2px;
+  background: linear-gradient(90deg, #5938d8, #8a5df7);
+  color: #ffff;
+}
+.row-n{
+  border: #0000 0.1px;
+}
