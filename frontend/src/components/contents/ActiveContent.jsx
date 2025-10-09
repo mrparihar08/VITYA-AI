@@ -1,7 +1,6 @@
 import React from "react";
 
 import{Register,Login, Profile} from "./ProfileContent";
-import GraphsContent from "./GraphsContent";
 import TrendGraphsContent from "./TrendGraphsContent";
 import AdviceContent from "./AdviceContent";
 import SettingsContent from "./SettingsContent";
@@ -16,7 +15,6 @@ export default function ActiveContent({ id }) {
     case "register": return <Register />;
     case "settings": return <SettingsContent />;
     case "advice": return <AdviceContent />;
-    case "graphs": return <GraphsContent />;
     case "trendGraphs": return <TrendGraphsContent />;
     case "help": return <HelpContent />;
     default:

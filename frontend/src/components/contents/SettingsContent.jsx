@@ -1,34 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 
 export default function SettingsContent() {
-  const [notifications, setNotifications] = useState(true);
-  const [compact, setCompact] = useState(false);
+  // =======================
+  // STATES
+  // =======================
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
+  const [compactMode, setCompactMode] = useState(
+    localStorage.getItem("compactMode") === "true"
+  );
+  const [primaryColor, setPrimaryColor] = useState(
+    localStorage.getItem("primaryColor") || "#6b46ff"
+  );
 
+  // =======================
+  // EFFECTS
+  // =======================
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    document.body.classList.toggle("compact-mode", compactMode);
+    localStorage.setItem("compactMode", compactMode);
+  }, [compactMode]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--primary", primaryColor);
+    localStorage.setItem("primaryColor", primaryColor);
+  }, [primaryColor]);
+
+  // =======================
+  // RENDER
+  // =======================
   return (
-    <div className="card settings-card">
+    <div className="settings-card">
       <h3 className="settings-title">Settings</h3>
 
+      {/* Dark Mode */}
       <div className="settings-option">
         <label className="toggle-label">
           <input
             type="checkbox"
-            checked={notifications}
-            onChange={() => setNotifications(!notifications)}
+            checked={darkMode}
+            onChange={() => setDarkMode(!darkMode)}
           />
           <span className="toggle-custom"></span>
-          Enable Notifications
+          Dark Mode
         </label>
       </div>
 
+      {/* Compact Mode */}
       <div className="settings-option">
         <label className="toggle-label">
           <input
             type="checkbox"
-            checked={compact}
-            onChange={() => setCompact(!compact)}
+            checked={compactMode}
+            onChange={() => setCompactMode(!compactMode)}
           />
           <span className="toggle-custom"></span>
-          Use Compact Mode
+          Compact Mode
+        </label>
+      </div>
+
+      {/* Primary Color Picker */}
+      <div className="settings-option">
+        <label className="color-label">
+          Primary Color
+          <input
+            type="color"
+            className="color-picker"
+            value={primaryColor}
+            onChange={(e) => setPrimaryColor(e.target.value)}
+          />
         </label>
       </div>
     </div>

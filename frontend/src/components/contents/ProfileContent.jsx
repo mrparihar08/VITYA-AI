@@ -170,6 +170,27 @@ export function Profile() {
     fetchOverview();
   }, [token, navigate, API_URL]);
 
+  const handleDownloadCSV = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/expenses/download`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to download CSV");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "expenses.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      alert("Error downloading CSV file!");
+      console.error(err);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     alert("Logged out successfully!");
@@ -191,7 +212,11 @@ export function Profile() {
           <p><strong>Available Balance:</strong> ₹{overview.available_balance}</p>
         </div>
       )}
-
+      <div>
+        <strong>Download CSV:</strong>
+        <button type="button"className="button-8b" onClick={handleDownloadCSV}style={{ marginLeft: "10px" }}> 
+          Download</button>
+          </div>
       <button type="button" className="button-8b" onClick={handleLogout} style={{ marginLeft: "10px" }}>
         Logout
       </button>

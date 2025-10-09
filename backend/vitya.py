@@ -1,5 +1,5 @@
-# app.py (fixed)
-from flask import Flask, request, jsonify, current_app
+
+from flask import Flask, request, jsonify, current_app,Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
@@ -239,6 +239,50 @@ def add_expense(current_user):
     db.session.commit()
     return jsonify({"message": "Expense added successfully!"}), 201
 
+import io
+import csv
+
+@app.route('/api/expenses/download', methods=['GET'])
+@token_required
+def download_expenses_csv(current_user):
+    try:
+        # Get all expenses for the logged-in user
+        expenses = current_user.expenses
+        # Create an in-memory CSV file
+        output = io.StringIO()
+        writer = csv.writer(output)
+        # Write CSV header
+        writer.writerow(['ID', 'Amount', 'Category', 'Description', 'Date', 'Payment Type'])
+        # Write each expense
+        for e in expenses:
+            writer.writerow([e.id, e.amount, e.category, e.description, e.date.strftime('%Y-%m-%d'), e.payment_type])
+        # Prepare response
+        response = Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                "Content-Disposition": "attachment; filename=expenses.csv"
+            }
+        )
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+# -------------------------------
+# Bar chart
+# -------------------------------
+@app.route('/api/expenses/chart', methods=['GET'])
+@token_required
+def get_expenses_chart(current_user):
+    try:
+        expenses = current_user.expenses
+        category_totals = {}
+        for e in expenses:
+            category_totals[e.category] = category_totals.get(e.category, 0) + float(e.amount)
+        # Convert to a list of dicts for chart
+        chart_data = [{"category": cat, "amount": amt} for cat, amt in category_totals.items()]
+        return jsonify(chart_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # -------------------------------
 # ANALYTICS OVERVIEW
@@ -269,22 +313,16 @@ def get_financial_overview(current_user):
 @app.route('/api/expenses/graph', methods=['GET'])
 @token_required
 def get_expense_graph(current_user):
-    expenses = Expense.query.filter_by(user_id=current_user.id).all()
-    if not expenses:
-        return jsonify({"message": "No expenses found!", "graph": None}), 200
-    categories = {}
-    for exp in expenses:
-        categories[exp.category] = categories.get(exp.category, 0) + float(exp.amount)
-    plt.figure(figsize=(5, 5))
-    plt.pie(categories.values(), labels= categories.keys(), autopct='%1.1f%%')
-    plt.title("Expense Distribution")
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    plt.close()
-    img.seek(0)
-    img_base64 = base64.b64encode(img.getvalue()).decode()
-    return jsonify({"graph": img_base64}), 200
-
+    try:
+        expenses = current_user.expenses
+        categories = {}
+        for e in expenses:
+            categories[e.category] = categories.get(e.category, 0) + float(e.amount)
+        # Convert to a list of dicts for chart
+        chart_data = [{"category": cat, "amount": amt} for cat, amt in categories.items()]
+        return jsonify(chart_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # -------------------------------
 # TREND GRAPH (INCOME & EXPENSE)
