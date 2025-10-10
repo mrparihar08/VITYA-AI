@@ -318,7 +318,7 @@ input, select, textarea {
   border: 1.5px solid #d1d5db;
   border-radius: 8px;
   font-size: 0.95rem;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
   outline: none;
   color: #111827;
   background-color: #f9fafb;
@@ -501,7 +501,12 @@ body.dark-mode {
 }
 @media (min-width: 768px){
 .form-card{
-  margin: 10% 15% 90% 15%;
+  margin: 20% 15% 90% 15%;
+}
+}
+@media (max-width: 350px){
+.form-card{
+  margin: 20% 15% 80% 15%;
 }
 }
 @media (max-width: 768px){
@@ -512,6 +517,26 @@ body.dark-mode {
 .home-card,
 .profile-card{
   margin: 8% 0% 0% 0%;
+}
+}
+@media (max-width: 490px){
+.advice-card, 
+.graph-card,
+.help-card,
+.settings-card,
+.home-card,
+.profile-card{
+  margin: 16% 0% 0% 0%;
+}
+}
+@media (max-width: 350px){
+.advice-card, 
+.graph-card,
+.help-card,
+.settings-card,
+.home-card,
+.profile-card{
+  margin: 20% 0% 0% 0%;
 }
 }
 
