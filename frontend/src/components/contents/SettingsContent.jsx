@@ -36,9 +36,8 @@ export default function SettingsContent() {
   // RENDER
   // =======================
   return (
-    <div className="settings-card">
-      <h3 className="settings-title">Settings</h3>
-
+    <div className="settings-card card">
+      <h1 className="h1-title">Settings</h1>
       {/* Dark Mode */}
       <div className="settings-option">
         <label className="toggle-label">

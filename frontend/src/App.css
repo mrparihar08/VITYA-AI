@@ -1,4 +1,4 @@
-/* 🌍 GLOBAL STYLES (Optimized) */
+/* 🌍 GLOBAL STYLES (Optimized Clean Version) */
 :root {
   --primary: #6b46ff;
   --primary-light: #9d77ff;
@@ -8,6 +8,7 @@
   --bg-dark: #17333a;
   --text-dark: #1f2937;
   --text-muted: #6b7280;
+  --border-color: #e5e7eb;
   --radius: 10px;
   --transition: 0.3s ease;
 }
@@ -20,20 +21,20 @@ body, html {
   margin: 0;
   padding: 0;
   font-family: "Inter", sans-serif;
-  background: var(--bg-main);
+  background-color: var(--bg-main);
   color: var(--text-dark);
   overflow-x: hidden;
-}
-
-.dashboard {
-  display: flex;
-  min-height: 100vh;
-  max-height: auto;
+  transition: background-color var(--transition), color var(--transition);
 }
 
 /* =======================
-   MAIN STRUCTURE
+   DASHBOARD STRUCTURE
 ======================= */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
 .dashboard-wrapper {
   display: flex;
   flex: 1;
@@ -41,6 +42,7 @@ body, html {
 }
 
 .dashboard-main {
+  flex: 1;
   display: flex;
   width: 100%;
 }
@@ -53,7 +55,7 @@ body, html {
   background: var(--bg-dark);
   color: #fff;
   padding: 25px 20px;
-  display:flex;
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
@@ -91,7 +93,7 @@ body, html {
   color: #b5b5b5;
 }
 
-/* Menu */
+/* Sidebar Menu */
 .menu {
   display: flex;
   flex-direction: column;
@@ -113,10 +115,10 @@ body, html {
 .sidebar-btn.active,
 .sidebar-btn:hover {
   background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  color: white;
+  color: #fff;
 }
 
-/* Bottom Pro card */
+/* Bottom Pro Card */
 .pro-card {
   background: #2c3242;
   padding: 10px;
@@ -147,11 +149,10 @@ body, html {
 ======================= */
 .active-section {
   flex: 1;
-  background: #fff;
-  border-radius: 0px;
-  margin: 1px;
-  padding: 30px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  background-color: var(--bg-main);
+  margin: 1%;
+  padding: 1rem;
+  border-radius: var(--radius);
 }
 
 .active-title {
@@ -162,18 +163,24 @@ body, html {
 /* =======================
    MOBILE MENU BUTTON
 ======================= */
+/* Mobile top header bar (logo or title) */
 .open-options-mo {
   display: none;
   position: fixed;
-  font-size: 26px;
-  border: none;
+  top: 0;
+  left: 0;
+  width: 100%;
   background: var(--bg-dark);
   color: white;
-  padding: 12px 20px 0px 12px;
-  width:100%;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 12px 20px;
   z-index: 999;
+  display: none;
+  align-items: center;
 }
 
+/* Sidebar toggle button (floating icon) */
 .open-options-btn {
   display: none;
   position: fixed;
@@ -189,17 +196,14 @@ body, html {
   z-index: 1000;
 }
 
+
 /* =======================
-   DRAWER (MOBILE SIDEBAR)
+   MOBILE DRAWER
 ======================= */
 .drawer-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: black;
-  opacity: 0.4;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
   z-index: 100;
 }
 
@@ -208,11 +212,11 @@ body, html {
   top: 0;
   right: 0;
   height: 100vh;
-  width: 70%;
-  max-width: 200px;
+  width: min(70%, 210px);
   background: #1f2430;
   color: white;
   padding: 20px;
+  padding-top: 100px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -225,13 +229,6 @@ body, html {
   transform: translateX(0);
 }
 
-.drawer-title {
-  font-size: 18px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 8px;
-}
-
 .drawer-btn {
   background: none;
   border: none;
@@ -240,6 +237,7 @@ body, html {
   padding: 10px;
   border-radius: 6px;
   cursor: pointer;
+  transition: background var(--transition);
 }
 
 .drawer-btn:hover {
@@ -247,144 +245,32 @@ body, html {
   color: white;
 }
 
+
 /* =======================
-   RESPONSIVE DESIGN
+   CARD COMPONENT
 ======================= */
-@media (max-width: 900px) {
-  .sidebar {
-    display: none;
-  }
-
-  .open-options-btn,
-  .open-options-mo {
-    display: block;
-  }
-
-  .active-section {
-    margin: 80px 15px 20px 15px;
-    padding: 20px;
-  }
-
-  .active-title {
-    font-size: 22px;
-  }
-}
-
-/* ===============================
-   HOME DASHBOARD MAIN STYLES
-=============================== */
-.home-card {
-  width: 100%;
-  padding: 20px;
-  min-height: 100vh;
-  background: var(--bg-main);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.dashboard-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* ==============================
-   HEADER (TOP BAR)
-============================== */
-.top-h {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-}
-
-.top-h-h h1 {
-  font-size: 24px;
-  margin: 0;
+.card {
+  
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: var(--radius);
+  padding: 1rem;
   color: var(--text-dark);
+  transition: background-color var(--transition), color var(--transition);
 }
 
-.top-h-h p {
-  font-size: 14px;
-  margin: 0;
-  color: var(--text-muted);
+body.dark-mode .card {
+  background-color: var(--text-dark);
+  color: #f1f5f9;
 }
 
-.profile-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 2px solid #e5e7eb;
-}
-
-.profile-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.profile-role {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-/* ===============================
-   ACCESSIBILITY FOCUS STYLES
-=============================== */
-.button-8b{
-  background: linear-gradient(90deg, #6b46ff, #9d77ff); 
-  color: white; 
-  border: none; 
-  padding: 10px 16px; 
-  border-radius: 8px; 
-  font-size: 14px; 
-  cursor: pointer; 
-  transition: background 0.3s;
- } 
-
- .button-8b:hover{ 
-    background: linear-gradient(90deg, #9d77ff,#6b46ff); 
-  }
-
-button:focus,
-input:focus {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  transition: outline var(--transition);
-}
-
-/* ===============================
-   DARK MODE SUPPORT
-=============================== */
-@media (prefers-color-scheme: dark) {
-
-  .settings-card,
-  .help-card,
-  .graph-card,
-  .advice-card {
-    color: #1e293b;
-  }
-
-  .sidebar {
-    background: #111827;
-  }
-
-  .drawer {
-    background: #1f2937;
-  }
-}
-/* ======= Responsive 12-Column Grid System ======= */
+/* =======================
+   GRID SYSTEM
+======================= */
 .container-grid {
   display: flex;
   flex-wrap: wrap;
-  margin: 0 -0.5rem; /* gutter space */
+  margin: 0 -0.5rem;
 }
 
 .col {
@@ -392,46 +278,23 @@ input:focus {
   box-sizing: border-box;
 }
 
-/* Default (Desktop) – 3 cards per row (4+4+4 = 12) */
 .col-4 {
   flex: 0 0 33.3333%;
   max-width: 33.3333%;
 }
 
-/* Tablet – 2 cards per row (6+6 = 12) */
 @media (max-width: 992px) {
-  .col-4 {
-    flex: 0 0 50%;
-    max-width: 50%;
-  }
+  .col-4 { flex: 0 0 50%; max-width: 50%; }
 }
 
-/* Mobile – 1 card per row (12 = full width) */
 @media (max-width: 576px) {
-  .col-4 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
+  .col-4 { flex: 0 0 100%; max-width: 100%; }
 }
-
-/* ===== Optional: Card alignment + spacing ===== */
-.card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
 /* =======================
-   Income Card Styling
+   home Cards Styling
 ======================= */
-
 .cards {
-  background: #ffffff;
+  background-color: #f9fafb;
   border-radius: 16px;
   padding: 1.8rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -439,204 +302,81 @@ input:focus {
   flex-direction: column;
   gap: 1rem;
   transition: all 0.3s ease;
-  height: 90%;
+  height: 81%;
+  
 }
-.card- {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  border-radius: 16px;
-  padding: 1.8rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  color: #ffffff;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 20px;
-  transition: all 0.3s ease;
-  height: 100%;
-
+body.dark-mode .cards {
+  background-color: #111827;
+  border-color: #374151;
 }
-
-.cards:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* ===== Title ===== */
-.cards h2, .cards .card-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.8rem;
-  border-bottom: 2px solid #f1f1f1;
-  padding-bottom: 0.5rem;
-}
-
-/* ===== Labels ===== */
-.cards label {
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.3rem;
-  font-size: 0.95rem;
-}
-
-/* ===== Inputs ===== */
-.cards input {
+/* =======================
+   INPUTS & BUTTONS
+======================= */
+input, select, textarea {
   width: 95%;
   padding: 0.6rem 0.8rem;
   border: 1.5px solid #d1d5db;
   border-radius: 8px;
   font-size: 0.95rem;
+  margin-bottom: 2px;
   outline: none;
-  transition: all 0.25s ease;
   color: #111827;
   background-color: #f9fafb;
+  transition: all 0.25s ease;
+  
 }
 
-.cards input:focus {
-  border-color: #6b46ff;
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.15);
   background-color: #fff;
 }
 
-/* ===== Button ===== */
-.btn-income {
-  background: linear-gradient(90deg, #6b46ff, #9d77ff);
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  padding: 0.7rem 1.2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background 0.3s ease, transform 0.2s ease;
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #111827;
+  color: #f9fafb;
+  border-color: #374151;
 }
 
-.btn-income:hover {
+button, .button-8b {
+  padding: 0.7rem 1.2rem;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
   background: linear-gradient(90deg, #5938d8, #8a5df7);
   transform: translateY(-2px);
 }
 
-.btn-income:active {
-  transform: translateY(0);
+button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
 }
 
-/* ===== Responsive Layout ===== */
-@media (max-width: 768px) {
-  .cards {
-    padding: 1.2rem;
-  }
-
-  .cards input {
-    font-size: 0.9rem;
-  }
-
-  .btn-income {
-    font-size: 0.9rem;
-    padding: 0.6rem 1rem;
-  }
-}
-/*=============================================
-
-========================================*/
-.form-card input {
-  padding: 0.6rem 0.8rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: 8px;
-  margin: 10px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: all 0.25s ease;
-  color: #111827;
-  background-color: #f9fafb;
-}
-
-.reset{
- background-color: transparent;
- border: transparent;
- color: #fff;
- padding: 0px;
- margin: 0px;
-}
-
-.form-card{
-  width: 60%;
-  margin: 20%;
-  margin-top: 10%;
-}
-
-.form-card input{
-  padding: 5px;
-}
-
-.graph-card .advice-card{
-  width: 100%;
-  
-}
-.row-1{
-  border: #0000 bold 2px;
-  background: linear-gradient(90deg, #5938d8, #8a5df7);
-  color: #ffff;
-}
-.row-n{
-  border: #0000 0.1px;
-}
-/* =========================
-   SETTINGS CARD
-========================= */
-.settings-card {
-  background: var(--bg-main);
-  border-radius: var(--radius);
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  transition: background var(--transition), color var(--transition);
-}
-
-body.dark-mode .settings-card {
-  background: var(--bg-dark);
-  color: #f1f5f9;
-}
-
-/* Title */
-.settings-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  color: var(--text-dark);
-}
-
-body.dark-mode .settings-title {
-  color: #f1f5f9;
-  border-bottom-color: #374151;
-}
-
-/* =========================
-   SETTINGS OPTION
-========================= */
-.settings-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Toggle Switch */
+/* =======================
+   TOGGLE SWITCH
+======================= */
 .toggle-label {
   display: flex;
   align-items: center;
-  cursor: pointer;
   gap: 12px;
   font-weight: 500;
-  color: var(--text-dark);
-  transition: color var(--transition);
-}
-
-body.dark-mode .toggle-label {
-  color: #f1f5f9;
+  cursor: pointer;
 }
 
 .toggle-label input {
@@ -672,12 +412,129 @@ body.dark-mode .toggle-label {
   transform: translateX(20px);
 }
 
+/* =======================
+   HELP CARD
+======================= */
+.help-card {
+  padding: 1.5rem;
+  margin: 1rem;
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .help-card {
+  background: var(--bg-dark);
+}
+
+.help-card input,
+.help-card textarea {
+  width: 95%;
+  
+}
+
+.help-card button {
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+
+}
+@media (min-width: 768px){
+.help-card button {
+  width: 97.5%;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+}
+
+.status-success {
+  color: var(--accent-green);
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.status-error {
+  color: var(--accent-red);
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+/* =======================
+   RESPONSIVE DESIGN
+======================= */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .open-options-btn { display: block; }
+  .open-options-mo{ display: block; }
+  .active-section { margin: 10% 3% 3% 0%; padding-top: 20px; }
+  .active-title { font-size: 22px; }
+}
+
+@media (max-width: 768px) {
+  .toggle-custom {
+    width: 36px;
+    height: 20px;
+  }
+  .toggle-custom::after {
+    width: 16px;
+    height: 16px;
+  }
+  .toggle-label input:checked + .toggle-custom::after {
+    transform: translateX(16px);
+  }
+}
+
+/* =======================
+   DARK MODE
+======================= */
+body.dark-mode {
+  background: var(--bg-dark);
+  color: #f1f5f9;
+}
+/*===============================
+
+================================*/
+@media (max-width: 768px){
+.form-card{
+  margin: 30% 10% 70% 10%;
+}
+}
+@media (min-width: 768px){
+.form-card{
+  margin: 10% 15% 90% 15%;
+}
+}
+@media (max-width: 768px){
+.advice-card, 
+.graph-card,
+.help-card,
+.settings-card,
+.home-card,
+.profile-card{
+  margin: 8% 0% 0% 0%;
+}
+}
+
+button:focus,
+input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  transition: outline var(--transition);
+}
 /* =========================
    SELECT / COLOR PICKER
 ========================= */
+.settings-option {
+  display: flex;
+  margin-bottom: 25px;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .select-label,
 .color-label {
   display: flex;
+  font-size: larger;
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -685,13 +542,14 @@ body.dark-mode .toggle-label {
   color: var(--text-dark);
 }
 
+
 body.dark-mode .select-label,
 body.dark-mode .color-label {
   color: #f1f5f9;
 }
 
 .select-input {
-  padding: 6px 10px;
+  padding: 10px 10px;
   border-radius: var(--radius);
   border: 1px solid #d1d5db;
   outline: none;
@@ -709,267 +567,148 @@ body.dark-mode .select-input {
 
 .color-picker {
   width: 40px;
-  height: 30px;
+  height: 40px;
   border: none;
   cursor: pointer;
-  background: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  background-color: #f1f5f1;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width: 768px) {
-  .settings-card {
-    padding: 1.5rem;
-  }
+/* =======================
+   COMPACT MODE (add to end of your CSS)
+   Usage: add class "compact-mode" on <body>
+   e.g. <body class="compact-mode"> or toggle via JS below
+   ======================= */
 
-  .toggle-custom {
-    width: 36px;
-    height: 20px;
-  }
-
-  .toggle-custom::after {
-    width: 16px;
-    height: 16px;
-  }
-
-  .toggle-label input:checked + .toggle-custom::after {
-    transform: translateX(16px);
-  }
-
-  .settings-title {
-    font-size: 1.3rem;
-  }
+body.compact-mode {
+  --compact-scale: 0.92;
 }
 
-/* =========================
-   HOVER / FOCUS STYLES
-========================= */
-.select-input:focus,
-.color-picker:focus {
-  outline: 2px solid var(--primary);
+/* general text & spacing */
+body.compact-mode {
+  font-size: 0.92rem; /* global slightly smaller */
+}
+
+/* SIDEBAR */
+body.compact-mode .sidebar {
+  width: 200px; /* narrower */
+  padding: 14px 12px;
+}
+
+body.compact-mode .mobile-logo { gap: 8px; margin-bottom: 18px; }
+body.compact-mode .logo-circle { width: 36px; height: 36px; font-size: 16px; }
+body.compact-mode .logo-text h2 { font-size: 16px; }
+body.compact-mode .logo-text p { font-size: 11px; }
+
+/* menu buttons */
+body.compact-mode .sidebar-btn,
+body.compact-mode .drawer-btn {
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* pro-card smaller */
+body.compact-mode .pro-card {
+  padding: 8px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* MAIN AREA / CARDS */
+body.compact-mode .active-section {
+  margin: 0.6%;
+  padding: 0.6rem;
+  border-radius: 6px;
+}
+
+body.compact-mode .active-title { font-size: 20px; margin-bottom: 8px; }
+
+body.compact-mode .card,
+body.compact-mode .help-card,
+body.compact-mode .cards {
+  padding: 0.6rem;
+  border-radius: 8px;
+}
+
+body.compact-mode .cards {
+  padding: 1rem;
+  gap: 0.6rem;
+}
+
+/* GRID */
+body.compact-mode .container-grid { margin: 0 -0.4rem; }
+body.compact-mode .col { padding: 0.4rem; }
+
+/* INPUTS & BUTTONS */
+body.compact-mode input,
+body.compact-mode select,
+body.compact-mode textarea {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+body.compact-mode button,
+body.compact-mode .button-8b {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.92rem;
+  border-radius: 8px;
+}
+
+/* TOGGLE SWITCH (smaller) */
+body.compact-mode .toggle-custom {
+  width: 36px;
+  height: 18px;
+}
+body.compact-mode .toggle-custom::after {
+  width: 14px;
+  height: 14px;
+  top: 2px;
+  left: 2px;
+}
+
+/* MOBILE APP BAR & TOGGLE BTN */
+body.compact-mode .open-options-mo {
+  font-size: 18px;
+  padding: 10px 14px;
+}
+body.compact-mode .open-options-btn {
+  font-size: 22px;
+  padding: 6px 8px;
+  top: 12px;
+  right: 12px;
+}
+
+/* DRAWER */
+body.compact-mode .drawer {
+  width: min(65%, 180px);
+  padding: 14px;
+  padding-top: 80px;
+}
+
+/* small adjustments for specific named cards */
+body.compact-mode .help-card,
+body.compact-mode .advice-card,
+body.compact-mode .graph-card,
+body.compact-mode .settings-card,
+body.compact-mode .home-card,
+body.compact-mode .profile-card {
+  margin: 6% 0 0 0;
+}
+
+/* Focus outlines: keep accessible but compact */
+body.compact-mode button:focus,
+body.compact-mode input:focus {
   outline-offset: 2px;
 }
 
-/* =========================
-   DARK MODE SUPPORT
-========================= */
-body.dark-mode {
-  background: var(--bg-dark);
-  color: #f1f5f9;
-}
-body.compact-mode .card,
-body.compact-mode .settings-card {
-  padding: 1rem;
-  gap: 0.5rem;
-}
-
-.help-card {
-  background: white;
-  border-radius: var(--radius);
-  padding: 2rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  max-width: 600px;
-  margin: 2rem auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.help-card input,
-.help-card textarea {
-  padding: 0.7rem 0.1rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: var(--radius);
-  width: 100%;
-  font-size: 0.95rem;
-  transition: all 0.25s ease;
-}
-
-.help-card input:focus,
-.help-card textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(107, 70, 255, 0.15);
-}
-
-.help-card button {
-  padding: 0.7rem 1.2rem;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.help-card button:hover {
-  background: linear-gradient(90deg, #5938d8, #8a5df7);
-  transform: translateY(-2px);
-}
-
-.status-success {
-  color: var(--accent-green);
-  font-weight: 500;
-  margin-top: 0.5rem;
-}
-
-.status-error {
-  color: var(--accent-red);
-  font-weight: 500;
-  margin-top: 0.5rem;
-}
-
-/* Responsive for mobile */
-@media (max-width: 640px) {
-  .help-card {
-    padding: 1.5rem;
-    margin: 1rem;
-  }
-
-  .help-card button {
-    width: 100%;
+/* Optional: auto-apply compact on very small screens (if desired) */
+/* Uncomment if you want automatic compact on tiny devices */
+/*
+@media (max-width: 420px) {
+  body { font-size: 0.9rem; }
+  body:not(.no-auto-compact) { /* Use .no-auto-compact to opt-out * /
+    font-size: 0.88rem;
   }
 }
-
-.advice-card {
-  background: white;
-  border-radius: var(--radius);
-  padding: 1.8rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 600px;
-  margin: 1rem auto;
-}
-
-.advice-card h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.button-8b {
-  padding: 0.7rem 1.2rem;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.button-8b:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.button-8b:hover:not(:disabled) {
-  background: linear-gradient(90deg, #5938d8, #8a5df7);
-  transform: translateY(-2px);
-}
-
-.advice-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  margin-top: 1rem;
-}
-
-.advice-item {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f1f1f1;
-}
-
-.advice-item .category {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.advice-item .value {
-  color: #374151;
-}
-
-.advice-item .prediction {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Responsive for mobile */
-@media (max-width: 640px) {
-  .advice-card {
-    padding: 1.2rem;
-  }
-}
-.graph-card {
-  background: white;
-  border-radius: var(--radius);
-  padding: 1.8rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 700px;
-  margin: 2rem auto;
-}
-
-.graph-card h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.button-8b {
-  padding: 0.7rem 1.2rem;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.button-8b:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.button-8b:hover:not(:disabled) {
-  background: linear-gradient(90deg, #5938d8, #8a5df7);
-  transform: translateY(-2px);
-}
-
-.graph-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.graph-section h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  color: #1f2937;
-}
-
-.graph-section img {
-  max-width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .graph-card {
-    padding: 1.2rem;
-    margin: 1rem;
-  }
-
-  .graph-section h3 {
-    font-size: 1rem;
-  }
-}
+*/

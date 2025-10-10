@@ -34,8 +34,8 @@ export default function Dashboard() {
            <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
                 <div className="logo-circle">V</div>
                 <div className="logo-text">
-                   <h2>VITYA.AI</h2>
-                    <p>Expense Dashboard</p>
+                   <h1>VITYA.AI</h1>
+                   <p>Expense Dashboard</p>
                 </div>
                 </div>    
             <nav className="menu">      
@@ -50,9 +50,8 @@ export default function Dashboard() {
             ))}
             </nav>
           <div className="pro-card">
-          <div className="pro-icon">E</div>
-          <span>Expensio Pro</span>
-          <span className="pro-badge">Pro</span>
+          <div className="pro-icon">VITYA.AI</div>
+          <span>Expenses Analysis</span>
         </div>
           </aside>
         </main>
@@ -61,7 +60,7 @@ export default function Dashboard() {
                 <div className="logo-circle">V</div>
                 <div className="logo-text">
                    <h2>VITYA.AI</h2>
-                    <p>Expense Dashboard</p>
+                   <p>Expense Analysis</p>
                 </div>
                 </div>           
           <button 

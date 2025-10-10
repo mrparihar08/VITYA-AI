@@ -156,10 +156,10 @@ export default function Home() {
 
   // ====== Render ======
   return (
-    <div className="Home-card">
+    <div className="home-card card">
       <div className='top-h'>
         <div className='top-h-h'>
-          <h1>Home</h1>
+          <h1 className="h1-title">Home</h1>
           <p>Welcome back, here’s your dashboard</p>
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function Home() {
             <label>Date:</label>
             <input type="date" value={expenseDate}
               onChange={(e) => setExpenseDate(e.target.value)} />
-            <button className="btn-income" onClick={handleAddExpense} disabled={loading}>
+            <button className="button-8b" onClick={handleAddExpense} disabled={loading}>
               {loading ? 'Processing...' : 'Add Expense'}
             </button>
           </Card>
@@ -205,7 +205,7 @@ export default function Home() {
             <label>Date:</label>
             <input type="date" value={IncomeDate}
               onChange={(e) => setIncomeDate(e.target.value)} />
-            <button className="btn-income" onClick={handleSetIncome} disabled={loading}>
+            <button className="button-8b" onClick={handleSetIncome} disabled={loading}>
               {loading ? 'Processing...' : 'Set Income'}
             </button>
           </Card>
@@ -247,6 +247,10 @@ export default function Home() {
               )}
             </div>
           </Card>
+          <br />
+          <br />
+          <br />
+          <br />
         </div>
       </div>
 
@@ -266,7 +270,6 @@ export default function Home() {
             )}
           </Card>
         </div>
-
         {/* Bar Chart */}
         <div className="col col-4">
           <Card title="Expenses by Category" className="income">
@@ -282,7 +285,6 @@ export default function Home() {
             </ResponsiveContainer>
           </Card>
         </div>
-
         {/* Expense Graph */}
         <div className="col col-4">
           <Card title="Expense Graph" className="income">
@@ -323,7 +325,7 @@ function Card({ title, children }) {
   return (
     <div className="cards">
       <div className="card-header">
-        <div className="card-title">{title}</div>
+        <div className="h3-title">{title}</div>
       </div>
       <div className='card-body'>{children}</div>
     </div>

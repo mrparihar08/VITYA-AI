@@ -39,8 +39,8 @@ export function Register() {
     }
   };
   return (
-          <div className="cards form-card">
-            <h2>Register</h2>
+          <div className="card form-card">
+          <h1 className="h1-title">Register</h1>
             <form onSubmit={handleRegister}>
               <input type="text" placeholder="Username" value={username}
                 onChange={(e) => setUsername(e.target.value)} required />
@@ -89,8 +89,9 @@ export function Login() {
     }
   };
   return (
-          <div className="cards form-card">
-            <h2>Login</h2>
+          <div className="card form-card">
+          <h1 className="h1-title">Login</h1>
+            
             <form onSubmit={handleLogin}>
               <input type="text" placeholder="Username" value={username}
                 onChange={(e) => setUsername(e.target.value)} required />
@@ -201,10 +202,9 @@ export function Profile() {
 
   return (
     <div className="card profile-card">
-      <h2>Welcome!</h2>
+    <h1 className="h1-title">Profile</h1>
       <p><strong>Username:</strong> {profile.username}</p>
       <p><strong>Email:</strong> {profile.email}</p>
-
       {overview && (
         <div>
           <p><strong>Total Income:</strong> ₹{overview.total_income}</p>

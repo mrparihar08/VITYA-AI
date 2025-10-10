@@ -29,7 +29,7 @@ export default function HelpContent() {
 
   return (
     <div className="card help-card">
-      <h3>Help & Support</h3>
+    <h1 className="h1-title">Help & Support</h1>
       <p>For assistance, please contact:</p>
       <ul>
         <li>Phone: +91-9876543210</li>
@@ -37,10 +37,8 @@ export default function HelpContent() {
           Docs: <a href="https://example.com/docs">Click here</a>
         </li>
       </ul>
-
       <section id="contact">
         <h3>Contact</h3>
-
         <form ref={form} onSubmit={sendEmail}>
           <div>
             <input name="user_name" placeholder="Your name" required />

@@ -32,7 +32,8 @@ export default function TrendGraphs() {
 
   return (
     <div className="card graph-card">
-      <h2>Expenses & Income Trend</h2>
+      <h1 className="h1-title">Expenses And Income Trend</h1>
+
       <button className="button-8b" onClick={handleGetGraphTrend} disabled={loading}>
         {loading ? 'Loading...' : 'View Trend'}
       </button>

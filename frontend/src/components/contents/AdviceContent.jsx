@@ -35,14 +35,12 @@ export default function AdviceContent() {
 
   return (
     <div className="card advice-card">
-      <h2>Expense Advice</h2>
+    <h1 className="h1-title">Advice</h1>
       <button className="button-8b" onClick={handleGetAdvice} disabled={loading}>
         {loading ? 'Loading...' : 'Get Advice'}
       </button>
-
       {advice.length > 0 && (
         <div className="advice-grid">
-          <h3>Advice:</h3>
           {advice.map((rec, idx) => (
             <div key={idx} className="advice-item">
               <span className="category">{rec.category}:</span>
