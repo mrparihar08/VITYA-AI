@@ -9,13 +9,13 @@ export function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/register`, {
+      const res = await axios.post(`${API_URL}/users/register`, {
         username,
         email,
         password,
@@ -64,13 +64,13 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/login`, {
+      const res = await axios.post(`${API_URL}/users/login`, {
         username,
         password,
       });
@@ -114,7 +114,7 @@ export function Profile() {
   const [loadingOverview, setLoadingOverview] = useState(true);
 
   const navigate = useNavigate();
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const token = localStorage.getItem("token");
 
   // Redirect if no token
@@ -155,7 +155,7 @@ export function Profile() {
 
     const fetchOverview = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/analytics_overview`, {
+        const res = await axios.get(`${API_URL}/api/financial_overview`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOverview(res.data);
@@ -173,7 +173,7 @@ export function Profile() {
 
   const handleDownloadCSV = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/expenses/download`, {
+      const res = await fetch(`${API_URL}/api/csv`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -202,9 +202,9 @@ export function Profile() {
 
   return (
     <div className="card profile-card">
-    <h1 className="h1-title">Profile</h1>
-      <p><strong>Username:</strong> {profile.username}</p>
-      <p><strong>Email:</strong> {profile.email}</p>
+    <div className="logo-circle profile">V</div>
+    <h2 className="h1-title Username">{profile.username}</h2>
+      <p className="Useremail">{profile.email}</p>
       {overview && (
         <div>
           <p><strong>Total Income:</strong> ₹{overview.total_income}</p>

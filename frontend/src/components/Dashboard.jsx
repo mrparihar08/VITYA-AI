@@ -12,6 +12,7 @@ export default function Dashboard() {
     { id: 'profile', title: 'Profile', desc: 'User profile settings' },
     { id: 'settings', title: 'Settings', desc: 'Application settings' },
     { id: 'advice', title: 'Advice', desc: 'AI-driven advice' },
+    { id: 'analytics', title: 'Analytics', desc: 'AI-driven analytics' },
     { id: 'trendGraphs', title: 'Trend Graphs', desc: 'Show trends over time' },
     { id: 'help', title: 'Help', desc: 'Get help & support' },
   ];

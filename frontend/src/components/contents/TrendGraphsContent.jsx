@@ -1,56 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+// ✅ stable constant (no warning)
+const API_URL =
+  process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
 export default function TrendGraphs() {
-  const [token, setToken] = useState('');
-  const [incomeGraph64, setIncomeGraph64] = useState('');
-  const [expenseGraph64, setExpenseGraph64] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
-
+  // token load
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
+    const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
   }, []);
 
-  const authHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
-
-  const handleGetGraphTrend = async () => {
+  // fetch data
+  useEffect(() => {
     if (!token) return;
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_URL}/api/expenses_income_trend`, authHeaders());
-      setIncomeGraph64(res.data.income_graph || '');
-      setExpenseGraph64(res.data.expense_graph || '');
-    } catch (err) {
-      alert(err.response?.data?.error || 'Error fetching trend graphs');
-    } finally {
-      setLoading(false);
-    }
+
+    const fetchTrend = async () => {
+      try {
+        const res = await axios.get(
+          `${API_URL}/api/expense_income_trend`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const income = res.data.income || [];
+        const expense = res.data.expense || [];
+
+        // merge income + expense by month
+        const merged = {};
+
+        income.forEach((i) => {
+          merged[i.month] = {
+            month: formatMonth(i.month),
+            income: i.amount,
+            expense: 0,
+          };
+        });
+
+        expense.forEach((e) => {
+          if (merged[e.month]) {
+            merged[e.month].expense = e.amount;
+          } else {
+            merged[e.month] = {
+              month: formatMonth(e.month),
+              income: 0,
+              expense: e.amount,
+            };
+          }
+        });
+
+        // sort by date (important for chart)
+        const sortedData = Object.values(merged).sort(
+          (a, b) => new Date(a.month) - new Date(b.month)
+        );
+
+        setData(sortedData);
+
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrend();
+  }, [token]); // ✅ no warning now
+
+  // ✅ format month (better UI)
+  const formatMonth = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-IN", {
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
     <div className="card graph-card">
-      <h1 className="h1-title">Expenses And Income Trend</h1>
+      <h1 className="h1-title">Income vs Expense Trend</h1>
 
-      <button className="button-8b" onClick={handleGetGraphTrend} disabled={loading}>
-        {loading ? 'Loading...' : 'View Trend'}
-      </button>
+      {loading && <p>Loading...</p>}
 
-      {incomeGraph64 && (
-        <div className="graph-section">
-          <h3>Income Trend</h3>
-          <img src={`data:image/png;base64,${incomeGraph64}`} alt="Income Trend" />
-        </div>
+      {!loading && data.length > 0 && (
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+
+            <Line type="monotone" dataKey="income" stroke="#00c853" />
+            <Line type="monotone" dataKey="expense" stroke="#ff1744" />
+          </LineChart>
+        </ResponsiveContainer>
       )}
 
-      {expenseGraph64 && (
-        <div className="graph-section">
-          <h3>Expense Trend</h3>
-          <img src={`data:image/png;base64,${expenseGraph64}`} alt="Expense Trend" />
-        </div>
-      )}
+      {!loading && data.length === 0 && <p>No data available</p>}
     </div>
   );
 }

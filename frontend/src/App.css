@@ -726,6 +726,14 @@ body.compact-mode button:focus,
 body.compact-mode input:focus {
   outline-offset: 2px;
 }
+.Username {
+  text-align: center;
+  text-transform: uppercase;
+}
+.Useremail{
+  text-align: center;
+  text-decoration:underline;
+}
 
 /* Optional: auto-apply compact on very small screens (if desired) */
 /* Uncomment if you want automatic compact on tiny devices */

@@ -19,7 +19,6 @@ export default function Home() {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('');
   const [expenseDate, setExpenseDate] = useState(getCurrentDate());
-  const [expensepayment_type, setExpensePaymentType] = useState('');
   const [overview, setOverview] = useState(null);
   const [token, setToken] = useState('');
   const [chartData, setChartData] = useState([]);
@@ -27,7 +26,7 @@ export default function Home() {
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1", "#d0ed57"];
 
   // ====== Config ======
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
   // ====== Helper: Current Date ======
   function getCurrentDate() {
@@ -68,7 +67,7 @@ export default function Home() {
   // ====== Data Fetching Functions ======
   const getOverview = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/analytics_overview`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/financial_overview`, authHeaders());
       setOverview(res.data);
     } catch (err) {
       console.error('Overview fetch error:', err);
@@ -88,7 +87,7 @@ export default function Home() {
 
   const fetchChart = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/expenses/chart`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/expenses_chart`, authHeaders());
       setChartData(res.data);
     } catch (err) {
       console.error("Chart fetch error:", err);
@@ -97,7 +96,7 @@ export default function Home() {
 
   const fetchGraph = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/expenses/graph`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/graph`, authHeaders());
       setGraphData(res.data ||[]);
     } catch (err) {
       console.error("Graph fetch error:", err);
@@ -136,17 +135,16 @@ export default function Home() {
   };
 
   const handleAddExpense = () => {
-    postWithAuth('/api/expenses', {
+    postWithAuth('/expense', {
       amount: parseFloat(expenseAmount),
       description: expenseDescription,
       category: expenseCategory || undefined,
       date: expenseDate,
-      payment_type: expensepayment_type,
     }, 'Expense added successfully!');
   };
 
   const handleSetIncome = () => {
-    postWithAuth('/api/incomes', {
+    postWithAuth('/income', {
       amount: parseFloat(IncomeAmount),
       source: IncomeSource,
       city: IncomeCity,
@@ -175,9 +173,6 @@ export default function Home() {
             <label>Category:</label>
             <input type="text" placeholder="Category" value={expenseCategory}
               onChange={(e) => setExpenseCategory(e.target.value)} />
-            <label>Payment Type:</label>
-            <input type="text" placeholder="Payment Type" value={expensepayment_type}
-              onChange={(e) => setExpensePaymentType(e.target.value)} />
             <label>Description:</label>
             <input type="text" placeholder="Description" value={expenseDescription}
               onChange={(e) => setExpenseDescription(e.target.value)} />
@@ -224,15 +219,11 @@ export default function Home() {
                   {recentTransactions.slice(0, 5).map(tx => (
                     <li key={tx._id} className={`transaction-item ${tx.type}`}>
                       <table>
+                        
                         <tbody>
-                          <tr className='row-1'>
-                            <td>Date</td>
-                            <td>Category</td>
-                            <td>Amount</td>
-                          </tr>
                           <tr className='row-n'>
-                            <td>{new Date(tx.date).toLocaleDateString()}</td>
-                            <td>{tx.category}</td>
+                            <td>{new Date(tx.date).toLocaleDateString()} |</td>
+                            <td>{tx.category} → </td>
                             <td className={tx.type === 'expense' ? 'negative' : 'positive'}>
                               {tx.type === 'expense' ? '-' : '+'}₹{tx.amount.toFixed(2)}
                             </td>

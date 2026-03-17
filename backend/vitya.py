@@ -186,6 +186,18 @@ def get_profile(current_user):
         "email": current_user.email
     }), 200
 
+@app.route('/api/change-password', methods=['POST'])
+@token_required
+def change_password(current_user):
+    data = request.get_json() or {}
+    if not all(k in data for k in ('old_password', 'new_password')):
+        return jsonify({'error': 'old_password and new_password required'}), 400
+    if not pwd_context.verify(data['old_password'], current_user.password):
+        return jsonify({'error': 'Old password incorrect'}), 401
+    current_user.password = pwd_context.hash(data['new_password'])
+    db.session.commit()
+    return jsonify({'message': 'Password changed successfully'}), 200
+
 
 # -------------------------------
 # INCOME ROUTES
@@ -212,6 +224,63 @@ def set_income(current_user):
     db.session.commit()
     return jsonify({"message": "Income added successfully!"}), 201
 
+@app.route('/api/incomes', methods=['GET'])
+@token_required
+def list_incomes(current_user):
+    # filters: start_date, end_date, page, per_page
+    q = Income.query.filter_by(user_id=current_user.id)
+    start = request.args.get('start_date')
+    end = request.args.get('end_date')
+    if start:
+        try:
+            start_dt = datetime.strptime(start, '%Y-%m-%d')
+            q = q.filter(Income.date >= start_dt)
+        except ValueError:
+            return jsonify({"error": "start_date must be YYYY-MM-DD"}), 400
+    if end:
+        try:
+            end_dt = datetime.strptime(end, '%Y-%m-%d')
+            q = q.filter(Income.date <= end_dt)
+        except ValueError:
+            return jsonify({"error": "end_date must be YYYY-MM-DD"}), 400
+    q = q.order_by(Income.date.desc())
+    page = max(int(request.args.get('page', 1)), 1)
+    per_page = min(int(request.args.get('per_page', 50)), 500)
+    items = q.offset((page - 1) * per_page).limit(per_page).all()
+    result = [{
+        "id": i.id,
+        "amount": i.amount,
+        "source": i.source,
+        "city": i.city,
+        "date": i.date.strftime('%Y-%m-%d')
+    } for i in items]
+    return jsonify({"items": result, "page": page, "per_page": per_page}), 200
+
+@app.route('/api/incomes/<int:income_id>', methods=['PUT', 'DELETE'])
+@token_required
+def modify_income(current_user, income_id):
+    inc = Income.query.filter_by(id=income_id, user_id=current_user.id).first()
+    if not inc:
+        return jsonify({'error': 'Income not found'}), 404
+    if request.method == 'DELETE':
+        db.session.delete(inc)
+        db.session.commit()
+        return jsonify({'message': 'Income deleted'}), 200
+    # PUT update
+    data = request.get_json() or {}
+    if 'amount' in data:
+        inc.amount = float(data['amount'])
+    if 'source' in data:
+        inc.source = data['source']
+    if 'city' in data:
+        inc.city = data['city']
+    if 'date' in data:
+        try:
+            inc.date = datetime.strptime(data['date'], '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
+    db.session.commit()
+    return jsonify({'message': 'Income updated'}), 200
 
 # -------------------------------
 # EXPENSE ROUTES
@@ -238,6 +307,71 @@ def add_expense(current_user):
     db.session.add(exp)
     db.session.commit()
     return jsonify({"message": "Expense added successfully!"}), 201
+
+
+@app.route('/api/expenses', methods=['GET'])
+@token_required
+def list_expenses(current_user):
+    # filters: start_date, end_date, category, page, per_page
+    q = Expense.query.filter_by(user_id=current_user.id)
+    start = request.args.get('start_date')
+    end = request.args.get('end_date')
+    category = request.args.get('category')
+    if start:
+        try:
+            start_dt = datetime.strptime(start, '%Y-%m-%d')
+            q = q.filter(Expense.date >= start_dt)
+        except ValueError:
+            return jsonify({"error": "start_date must be YYYY-MM-DD"}), 400
+    if end:
+        try:
+            end_dt = datetime.strptime(end, '%Y-%m-%d')
+            q = q.filter(Expense.date <= end_dt)
+        except ValueError:
+            return jsonify({"error": "end_date must be YYYY-MM-DD"}), 400
+    if category:
+        q = q.filter(Expense.category == category)
+    q = q.order_by(Expense.date.desc())
+    page = max(int(request.args.get('page', 1)), 1)
+    per_page = min(int(request.args.get('per_page', 50)), 500)
+    items = q.offset((page - 1) * per_page).limit(per_page).all()
+    result = [{
+        "id": e.id,
+        "amount": e.amount,
+        "category": e.category,
+        "description": e.description,
+        "date": e.date.strftime('%Y-%m-%d'),
+        "payment_type": e.payment_type
+    } for e in items]
+    return jsonify({"items": result, "page": page, "per_page": per_page}), 200
+
+@app.route('/api/expenses/<int:expense_id>', methods=['PUT', 'DELETE'])
+@token_required
+def modify_expense(current_user, expense_id):
+    e = Expense.query.filter_by(id=expense_id, user_id=current_user.id).first()
+    if not e:
+        return jsonify({'error': 'Expense not found'}), 404
+    if request.method == 'DELETE':
+        db.session.delete(e)
+        db.session.commit()
+        return jsonify({'message': 'Expense deleted'}), 200
+    # PUT update
+    data = request.get_json() or {}
+    if 'amount' in data:
+        e.amount = float(data['amount'])
+    if 'category' in data:
+        e.category = data['category']
+    if 'description' in data:
+        e.description = data['description']
+    if 'payment_type' in data:
+        e.payment_type = data['payment_type']
+    if 'date' in data:
+        try:
+            e.date = datetime.strptime(data['date'], '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "Incorrect date format. Use YYYY-MM-DD."}), 400
+    db.session.commit()
+    return jsonify({'message': 'Expense updated'}), 200
 
 import io
 import csv

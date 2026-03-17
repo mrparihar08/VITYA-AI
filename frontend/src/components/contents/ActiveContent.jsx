@@ -6,6 +6,7 @@ import AdviceContent from "./AdviceContent";
 import SettingsContent from "./SettingsContent";
 import HelpContent from "./HelpContent";
 import HomeContent from "./HomeContent";
+import AnalyticsContent from "./AI_Analytics";
 
 export default function ActiveContent({ id }) {
   switch (id) {
@@ -15,6 +16,7 @@ export default function ActiveContent({ id }) {
     case "register": return <Register />;
     case "settings": return <SettingsContent />;
     case "advice": return <AdviceContent />;
+    case "analytics": return <AnalyticsContent />;
     case "trendGraphs": return <TrendGraphsContent />;
     case "help": return <HelpContent />;
     default:
