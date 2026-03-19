@@ -5,7 +5,7 @@ from api.models.vitya import Base
 import os
 
 from api.routes import users, income, expense, vitya,ai
-
+from chats import chat
 app = FastAPI()
 
 # Create tables
@@ -40,3 +40,4 @@ app.include_router(income.router)
 app.include_router(expense.router)
 app.include_router(vitya.router)
 app.include_router(ai.router)
+app.include_router(chat.router)

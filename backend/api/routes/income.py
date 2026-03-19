@@ -6,6 +6,7 @@ from api.database import get_db
 from api.models.vitya import Income, User
 from api.schemas.vitya import IncomeCreate
 from api.auth import token_required
+from datetime import datetime
 
 router = APIRouter(prefix="/income", tags=["income"])
 

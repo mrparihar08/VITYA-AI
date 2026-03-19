@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ActiveContent from './contents/ActiveContent';
+import Chatbot from "./contents/chatbot";
 
 export default function Dashboard() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState('home');
   const [title] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
 
   const options = [
     { id: 'home', title: 'Home', desc: 'Main dashboard view' },
@@ -106,6 +108,35 @@ export default function Dashboard() {
             </>
           )}
         </AnimatePresence>
+        {/*chatbot button logo to user tach tham it is open and work */}
+        {/* 💬 CHAT BUTTON */}
+        {/* 💬 CHATBOT UI */}
+<AnimatePresence>
+  {chatOpen && (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 50 }}
+      className="chat-popup"
+    >
+      <div className="chat-header">
+        <span>VITYA.AI</span>
+        <button onClick={() => setChatOpen(false)}>✖</button>
+      </div>
+
+      <div className="chat-body">
+        {/* 👉 Replace with your Chatbot component */}
+        <Chatbot />
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+        <button
+          className="chat-float-btn"
+          onClick={() => setChatOpen(!chatOpen)}
+             >
+  💬
+        </button>
       </div>
     </div>
   );

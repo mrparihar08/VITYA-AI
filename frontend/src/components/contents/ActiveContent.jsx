@@ -7,6 +7,7 @@ import SettingsContent from "./SettingsContent";
 import HelpContent from "./HelpContent";
 import HomeContent from "./HomeContent";
 import AnalyticsContent from "./AI_Analytics";
+import Chatbot from "./chatbot";
 
 export default function ActiveContent({ id }) {
   switch (id) {
@@ -19,6 +20,7 @@ export default function ActiveContent({ id }) {
     case "analytics": return <AnalyticsContent />;
     case "trendGraphs": return <TrendGraphsContent />;
     case "help": return <HelpContent />;
+    case "chatbot": return <Chatbot />;
     default:
       return <div>Select an option to continue.</div>;
   }

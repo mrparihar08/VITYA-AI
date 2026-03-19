@@ -22,3 +22,6 @@ class ExpenseCreate(BaseModel):
     category: str
     description: str
     date: date
+
+class ChatRequest(BaseModel):
+    message: str    
