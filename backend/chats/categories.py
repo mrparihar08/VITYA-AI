@@ -5,7 +5,7 @@ CATEGORY_KEYWORDS = {
         "cafe": 2, "snacks": 1, "pizza": 2, "burger": 2,
         "swiggy": 3, "zomato": 3,
         "khana": 2, "nashta": 2, "chai": 1, "coffee": 1,
-        "meal": 2, "khane": 2, "khaya": 1
+        "meal": 2, "khane": 2, "khaya": 1,"nashta": 1
     },
 
     "Transport": {

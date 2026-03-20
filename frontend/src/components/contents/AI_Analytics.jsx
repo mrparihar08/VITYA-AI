@@ -4,7 +4,6 @@ import axios from "axios";
 export default function AIAnalytics() {
 
   const [token, setToken] = useState("");
-  const [category, setCategory] = useState("");
   const [waste, setWaste] = useState([]);
   const [budget, setBudget] = useState(null);
   const [trend, setTrend] = useState([]);
@@ -12,7 +11,6 @@ export default function AIAnalytics() {
   const API_URL =
     process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
-  // Load token
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setToken(savedToken);
@@ -22,7 +20,8 @@ export default function AIAnalytics() {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  // Waste Analysis
+  // ---------------- API CALLS ---------------- //
+
   const getWasteAnalysis = async () => {
     try {
       const res = await axios.get(
@@ -30,12 +29,11 @@ export default function AIAnalytics() {
         authHeaders()
       );
       setWaste(res.data);
-    } catch (err) {
-      console.log("Waste analysis error");
+    } catch {
+      console.log("Waste error");
     }
   };
 
-  // Budget Plan
   const getBudgetPlan = async () => {
     try {
       const res = await axios.get(
@@ -43,12 +41,11 @@ export default function AIAnalytics() {
         authHeaders()
       );
       setBudget(res.data);
-    } catch (err) {
+    } catch {
       console.log("Budget error");
     }
   };
 
-  // Monthly Trend
   const getMonthlyTrend = async () => {
     try {
       const res = await axios.get(
@@ -56,73 +53,80 @@ export default function AIAnalytics() {
         authHeaders()
       );
       setTrend(res.data);
-    } catch (err) {
+    } catch {
       console.log("Trend error");
     }
   };
 
-  
-
-  // Refresh all data
   const refreshData = () => {
     if (!token) return;
-
     getWasteAnalysis();
     getBudgetPlan();
     getMonthlyTrend();
   };
 
-  // Auto load + refresh every 30 seconds
   useEffect(() => {
-
     refreshData();
 
-    const interval = setInterval(() => {
-      refreshData();
-    }, 30000);
-
+    const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
 
-  }, [token, category]);
+  }, [token]);
+
+  // ---------------- HELPERS ---------------- //
+
+  const formatMonth = (m) => {
+    const d = new Date(m);
+    return d.toLocaleDateString("en-IN", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // ---------------- UI ---------------- //
 
   return (
     <div className="card">
 
       <h1>AI Analytics</h1>
-      {/* Waste Analysis */}
+
+      {/* ---------------- WASTE ---------------- */}
       {waste.length > 0 && (
         <div>
-          <h2>|| Waste Analysis ||</h2>
+          <h2>📊 Waste Analysis</h2>
           {waste.map((item, i) => (
             <div key={i}>
-              {item.category} : ₹{item.total_spent} ({item.status})
+              {item.category} → ₹{item.total_spent} ({item.status})
             </div>
           ))}
         </div>
       )}
 
-      {/* Budget Plan */}
+      {/* ---------------- BUDGET ---------------- */}
       {budget && (
         <div>
-          <h2>|| Budget Plan ||</h2>
-          <p>Total Income: ₹{budget.total_income}</p>
-          <p>Savings: ₹{budget.suggested_savings}</p>
+          <h2>💰 Budget Plan</h2>
+
+          <p>Total Income: ₹{budget.summary.total_income}</p>
+          <p>Savings: ₹{budget.summary.suggested_savings}</p>
+          <p>Usable: ₹{budget.summary.usable_funds}</p>
 
           {budget.budget_plan.map((b, i) => (
             <div key={i}>
-              {b.category} → Suggested Budget ₹{b.suggested_budget}
+              {b.category} → ₹{b.suggested_budget} ({b.status})
             </div>
           ))}
         </div>
       )}
 
-      {/* Monthly Trend */}
+      {/* ---------------- TREND ---------------- */}
       {trend.length > 0 && (
         <div>
-          <h2>|| Monthly Trend ||</h2>
+          <h2>📈 Monthly Trend</h2>
+
           {trend.map((t, i) => (
             <div key={i}>
-              {t.month} : ₹{t.total_expense}
+              {formatMonth(t.month)} → ₹{t.amount}
             </div>
           ))}
         </div>
