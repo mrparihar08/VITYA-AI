@@ -356,7 +356,7 @@ const styles = {
   },
   mic: {
     padding: 10,
-    background: "#00c853",
+    background: "#17333a",
     color: "#fff",
     border: "none",
   },
