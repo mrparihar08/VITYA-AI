@@ -26,7 +26,7 @@ export default function Home() {
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1", "#d0ed57"];
 
   // ====== Config ======
-  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
   // ====== Helper: Current Date ======
   function getCurrentDate() {

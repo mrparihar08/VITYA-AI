@@ -13,7 +13,7 @@ import {
 
 // ✅ stable constant (no warning)
 const API_URL =
-  process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+  process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
 export default function TrendGraphs() {
   const [token, setToken] = useState("");

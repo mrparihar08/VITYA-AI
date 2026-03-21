@@ -100,7 +100,7 @@ const Chatbot = () => {
   // ---------------- CSV DOWNLOAD ---------------- //
   const handleDownloadCSV = async (url, filename = "data.csv") => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000${url}`, {
+    const res = await fetch(`https://vitya-ai-qlbn.onrender.com${url}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -138,7 +138,7 @@ const sendMessage = async (voiceText = null) => {
   setLoading(true);
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/chat/", {
+    const res = await fetch("https://vitya-ai-qlbn.onrender.com/chat/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

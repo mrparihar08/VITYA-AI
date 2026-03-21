@@ -9,7 +9,7 @@ export default function AIAnalytics() {
   const [trend, setTrend] = useState([]);
 
   const API_URL =
-    process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+    process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
