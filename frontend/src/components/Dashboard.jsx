@@ -120,8 +120,13 @@ export default function Dashboard() {
       className="chat-popup"
     >
       <div className="chat-header">
-        <span>VITYA.AI</span>
-        <button onClick={() => setChatOpen(false)}>✖</button>
+        <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
+                <div className="logo-circle">V</div>
+                <div className="logo-text">
+                   <h2>VITYA.AI</h2>
+                   <p>Expense Analysis</p>
+                </div>
+                </div> 
       </div>
 
       <div className="chat-body">
@@ -135,7 +140,7 @@ export default function Dashboard() {
           className="chat-float-btn"
           onClick={() => setChatOpen(!chatOpen)}
              >
-  💬
+              v
         </button>
       </div>
     </div>

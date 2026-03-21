@@ -40,25 +40,27 @@ def get_profile(current_user: User = Depends(token_required)):
 # -------------------------------
 # CSV EXPORT
 # -------------------------------
-@router.get("/csv")
-def download_expenses_csv(current_user: User = Depends(token_required)):
+from fastapi.responses import Response
 
+@router.get("/csv")
+def download_expenses_csv(
+    current_user: User = Depends(token_required)
+):
     output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow(
-        ["ID", "Amount", "Category", "Description", "Date"]
-    )
+    writer.writerow(["ID", "Amount", "Category", "Description", "Date"])
 
     for e in current_user.expenses:
         writer.writerow([
             e.id,
             float(e.amount),
             e.category,
-            e.description,
-            e.date.strftime("%Y-%m-%d"),
-            
+            e.description or "",
+            e.date.strftime("%Y-%m-%d") if e.date else ""
         ])
+
+    output.seek(0)
 
     return Response(
         content=output.getvalue(),

@@ -1,4 +1,7 @@
+from os import link
 import re
+from fastapi.responses import StreamingResponse
+from requests import request
 from sqlalchemy import func
 from datetime import datetime
 
@@ -7,7 +10,7 @@ from api.routes.ai import budget_plan,monthly_trend
 from api.routes.vitya import (
     get_expense_graph,
     get_expense_income_trend,
-    get_expenses_chart
+    get_expenses_chart, 
 )
 
 from chats.categories import CATEGORY_KEYWORDS
@@ -73,7 +76,7 @@ def extract_chart_data(msg):
 
 # ---------------- CHART DETECTOR ---------------- #
 def detect_chart_type(msg, data):
-    msg = msg.lower()
+    msg = request.msg.lower()
 
     # explicit user choice
     if "pie" in msg:
@@ -258,7 +261,8 @@ Savings: {data['summary']['suggested_savings']}
             "type": "text",
             "content": response
         }
-   
+    
+        
     if "report" in msg:
         return {"type": "text",
                 "content": "Report feature is coming soon!"}

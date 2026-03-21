@@ -19,7 +19,6 @@ const Chatbot = () => {
   const token = localStorage.getItem("token");
   const bottomRef = useRef(null);
 
-  // 🔥 SAFE REFS
   const recognitionRef = useRef(null);
   const isSpeakingRef = useRef(false);
 
@@ -42,7 +41,7 @@ const Chatbot = () => {
   const speak = (text) => {
     if (!text || isSpeakingRef.current) return;
 
-    speechSynthesis.cancel(); // 🔥 stop previous speech
+    speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
@@ -51,7 +50,6 @@ const Chatbot = () => {
 
     utterance.onend = () => {
       isSpeakingRef.current = false;
-      startListening(); // 🔥 resume listening
     };
 
     speechSynthesis.speak(utterance);
@@ -66,11 +64,16 @@ const Chatbot = () => {
     const recognition = recognitionRef.current;
 
     if (!recognition) {
-      alert("Voice not supported in this browser");
+      alert("Voice not supported");
       return;
     }
 
-    // 🔥 prevent loop
+    if (listening) {
+      recognition.stop();
+      setListening(false);
+      return;
+    }
+
     if (isSpeakingRef.current) return;
 
     setListening(true);
@@ -82,68 +85,124 @@ const Chatbot = () => {
     }
 
     recognition.onresult = (event) => {
+      if (!event.results || !event.results[0]) return;
+
       const speechText = preprocessVoice(event.results[0][0].transcript);
 
       setListening(false);
-      sendMessage(speechText); // 🔥 auto send
+      sendMessage(speechText);
     };
 
-    recognition.onerror = () => {
-      setListening(false);
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
   };
 
+  // ---------------- CSV DOWNLOAD ---------------- //
+  const handleDownloadCSV = async (url, filename = "data.csv") => {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${url}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Download failed");
+
+    const blob = await res.blob();
+
+    const fileUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = fileUrl;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+
+    a.remove();
+    window.URL.revokeObjectURL(fileUrl);
+
+  } catch (err) {
+    console.error("CSV error:", err);
+  }
+};
   // ---------------- SEND MESSAGE ---------------- //
-  const sendMessage = async (voiceText = null) => {
-    const messageToSend = voiceText || input;
+const sendMessage = async (voiceText = null) => {
+  const messageToSend = voiceText || input;
 
-    if (!messageToSend.trim()) return;
+  if (!messageToSend.trim()) return;
 
-    const userMessage = { sender: "user", text: messageToSend };
-    setMessages((prev) => [...prev, userMessage]);
+  const userMessage = { sender: "user", text: messageToSend };
+  setMessages((prev) => [...prev, userMessage]);
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const res = await fetch("http://127.0.0.1:8000/chat/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message: messageToSend }),
-      });
+  try {
+    const res = await fetch("http://127.0.0.1:8000/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message: messageToSend }),
+    });
 
-      const data = await res.json();
+    const contentType = res.headers.get("content-type");
 
-      const botMessage = {
-        sender: "bot",
-        type: data.type || "text",
-        text: data.content,
-      };
+    // ✅ 🔥 CSV RESPONSE HANDLE
+    if (contentType && contentType.includes("text/csv")) {
 
-      setMessages((prev) => [...prev, botMessage]);
+      const blob = await res.blob();
 
-      // 🔊 SPEAK
-      if (typeof data.content === "string") {
-        speak(data.content);
-      }
+      const fileUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
 
-    } catch {
-      setMessages((prev) => [
+      a.href = fileUrl;
+      a.download = "chat_data.csv";
+
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(fileUrl);
+
+      setMessages(prev => [
         ...prev,
-        { sender: "bot", text: "Server error ❌" },
+        { sender: "bot", text: "CSV downloaded ✅" }
       ]);
+
+      return;
     }
 
-    setLoading(false);
-    setInput("");
-  };
+    // ✅ NORMAL JSON RESPONSE
+    const data = await res.json();
 
+    const botText = data.reply || data.content || "No response";
+
+    const botMessage = {
+      sender: "bot",
+      type: data.type || "text",
+      text: botText,
+    };
+
+    setMessages(prev => [...prev, botMessage]);
+
+    if (typeof botText === "string") {
+      speak(botText);
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    setMessages((prev) => [
+      ...prev,
+      { sender: "bot", text: "Server error ❌" },
+    ]);
+  }
+
+  setLoading(false);
+  setInput("");
+};
   // ---------------- FORMAT MONTH ---------------- //
   const formatMonth = (dateStr) => {
     const d = new Date(dateStr);
@@ -155,7 +214,7 @@ const Chatbot = () => {
 
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"];
 
-  // ---------------- CHART RENDER ---------------- //
+  // ---------------- CHART ---------------- //
   const renderChart = (msg) => {
     let data = msg.text;
 
@@ -303,14 +362,17 @@ const Chatbot = () => {
           placeholder="Type or speak..."
           style={styles.input}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          
         />
 
         <button onClick={() => sendMessage()} style={styles.button}>
-          Send
+          <img src="/send.png" alt="Send" style={{width:"20px",height:"20px"}}/>
         </button>
 
         <button onClick={startListening} style={styles.mic}>
-          {listening ? "🎤 Listening..." : "🎤"}
+          <img src={listening ? "/mic.png" : "/mic.png"} 
+          alt = "Mic"
+          style={{width:"24px",height:"24px"}}/>
         </button>
       </div>
 
@@ -349,15 +411,18 @@ const styles = {
     padding: 10,
   },
   button: {
-    padding: 10,
+    padding: 12,
     background: "#9d77ff",
     color: "#fff",
     border: "none",
+    borderRadius: "55px",
+    
   },
   mic: {
     padding: 10,
     background: "#17333a",
     color: "#fff",
     border: "none",
+    borderRadius: "50px",
   },
 };

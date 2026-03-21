@@ -744,7 +744,7 @@ body.compact-mode input:focus {
   border-radius: 50%;
   width: 60px;
   height: 60px;
-  font-size: 24px;
+  font-size: 30px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
