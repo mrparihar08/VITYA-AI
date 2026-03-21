@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 import io
 import csv
 
-from api.database import get_db
-from api.models.vitya import User
-from api.auth import token_required
-from chats.rules import get_reply
-from chats.chatbot import chatbot_reply
-from api.routes.vitya import download_expenses_csv
+from backend.api.database import get_db
+from backend.api.models.vitya import User
+from backend.api.auth import token_required
+from backend.chats.rules import get_reply
+from backend.chats.chatbot import chatbot_reply
+from backend.api.routes.vitya import download_expenses_csv
 class ChatRequest(BaseModel):
     message: str
 

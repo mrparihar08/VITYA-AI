@@ -4,8 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from api.database import get_db
-from api.models.vitya import User
+from backend.api.database import get_db
+from backend.api.models.vitya import User
 
 SECRET_KEY = "supersecret"
 ALGORITHM = "HS256"

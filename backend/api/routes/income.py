@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from api.database import get_db
-from api.models.vitya import Income, User
-from api.schemas.vitya import IncomeCreate
-from api.auth import token_required
+from backend.api.database import get_db
+from backend.api.models.vitya import Income, User
+from backend.api.schemas.vitya import IncomeCreate
+from backend.api.auth import token_required
 from datetime import datetime
 
 router = APIRouter(prefix="/income", tags=["income"])

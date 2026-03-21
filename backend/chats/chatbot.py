@@ -5,9 +5,9 @@ from requests import request
 from sqlalchemy import func
 from datetime import datetime
 
-from api.models.vitya import Expense, Income
-from api.routes.ai import budget_plan,monthly_trend
-from api.routes.vitya import (
+from backend.api.models.vitya import Expense, Income
+from backend.api.routes.ai import budget_plan,monthly_trend
+from backend.api.routes.vitya import (
     get_expense_graph,
     get_expense_income_trend,
     get_expenses_chart, 

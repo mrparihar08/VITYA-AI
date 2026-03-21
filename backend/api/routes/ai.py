@@ -5,9 +5,9 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
 
-from api.database import get_db
-from api.models.vitya import Expense, Income
-from api.auth import token_required
+from backend.api.database import get_db
+from backend.api.models.vitya import Expense, Income
+from backend.api.auth import token_required
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 

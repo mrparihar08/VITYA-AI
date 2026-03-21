@@ -5,10 +5,10 @@ from sqlalchemy.exc import IntegrityError
 from jose import jwt
 from passlib.context import CryptContext
 
-from api.database import get_db
-from api.models.vitya import User
-from api.schemas.vitya import Register, Login
-from api.auth import SECRET_KEY, ALGORITHM
+from backend.api.database import get_db
+from backend.api.models.vitya import User
+from backend.api.schemas.vitya import Register, Login
+from backend.api.auth import SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/users", tags=["users"])
 

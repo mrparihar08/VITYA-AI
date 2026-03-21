@@ -4,11 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
 
-from api.database import engine
-from api.models.vitya import Base
+from backend.api.database import engine
+from backend.api.models.vitya import Base
 
-from api.routes import users, income, expense, vitya, ai
-from chats import chat
+from backend.api.routes import users, income, expense, vitya, ai
+from backend.chats import chat
 
 # ---------------------------
 # LOGGING

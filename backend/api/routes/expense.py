@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from api.database import get_db
-from api.models.vitya import Expense, User
-from api.schemas.vitya import ExpenseCreate
-from api.auth import token_required
+from backend.api.database import get_db
+from backend.api.models.vitya import Expense, User
+from backend.api.schemas.vitya import ExpenseCreate
+from backend.api.auth import token_required
 
 
 router = APIRouter(prefix="/expense", tags=["expense"])

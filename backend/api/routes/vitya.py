@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Response, Depends,HTTPException
 from sqlalchemy.orm import Session
-from api.database import get_db
-from api.models.vitya import Expense, Income, User
+from backend.api.database import get_db
+from backend.api.models.vitya import Expense, Income, User
 from sqlalchemy import desc, func
 
-from api.auth import token_required
+from backend.api.auth import token_required
 import io
 import base64
 import csv
