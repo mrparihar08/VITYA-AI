@@ -13,7 +13,7 @@ from backend.api.routes.vitya import (
     get_expenses_chart, 
 )
 
-from chats.categories import CATEGORY_KEYWORDS
+from backend.chats.categories import CATEGORY_KEYWORDS
 
 
 # ---------------- NORMALIZATION ---------------- #
