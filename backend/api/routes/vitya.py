@@ -23,20 +23,6 @@ router = APIRouter()
 ML_API_BASE = os.environ.get("ML_API_BASE")
 ML_REQUEST_TIMEOUT = int(os.environ.get("ML_REQUEST_TIMEOUT", "15"))
 
-
-# -------------------------------
-# PROFILE
-# -------------------------------
-@router.get("/profile")
-def get_profile(current_user: User = Depends(token_required)):
-
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email
-    }
-
-
 # -------------------------------
 # CSV EXPORT
 # -------------------------------

@@ -8,13 +8,23 @@ from passlib.context import CryptContext
 from backend.api.database import get_db
 from backend.api.models.vitya import User
 from backend.api.schemas.vitya import Register, Login
-from backend.api.auth import SECRET_KEY, ALGORITHM
+from backend.api.auth import SECRET_KEY, ALGORITHM, token_required
 
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# -------------------------------
+# PROFILE
+# -------------------------------
+@router.get("/profile")
+def get_profile(current_user: User = Depends(token_required)):
 
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }
 # -------------------------
 # REGISTER
 # -------------------------
