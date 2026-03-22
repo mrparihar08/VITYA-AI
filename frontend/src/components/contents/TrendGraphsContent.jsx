@@ -33,7 +33,7 @@ export default function TrendGraphs() {
     const fetchTrend = async () => {
       try {
         const res = await axios.get(
-          `${API_URL}/api/expense_income_trend`,
+          `${API_URL}/api/vitya/expense_income_trend`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

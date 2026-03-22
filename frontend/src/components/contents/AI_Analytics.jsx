@@ -25,7 +25,7 @@ export default function AIAnalytics() {
   const getWasteAnalysis = async () => {
     try {
       const res = await axios.get(
-        `${API_URL}/ai/waste-analysis`,
+        `${API_URL}/api/ai/waste-analysis`,
         authHeaders()
       );
       setWaste(res.data);
@@ -37,7 +37,7 @@ export default function AIAnalytics() {
   const getBudgetPlan = async () => {
     try {
       const res = await axios.get(
-        `${API_URL}/ai/budget-plan`,
+        `${API_URL}/api/ai/budget-plan`,
         authHeaders()
       );
       setBudget(res.data);
@@ -49,7 +49,7 @@ export default function AIAnalytics() {
   const getMonthlyTrend = async () => {
     try {
       const res = await axios.get(
-        `${API_URL}/ai/monthly-trend`,
+        `${API_URL}/api/ai/monthly-trend`,
         authHeaders()
       );
       setTrend(res.data);

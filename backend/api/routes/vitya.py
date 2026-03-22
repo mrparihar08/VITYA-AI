@@ -18,7 +18,7 @@ load_dotenv()
 
 matplotlib.use("Agg")
 
-router = APIRouter(prefix="/api", tags=["vitya"])
+router = APIRouter(prefix="/vitya", tags=["vitya"])
 
 ML_API_BASE = os.environ.get("ML_API_BASE")
 ML_REQUEST_TIMEOUT = int(os.environ.get("ML_REQUEST_TIMEOUT", "15"))

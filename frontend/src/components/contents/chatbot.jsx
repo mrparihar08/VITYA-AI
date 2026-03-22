@@ -138,7 +138,7 @@ const sendMessage = async (voiceText = null) => {
   setLoading(true);
 
   try {
-    const res = await fetch("https://vitya-ai-qlbn.onrender.com/chat/", {
+    const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

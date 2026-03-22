@@ -15,7 +15,7 @@ export function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/users/register`, {
+      const res = await axios.post(`${API_URL}/api/users/register`, {
         username,
         email,
         password,
@@ -40,6 +40,14 @@ export function Register() {
   };
   return (
           <div className="card form-card">
+             <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+              </button>
           <h1 className="h1-title">Register</h1>
             <form onSubmit={handleRegister}>
               <input type="text" placeholder="Username" value={username}
@@ -70,7 +78,7 @@ export function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/users/login`, {
+      const res = await axios.post(`${API_URL}/api/users/login`, {
         username,
         password,
       });
@@ -90,6 +98,14 @@ export function Login() {
   };
   return (
           <div className="card form-card">
+             <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+              </button>            
           <h1 className="h1-title">Login</h1>
             
             <form onSubmit={handleLogin}>
@@ -130,7 +146,7 @@ export function Profile() {
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/profile`, {
+        const res = await axios.get(`${API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile({
@@ -155,7 +171,7 @@ export function Profile() {
 
     const fetchOverview = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/financial_overview`, {
+        const res = await axios.get(`${API_URL}/api/vitya/financial_overview`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOverview(res.data);
@@ -173,7 +189,7 @@ export function Profile() {
 
   const handleDownloadCSV = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/csv`, {
+      const res = await fetch(`${API_URL}/api/vitya/csv`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -202,6 +218,14 @@ export function Profile() {
 
   return (
     <div className="card profile-card">
+        <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+        </button>  
     <div className="logo-circle profile">V</div>
     <h2 className="h1-title Username">{profile.username}</h2>
       <p className="Useremail">{profile.email}</p>

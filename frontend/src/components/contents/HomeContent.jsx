@@ -67,7 +67,7 @@ export default function Home() {
   // ====== Data Fetching Functions ======
   const getOverview = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/financial_overview`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/vitya/financial_overview`, authHeaders());
       setOverview(res.data);
     } catch (err) {
       console.error('Overview fetch error:', err);
@@ -77,7 +77,7 @@ export default function Home() {
   const fetchDashboardData = async () => {
     try {
       setError('');
-      const res = await axiosAuth.get('/api/transactions/recent');
+      const res = await axiosAuth.get('/api/vitya/transactions/recent');
       setRecentTransactions(res.data || []);
     } catch (err) {
       console.error(err);
@@ -87,7 +87,7 @@ export default function Home() {
 
   const fetchChart = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/expenses_chart`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/vitya/expenses_chart`, authHeaders());
       setChartData(res.data);
     } catch (err) {
       console.error("Chart fetch error:", err);
@@ -96,7 +96,7 @@ export default function Home() {
 
   const fetchGraph = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/graph`, authHeaders());
+      const res = await axios.get(`${API_URL}/api/vitya/graph`, authHeaders());
       setGraphData(res.data ||[]);
     } catch (err) {
       console.error("Graph fetch error:", err);
@@ -115,7 +115,7 @@ export default function Home() {
   useEffect(() => {
     if (token) {
       refreshAllData();
-      axiosAuth.get('/api/profile').catch(err => console.error(err));
+      axiosAuth.get('/api/user/profile').catch(err => console.error(err));
     }
   }, [token, axiosAuth]);
 
@@ -135,7 +135,7 @@ export default function Home() {
   };
 
   const handleAddExpense = () => {
-    postWithAuth('/expense', {
+    postWithAuth('/api/expense', {
       amount: parseFloat(expenseAmount),
       description: expenseDescription,
       category: expenseCategory || undefined,
@@ -144,7 +144,7 @@ export default function Home() {
   };
 
   const handleSetIncome = () => {
-    postWithAuth('/income', {
+    postWithAuth('/api/income', {
       amount: parseFloat(IncomeAmount),
       source: IncomeSource,
       city: IncomeCity,

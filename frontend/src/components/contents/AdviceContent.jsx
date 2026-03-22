@@ -29,22 +29,22 @@ export default function AdviceContent() {
     try {
 
       const predict = await axios.get(
-        `${API_URL}/ai/predict/${category}`,
+        `${API_URL}/api/ai/predict/${category}`,
         authHeaders()
       );
 
       const advisorRes = await axios.get(
-        `${API_URL}/ai/advisor/${category}`,
+        `${API_URL}/api/ai/advisor/${category}`,
         authHeaders()
       );
 
       const over = await axios.get(
-        `${API_URL}/ai/overspending/${category}`,
+        `${API_URL}/api/ai/overspending/${category}`,
         authHeaders()
       );
 
       const anomaly = await axios.get(
-        `${API_URL}/ai/anomaly/${category}`,
+        `${API_URL}/api/ai/anomaly/${category}`,
         authHeaders()
       );
 
