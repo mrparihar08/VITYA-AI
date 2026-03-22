@@ -8,7 +8,7 @@ from backend.api.schemas.vitya import ExpenseCreate
 from backend.api.auth import token_required
 
 
-router = APIRouter(prefix="/api/expense", tags=["expense"])
+router = APIRouter()
 
 
 @router.post("/")

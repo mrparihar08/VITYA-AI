@@ -9,7 +9,7 @@ from backend.api.database import get_db
 from backend.api.models.vitya import Expense, Income
 from backend.api.auth import token_required
 
-router = APIRouter(prefix="/api/ai", tags=["AI"])
+router = APIRouter()
 
 
 # ================= PREDICTION ================= #

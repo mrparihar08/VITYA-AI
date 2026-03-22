@@ -14,7 +14,7 @@ from backend.api.routes.vitya import download_expenses_csv
 class ChatRequest(BaseModel):
     message: str
 
-router = APIRouter(prefix="/api/chat", tags=["chat"])
+router = APIRouter()
 
 
 # ✅ CSV Generator

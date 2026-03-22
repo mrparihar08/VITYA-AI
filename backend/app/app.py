@@ -62,6 +62,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # safer than "*"
     allow_headers=["*"],
 )
+@app.get("/")
+def root():
+    return {"message": "API is running"}
 
 # ---------------------------
 # HEALTH CHECK (IMPORTANT)
@@ -73,9 +76,9 @@ def health_check():
 # ---------------------------
 # ROUTERS
 # ---------------------------
-app.include_router(users.router)
-app.include_router(income.router)
-app.include_router(expense.router)
-app.include_router(vitya.router)
-app.include_router(ai.router)
-app.include_router(chat.router)
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(income.router, prefix="/api/income", tags=["Income"])
+app.include_router(expense.router, prefix="/api/expense", tags=["Expense"])
+app.include_router(vitya.router, prefix="/api/vitya", tags=["Vitya"])
+app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
+app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
