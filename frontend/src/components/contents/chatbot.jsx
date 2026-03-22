@@ -7,6 +7,9 @@ import {
   CartesianGrid,
   ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
+  ,ScatterChart, Scatter,
+  RadarChart, Radar,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 
 const Chatbot = () => {
@@ -21,7 +24,11 @@ const Chatbot = () => {
 
   const recognitionRef = useRef(null);
   const isSpeakingRef = useRef(false);
-
+  const CHART_TYPES = [
+  "bar","chart","line","line_chart","pie","area",
+  "composed","multi_line","donut","stacked",
+  "scatter","radar","heatmap","waterfall"
+];
   // ---------------- INIT SPEECH ---------------- //
   useEffect(() => {
     if ("webkitSpeechRecognition" in window) {
@@ -216,9 +223,9 @@ const sendMessage = async (voiceText = null) => {
 
   // ---------------- CHART ---------------- //
   const renderChart = (msg) => {
-    let data = msg.text;
+    let data = msg.text || msg.content || [];
 
-    if (msg.type === "multi_line") {
+    if (msg.type === "multi_line" && data?.income && data?.expense) {
       const incomeData = data?.income || [];
       const expenseData = data?.expense || [];
 
@@ -251,82 +258,192 @@ const sendMessage = async (voiceText = null) => {
 
     const xKey = data[0]?.category ? "category" : "month";
 
-    switch (msg.type) {
+switch (msg.type) {
 
-      case "bar":
-      case "chart":
-        return (
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xKey} />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="amount" fill="#8884d8" />
-          </BarChart>
-        );
+  // ================= BAR =================
+  case "bar":
+  case "chart":
+    return (
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="amount" fill="#8884d8" />
+      </BarChart>
+    );
 
-      case "line":
-      case "line_chart":
-        return (
-          <LineChart data={data}>
-            <XAxis dataKey={xKey} />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line dataKey="amount" stroke="#8884d8" />
-          </LineChart>
-        );
+  // ================= LINE =================
+  case "line":
+  case "line_chart":
+    return (
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="amount" stroke="#8884d8" />
+      </LineChart>
+    );
 
-      case "multi_line":
-        return (
-          <LineChart data={data}>
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line dataKey="income" stroke="#00c853" />
-            <Line dataKey="expense" stroke="#ff1744" />
-          </LineChart>
-        );
+  // ================= MULTI LINE =================
+  case "multi_line":
+    return (
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="income" stroke="#00c853" />
+        <Line type="monotone" dataKey="expense" stroke="#ff1744" />
+      </LineChart>
+    );
 
-      case "pie":
-        return (
-          <PieChart>
-            <Pie data={data} dataKey="amount" nameKey={xKey}>
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        );
+  // ================= PIE =================
+  case "pie":
+    return (
+      <PieChart>
+        <Pie data={data} dataKey="amount" nameKey={xKey}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    );
 
-      case "area":
-        return (
-          <AreaChart data={data}>
-            <XAxis dataKey={xKey} />
-            <YAxis />
-            <Tooltip />
-            <Area dataKey="amount" fill="#8884d8" />
-          </AreaChart>
-        );
+  // ================= DONUT =================
+  case "donut":
+    return (
+      <PieChart>
+        <Pie
+          data={data}
+          dataKey="amount"
+          nameKey={xKey}
+          innerRadius={50}
+          outerRadius={80}
+        >
+          {data.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    );
 
-      case "composed":
-        return (
-          <ComposedChart data={data}>
-            <XAxis dataKey={xKey} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="amount" />
-            <Line dataKey="amount" />
-          </ComposedChart>
-        );
+  // ================= AREA =================
+  case "area":
+    return (
+      <AreaChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip />
+        <Area type="monotone" dataKey="amount" fill="#8884d8" />
+      </AreaChart>
+    );
 
-      default:
-        return null;
-    }
-  };
+  // ================= STACKED =================
+  case "stacked":
+    return (
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="income" stackId="a" fill="#00c853" />
+        <Bar dataKey="expense" stackId="a" fill="#ff1744" />
+      </BarChart>
+    );
+
+  // ================= COMPOSED =================
+  case "composed":
+    return (
+      <ComposedChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="amount" fill="#8884d8" />
+        <Line type="monotone" dataKey="amount" stroke="#ff7300" />
+      </ComposedChart>
+    );
+
+  // ================= SCATTER =================
+  case "scatter":
+    return (
+      <ScatterChart>
+        <CartesianGrid />
+        <XAxis dataKey="x" name="Income" />
+        <YAxis dataKey="y" name="Expense" />
+        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+        <Scatter data={data} fill="#8884d8" />
+      </ScatterChart>
+    );
+
+  // ================= RADAR =================
+  case "radar":
+    return (
+      <RadarChart outerRadius={80} data={data}>
+        <PolarGrid />
+        <PolarAngleAxis dataKey="category" />
+        <PolarRadiusAxis />
+        <Radar
+          dataKey="amount"
+          stroke="#8884d8"
+          fill="#8884d8"
+          fillOpacity={0.6}
+        />
+      </RadarChart>
+    );
+
+  // ================= HEATMAP (custom UI) =================
+  case "heatmap":
+    return (
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: 4
+      }}>
+        {data.map((item, i) => (
+          <div
+            key={i}
+            title={item.amount}
+            style={{
+              height: 30,
+              background: `rgba(0,128,0, ${Math.min(item.amount / 1000, 1)})`,
+              borderRadius: 4
+            }}
+          />
+        ))}
+      </div>
+    );
+
+  // ================= WATERFALL =================
+  case "waterfall":
+    return (
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="amount" fill="#8884d8" />
+      </BarChart>
+    );
+
+  // ================= DEFAULT =================
+  default:
+    return <div>No chart available</div>;
+} 
+};
 
   return (
     <div style={styles.container}>
@@ -339,8 +456,8 @@ const sendMessage = async (voiceText = null) => {
             background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
             color: msg.sender === "user" ? "white" : "black",
           }}>
-            {["bar","chart","line","line_chart","pie","area","composed","multi_line"].includes(msg.type) ? (
-              <div style={{ width: 300, height: 200 }}>
+            {CHART_TYPES.includes(msg.type) ? (
+              <div style={{ width: "100%", height: 250 }}>
                 <ResponsiveContainer>
                   {renderChart(msg)}
                 </ResponsiveContainer>

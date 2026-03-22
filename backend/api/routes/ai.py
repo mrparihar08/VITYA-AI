@@ -207,18 +207,25 @@ def financial_advisor(category: str, current_user=Depends(token_required), db: S
 @router.get("/monthly-trend")
 def monthly_trend(current_user=Depends(token_required), db: Session = Depends(get_db)):
 
-    data = db.query(
-        func.strftime("%Y-%m", Expense.date).label("month"),
-        func.sum(Expense.amount).label("amount")
-    ).filter(
-        Expense.user_id == current_user.id
-    ).group_by("month").all()
+    try:
+        data = db.query(
+            func.strftime("%Y-%m", Expense.date).label("month"),
+            func.sum(Expense.amount).label("amount")
+        ).filter(
+            Expense.user_id == current_user.id
+        ).group_by("month").all()
 
-    return [
-        {"month": m, "amount": float(a)}
-        for m, a in data
-    ]
+        if not data:
+            return []
 
+        return [
+            {"month": m, "amount": float(a or 0)}
+            for m, a in data
+        ]
+
+    except Exception as e:
+        print("MONTHLY TREND ERROR:", e)
+        return []
 
 # ================= ANOMALY ================= #
 @router.get("/anomaly/{category}")

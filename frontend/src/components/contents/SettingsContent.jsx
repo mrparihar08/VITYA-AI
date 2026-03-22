@@ -14,6 +14,7 @@ export default function SettingsContent() {
     localStorage.getItem("primaryColor") || "#6b46ff"
   );
 
+
   // =======================
   // EFFECTS
   // =======================
@@ -31,6 +32,7 @@ export default function SettingsContent() {
     document.documentElement.style.setProperty("--primary", primaryColor);
     localStorage.setItem("primaryColor", primaryColor);
   }, [primaryColor]);
+  
 
   // =======================
   // RENDER

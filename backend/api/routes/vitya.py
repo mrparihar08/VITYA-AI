@@ -55,6 +55,32 @@ def download_expenses_csv(
             "Content-Disposition": "attachment; filename=expenses.csv"
         }
     )
+@router.get("/csv")
+def download_incomes_csv(
+    current_user: User = Depends(token_required)
+):
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["ID", "Amount", "Source", "Date"])
+
+    for i in current_user.incomes:
+        writer.writerow([
+            i.id,
+            float(i.amount),
+            i.source,
+            i.date.strftime("%Y-%m-%d") if i.date else ""
+        ])
+
+    output.seek(0)
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=incomes.csv"
+        }
+    )
 
 
 # -------------------------------

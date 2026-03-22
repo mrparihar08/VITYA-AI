@@ -105,7 +105,9 @@ export function Login() {
                  style={{ marginTop: "10px" }}
                           >
                    ← Go to Home
-              </button>            
+              </button>  
+              <hr />
+              <br />          
           <h1 className="h1-title">Login</h1>
             
             <form onSubmit={handleLogin}>
@@ -240,7 +242,7 @@ export function Profile() {
         <strong>Download CSV:</strong>
         <button type="button"className="button-8b" onClick={handleDownloadCSV}style={{ marginLeft: "10px" }}> 
           Download</button>
-          </div>
+      </div>
       <button type="button" className="button-8b" onClick={handleLogout} style={{ marginLeft: "10px" }}>
         Logout
       </button>

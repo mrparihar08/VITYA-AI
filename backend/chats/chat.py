@@ -10,7 +10,7 @@ from backend.api.models.vitya import User
 from backend.api.auth import token_required
 from backend.chats.rules import get_reply
 from backend.chats.chatbot import chatbot_reply
-from backend.api.routes.vitya import download_expenses_csv
+from backend.api.routes.vitya import download_expenses_csv, download_incomes_csv
 class ChatRequest(BaseModel):
     message: str
 
@@ -61,9 +61,11 @@ def chat(
     msg = user_message.lower()
 
     # ✅ CSV trigger
-    if "create csv file of" in msg or "generate csv of" in msg or "export csv of" in msg or "download csv of" in msg or "give me csv of" in msg:
-        if "my expense csv" in msg or "my expenses download" in msg or "my expenses" in msg:
-            return download_expenses_csv(current_user)
+    if any(word in msg for word in ["csv", "excel", "file"]):
+        if any(word in msg for word in ["expense", "expenses","cost"]):
+               return download_expenses_csv(current_user)
+        elif any(word in msg for word in ["income", "revenue","incomes"]):
+               return download_incomes_csv(current_user)
 
         csv_file = generate_csv_from_text(user_message)
 
