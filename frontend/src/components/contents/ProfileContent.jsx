@@ -2,12 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-// ✅ Common API URL
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://vitya-ai-qlbn.onrender.com";
-
-// ================= REGISTER =================
 export function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -15,45 +9,28 @@ export function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    if (!username.trim() || !email.trim() || !password.trim()) {
-      alert("All fields are required");
-      return;
-    }
-
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters");
-      return;
-    }
-
     setLoading(true);
-
     try {
       const res = await axios.post(`${API_URL}/api/users/register`, {
-        username: username.trim(),
-        email: email.trim(),
+        username,
+        email,
         password,
       });
 
-      if (res.status === 200 || res.status === 201) {
-        alert(res.data.message || "Registration successful!");
-
-        if (res.data.token) {
-          localStorage.setItem("token", res.data.token);
-          navigate("/profile");
-        } else {
-          navigate("/login");
-        }
+      alert(res.data.message || "Registration successful!");
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        navigate("/profile"); // redirect after signup
       } else {
-        alert("Registration failed");
+        navigate("/login"); // fallback → go login page
       }
     } catch (err) {
-      console.error(err);
       alert(
-        err.response?.data?.detail ||
-          err.response?.data?.error ||
+        err.response?.data?.error ||
           err.response?.data?.message ||
           "Registration failed"
       );
@@ -61,240 +38,210 @@ export function Register() {
       setLoading(false);
     }
   };
-
   return (
-    <div className="card form-card">
-      <button
-        type="button"
-        className="button-8b"
-        onClick={() => navigate("/")}
-      >
-        ← Go to Home
-      </button>
+          <div className="card form-card">
+             <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+              </button>
+          <h1 className="h1-title">Register</h1>
+            <form onSubmit={handleRegister}>
+              <input type="text" placeholder="Username" value={username}
+                onChange={(e) => setUsername(e.target.value)} required />
+              <input type="email" placeholder="Email" value={email}
+                onChange={(e) => setEmail(e.target.value)} required />
+              <input type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)} required />
+              <button type="submit" className='button-8b' disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+              </button>
 
-      <h1 className="h1-title">Register</h1>
-
-      <form onSubmit={handleRegister}>
-        <input
-          disabled={loading}
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-
-        <input
-          disabled={loading}
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <input
-          disabled={loading}
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button type="submit" className="button-8b" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
-      </form>
-
-      <div>
-        Already registered? <Link to="/login">Login</Link>
-      </div>
-    </div>
+            </form>
+              <div>Already registered? <Link to='/login'>Login</Link></div>
+          </div>
   );
 }
 
-// ================= LOGIN =================
 export function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!username.trim() || !password.trim()) {
-      alert("All fields are required");
-      return;
-    }
-
     setLoading(true);
-
     try {
       const res = await axios.post(`${API_URL}/api/users/login`, {
-        username: username.trim(),
+        username,
         password,
       });
 
-      if (res.status === 200 && res.data.token) {
+      if (res.data.token) {
         localStorage.setItem("token", res.data.token);
-        alert("Login successful!");
-        navigate("/profile");
-      } else {
-        alert("Invalid login response");
+        alert("login successful!");
+        navigate("/profile"); // redirect after login
+      }else{
+        alert("invalid login response!");
       }
     } catch (err) {
-      console.error(err);
-      alert(
-        err.response?.data?.detail ||
-          err.response?.data?.error ||
-          "Login failed"
-      );
+      alert(err.response?.data?.error || "login failed");
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div className="card form-card">
-      <button
-        type="button"
-        className="button-8b"
-        onClick={() => navigate("/")}
-      >
-        ← Go to Home
-      </button>
-
-      <h1 className="h1-title">Login</h1>
-
-      <form onSubmit={handleLogin}>
-        <input
-          disabled={loading}
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-
-        <input
-          disabled={loading}
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button type="submit" className="button-8b" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <div>
-        Not registered yet? <Link to="/register">Register</Link>
-      </div>
-    </div>
+          <div className="card form-card">
+             <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+              </button>            
+          <h1 className="h1-title">Login</h1>
+            
+            <form onSubmit={handleLogin}>
+              <input type="text" placeholder="Username" value={username}
+                onChange={(e) => setUsername(e.target.value)} required />
+              <input type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)} required />
+              <button type="submit" className='button-8b' disabled={loading}>
+               {loading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+            <div>Not registered yet? <Link to='/register'>Register</Link></div>
+          </div>
   );
 }
 
-// ================= PROFILE =================
+
 export function Profile() {
   const [profile, setProfile] = useState({ username: "", email: "" });
   const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingOverview, setLoadingOverview] = useState(true);
 
   const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
+  const token = localStorage.getItem("token");
 
-  // ✅ Redirect if not logged in
+  // Redirect if no token
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
-      return;
     }
+  }, [token, navigate]);
 
-    const fetchData = async () => {
+  // Fetch Profile
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchProfile = async () => {
       try {
-        const res1 = await axios.get(`${API_URL}/api/users/profile`, {
+        const res = await axios.get(`${API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setProfile({
-          username: res1.data.username,
-          email: res1.data.email,
+          username: res.data.username,
+          email: res.data.email,
         });
-
-        const res2 = await axios.get(
-          `${API_URL}/api/vitya/financial_overview`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setOverview(res2.data);
       } catch (err) {
-        console.error(err);
-        alert("Session expired, please login again");
+        alert(err.response?.data?.message || "Session expired, please login again!");
         localStorage.removeItem("token");
         navigate("/login");
       } finally {
-        setLoading(false);
+        setLoadingProfile(false);
       }
     };
 
-    fetchData();
-  }, [navigate]);
+    fetchProfile();
+  }, [token, navigate, API_URL]);
+
+  // Fetch Overview
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchOverview = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/vitya/financial_overview`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setOverview(res.data);
+      } catch (err) {
+        alert(err.response?.data?.message || "Session expired, please login again!");
+        localStorage.removeItem("token");
+        navigate("/login");
+      } finally {
+        setLoadingOverview(false);
+      }
+    };
+
+    fetchOverview();
+  }, [token, navigate, API_URL]);
 
   const handleDownloadCSV = async () => {
-    const token = localStorage.getItem("token");
-
     try {
       const res = await fetch(`${API_URL}/api/vitya/csv`, {
+        method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      if (!res.ok) throw new Error("Failed to download CSV");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-
       const a = document.createElement("a");
       a.href = url;
       a.download = "expenses.csv";
+      document.body.appendChild(a);
       a.click();
+      a.remove();
     } catch (err) {
-      alert("CSV download failed");
+      alert("Error downloading CSV file!");
+      console.error(err);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    alert("Logged out successfully!");
     navigate("/login");
   };
 
-  if (loading) return <p>Loading profile...</p>;
+  if (loadingProfile || loadingOverview) return <p>Loading profile...</p>;
 
   return (
     <div className="card profile-card">
-      <button
-        type="button"
-        className="button-8b"
-        onClick={() => navigate("/")}
-      >
-        ← Go to Home
-      </button>
-
-      <h2>{profile.username}</h2>
-      <p>{profile.email}</p>
-
+        <button
+                 type="button"
+                 className="button-8b"
+                 onClick={() => navigate("/")}
+                 style={{ marginTop: "10px" }}
+                          >
+                   ← Go to Home
+        </button>  
+    <div className="logo-circle profile">V</div>
+    <h2 className="h1-title Username">{profile.username}</h2>
+      <p className="Useremail">{profile.email}</p>
       {overview && (
         <div>
-          <p>Income: ₹{overview.total_income}</p>
-          <p>Expenses: ₹{overview.total_expenses}</p>
-          <p>Balance: ₹{overview.available_balance}</p>
+          <p><strong>Total Income:</strong> ₹{overview.total_income}</p>
+          <p><strong>Total Expenses:</strong> ₹{overview.total_expenses}</p>
+          <p><strong>Available Balance:</strong> ₹{overview.available_balance}</p>
         </div>
       )}
-
-      <button className="button-8b" onClick={handleDownloadCSV}>
-        Download CSV
-      </button>
-
-      <button className="button-8b" onClick={handleLogout}>
+      <div>
+        <strong>Download CSV:</strong>
+        <button type="button"className="button-8b" onClick={handleDownloadCSV}style={{ marginLeft: "10px" }}> 
+          Download</button>
+          </div>
+      <button type="button" className="button-8b" onClick={handleLogout} style={{ marginLeft: "10px" }}>
         Logout
       </button>
     </div>
