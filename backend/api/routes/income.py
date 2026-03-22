@@ -8,7 +8,7 @@ from backend.api.schemas.vitya import IncomeCreate
 from backend.api.auth import token_required
 from datetime import datetime
 
-router = APIRouter(prefix="/income", tags=["income"])
+router = APIRouter(prefix="/api/income", tags=["income"])
 
 
 @router.post("/")

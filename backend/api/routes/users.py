@@ -10,7 +10,7 @@ from backend.api.models.vitya import User
 from backend.api.schemas.vitya import Register, Login
 from backend.api.auth import SECRET_KEY, ALGORITHM
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/api/users", tags=["users"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

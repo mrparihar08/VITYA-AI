@@ -73,9 +73,9 @@ def health_check():
 # ---------------------------
 # ROUTERS
 # ---------------------------
-app.include_router(users.router, prefix="/api", tags=["Users"])
-app.include_router(income.router, prefix="/api", tags=["Income"])
-app.include_router(expense.router, prefix="/api", tags=["Expense"])
-app.include_router(vitya.router, prefix="/api", tags=["Vitya"])
-app.include_router(ai.router, prefix="/api", tags=["AI"])
-app.include_router(chat.router, prefix="/api", tags=["Chat"])
+app.include_router(users.router)
+app.include_router(income.router)
+app.include_router(expense.router)
+app.include_router(vitya.router)
+app.include_router(ai.router)
+app.include_router(chat.router)
