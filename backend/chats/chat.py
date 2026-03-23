@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from jupyter_server_terminals import msg
+
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import io
