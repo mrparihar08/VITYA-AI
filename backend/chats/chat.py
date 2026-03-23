@@ -188,7 +188,7 @@ def chat(
     msg = user_message.lower()
 
     # ✅ CSV trigger
-    if any(word in msg for word in ["csv", "excel", "file"]):
+    if any(word in msg for word in ["csv", "excel", "csv file"]):
         if any(word in msg for word in ["expense", "expenses","cost"]):
                return download_expenses_csv(current_user)
         elif any(word in msg for word in ["income", "revenue","incomes"]):
@@ -216,7 +216,7 @@ def chat(
     )
     # ✅ PDF trigger
     # # ✅ PDF trigger
-    if any(word in msg for word in ["pdf"]):
+    if any(word in msg for word in ["pdf file"]):
            pdf_file = generate_pdf_from_text(user_message)
 
            return StreamingResponse(
