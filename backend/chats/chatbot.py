@@ -53,7 +53,6 @@ def detect_txn_type(msg: str):
 
 
 def detect_category(msg: str):
-    # special case
     if "salary" in msg:
         return "salary"
 
@@ -69,65 +68,27 @@ def detect_category(msg: str):
     return max(scores, key=scores.get) if scores else "other"
 
 
-# ---------------- CHART PARSER ---------------- #
+# ---------------- CUSTOM DATA ---------------- #
 def extract_chart_data(msg):
-    pairs = re.findall(r'([a-zA-Z]+)[\s:=\-]*([\d]+)', msg)
+    pairs = re.findall(r'([a-zA-Z]+)\s*[:=]?\s*(\d+)', msg)
     return [{"category": k.capitalize(), "amount": float(v)} for k, v in pairs]
 
 
-def detect_chart_type(msg, data):
-    msg = msg.lower()
-
-    # 🔥 ADVANCED (highest priority)
-    if "compare" in msg or "vs" in msg:
-        return "multi_line"
-
-    if "heatmap" in msg or "calendar" in msg:
-        return "heatmap"
-
-    if "radar" in msg:
-        return "radar"
-
-    if "flow" in msg or "waterfall" in msg:
-        return "waterfall"
-
-    if "relation" in msg or "scatter" in msg:
-        return "scatter"
-
-    # 🔥 CUSTOM STYLE
-    if "mix" in msg or "combined" in msg:
-        return "composed"
-
-    if "stack" in msg:
-        return "stacked"
-
-    if "donut" in msg:
-        return "donut"
-
-    # 🔥 BASIC
-    if "pie" in msg:
-        return "pie"
-
-    if "line" in msg or "trend" in msg:
-        return "line_chart"
-
-    if "area" in msg:
-        return "area"
-
-    # 🔥 AUTO DETECTION
-    if isinstance(data, dict) and "income" in data:
-        return "multi_line"
-
-    if isinstance(data, list):
-        if data and "month" in data[0]:
-            return "line_chart"
-
-        if len(data) <= 5:
-            return "pie"
-
-        return "bar"
-
+# ---------------- CHART TYPE ---------------- #
+def detect_chart_type(msg):
+    if "pie" in msg: return "pie"
+    if "donut" in msg: return "donut"
+    if "line" in msg: return "line_chart"
+    if "area" in msg: return "area"
+    if "scatter" in msg: return "scatter"
+    if "radar" in msg: return "radar"
+    if "heatmap" in msg: return "heatmap"
+    if "waterfall" in msg: return "waterfall"
+    if "stack" in msg: return "stacked"
+    if "compare" in msg or "vs" in msg: return "multi_line"
+    if "mix" in msg or "combined" in msg: return "composed"
     return "bar"
+
 
 # ---------------- MAIN CHATBOT ---------------- #
 def chatbot_reply(message: str, db, current_user):
@@ -139,51 +100,66 @@ def chatbot_reply(message: str, db, current_user):
 
     # ================= TRANSACTIONS ================= #
     if amount is not None and txn_type == "expense":
-        entry = Expense(
-            amount=amount,
-            category=category,
-            date=datetime.utcnow(),
-            user_id=current_user.id
-        )
-        db.add(entry)
+        db.add(Expense(amount=amount, category=category,
+               date=datetime.utcnow(), user_id=current_user.id))
         db.commit()
-
         return {"type": "text", "content": f"Expense ₹{amount} added in {category}"}
 
     if amount is not None and txn_type == "income":
-        entry = Income(
-            amount=amount,
-            source=category,
-            date=datetime.utcnow(),
-            user_id=current_user.id
-        )
-        db.add(entry)
+        db.add(Income(amount=amount, source=category,
+               date=datetime.utcnow(), user_id=current_user.id))
         db.commit()
-
         return {"type": "text", "content": f"Income ₹{amount} added as {category}"}
-
-     # ================= CUSTOM DATA ================= #
+    # ================= PRIORITY 1 → CUSTOM DATA ================= #
     custom_data = extract_chart_data(msg)
 
-    # ================= ADVANCED CHARTS ================= #
+    if len(custom_data) >= 2:
+        return {
+            "type": detect_chart_type(msg),
+            "content": custom_data
+        }
 
-    # 🔥 HEATMAP
-    if "heatmap" in msg or "calendar" in msg:
+
+    # ================= PRIORITY 2 → DATABASE ================= #
+
+    # 🔥 PIE / DONUT
+    if "pie" in msg or "donut" in msg:
+        data = get_expense_graph(current_user=current_user, db=db)
+        return {"type": detect_chart_type(msg), "content": data or []}
+
+    # 🔥 LINE / TREND
+    if "line" in msg or "trend" in msg:
+        data = get_expense_income_trend(current_user=current_user, db=db)
+        return {"type": "line_chart", "content": data}
+
+    # 🔥 BAR / GENERAL
+    if "chart" in msg or "graph" in msg:
         data = get_expenses_chart(current_user=current_user, db=db)
-        return {"type": "heatmap", "content": data}
+        return {"type": "bar", "content": data or []}
+
+    # 🔥 SCATTER
+    if "scatter" in msg:
+        trend = get_expense_income_trend(current_user=current_user, db=db)
+        scatter_data = [{"x": i["income"], "y": i["expense"]} for i in trend]
+        return {"type": "scatter", "content": scatter_data}
 
     # 🔥 RADAR
     if "radar" in msg:
         data = get_expense_graph(current_user=current_user, db=db)
         return {"type": "radar", "content": data}
 
-    # 🔥 WATERFALL
-    if "flow" in msg or "waterfall" in msg:
-        income = db.query(func.sum(Income.amount))\
-            .filter(Income.user_id == current_user.id).scalar() or 0
+    # 🔥 HEATMAP
+    if "heatmap" in msg:
+        data = get_expenses_chart(current_user=current_user, db=db)
+        return {"type": "heatmap", "content": data}
 
-        expense = db.query(func.sum(Expense.amount))\
-            .filter(Expense.user_id == current_user.id).scalar() or 0
+    # 🔥 WATERFALL
+    if "waterfall" in msg:
+        income = db.query(func.sum(Income.amount)).filter(
+            Income.user_id == current_user.id).scalar() or 0
+
+        expense = db.query(func.sum(Expense.amount)).filter(
+            Expense.user_id == current_user.id).scalar() or 0
 
         data = [
             {"name": "Income", "amount": income},
@@ -193,75 +169,16 @@ def chatbot_reply(message: str, db, current_user):
 
         return {"type": "waterfall", "content": data}
 
-    # 🔥 SCATTER
-    if "relation" in msg or "scatter" in msg:
-        trend = get_expense_income_trend(current_user=current_user, db=db)
-
-        scatter_data = [
-            {"x": item.get("income", 0), "y": item.get("expense", 0)}
-            for item in trend
-        ]
-
-        return {"type": "scatter", "content": scatter_data}
-
-    # ================= PIE / DONUT ================= #
-    if "pie" in msg or "donut" in msg:
-        if len(custom_data) >= 2:
-            return {
-                "type": "donut" if "donut" in msg else "pie",
-                "content": custom_data
-            }
-
-        data = get_expense_graph(current_user=current_user, db=db)
-
-        return {
-            "type": "donut" if "donut" in msg else "pie",
-            "content": data or []
-        }
-
-    # ================= TREND / COMPARE ================= #
-    if "trend" in msg or "compare" in msg or "vs" in msg:
-        data = get_expense_income_trend(current_user=current_user, db=db)
-
-        return {
-            "type": "stacked" if "stack" in msg else "multi_line",
-            "content": data
-        }
-
-    # ================= CUSTOM CHART ================= #
-    if len(custom_data) >= 2:
-        chart_type = detect_chart_type(msg, custom_data)
-
-        return {
-            "type": chart_type,
-            "content": custom_data
-        }
-
-    # ================= GENERAL CHART ================= #
-    if "chart" in msg or "graph" in msg or "mix" in msg or "combined" in msg:
-        data = get_expenses_chart(current_user=current_user, db=db)
-
-        if not data:
-            return {"type": "text", "content": "No data 📊"}
-
-        chart_type = detect_chart_type(msg, data)
-
-        return {
-            "type": chart_type,
-            "content": data
-        }
 
     # ================= TOTAL ================= #
     if "total expense" in msg:
-        total = db.query(func.sum(Expense.amount))\
-            .filter(Expense.user_id == current_user.id).scalar() or 0
-
+        total = db.query(func.sum(Expense.amount)).filter(
+            Expense.user_id == current_user.id).scalar() or 0
         return {"type": "text", "content": f"Total expense: ₹{total}"}
 
     if "total income" in msg:
-        total = db.query(func.sum(Income.amount))\
-            .filter(Income.user_id == current_user.id).scalar() or 0
-
+        total = db.query(func.sum(Income.amount)).filter(
+            Income.user_id == current_user.id).scalar() or 0
         return {"type": "text", "content": f"Total income: ₹{total}"}
 
     # ================= BUDGET ================= #
@@ -324,9 +241,6 @@ def chatbot_reply(message: str, db, current_user):
             print("MONTHLY REPORT ERROR:", e)
             return {"type": "text", "content": "Error generating report ❌"}
 
-    # ================= FALLBACK ================= #
-   
-
     if "report" in msg:
         return {"type": "text",
                 "content": "Report feature is coming soon!"}
@@ -385,5 +299,5 @@ def chatbot_reply(message: str, db, current_user):
     # ✅ FALLBACK
     return {
         "type": "text",
-        "content": "Try: 'I spent 200 on food' or 'I earned 5000 salary'"
+        "content": " Sorry, I didn't understand that. You can tell me about your expenses and income, or ask for reports and advice!"
       }
