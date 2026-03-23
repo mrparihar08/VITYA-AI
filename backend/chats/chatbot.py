@@ -70,7 +70,7 @@ def detect_category(msg: str):
 
 # ---------------- CUSTOM DATA ---------------- #
 def extract_chart_data(msg):
-    pairs = re.findall(r'([a-zA-Z]+)\s*[:=]?\s*(\d+)', msg)
+    pairs = re.findall(r'r([a-zA-Z]+)\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)', msg)
     return [{"category": k.capitalize(), "amount": float(v)} for k, v in pairs]
 
 

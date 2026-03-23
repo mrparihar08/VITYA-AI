@@ -12,6 +12,7 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 
+
 const Chatbot = () => {
 
   const [messages, setMessages] = useState([]);
@@ -24,13 +25,6 @@ const Chatbot = () => {
 
   const recognitionRef = useRef(null);
   const isSpeakingRef = useRef(false);
-  const API_URL = process.env.REACT_APP_API_URL || "https://vitya-ai-qlbn.onrender.com";
-
-  const CHART_TYPES = [
-    "bar","chart","line","line_chart","pie","area",
-    "composed","multi_line","donut","stacked",
-    "scatter","radar","heatmap","waterfall"
-  ];
 
   // ---------------- INIT SPEECH ---------------- //
   useEffect(() => {
@@ -49,11 +43,9 @@ const Chatbot = () => {
 
   // ---------------- TEXT TO SPEECH ---------------- //
   const speak = (text) => {
-    if (!text) return;
+    if (!text || isSpeakingRef.current) return;
 
-    if (speechSynthesis.speaking) {
-      speechSynthesis.cancel();
-    }
+    speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
@@ -92,8 +84,8 @@ const Chatbot = () => {
 
     try {
       recognition.start();
-    } catch (e) {
-      console.log("Mic already running");
+    } catch {
+      return;
     }
 
     recognition.onresult = (event) => {
@@ -111,114 +103,189 @@ const Chatbot = () => {
 
   // ---------------- CSV DOWNLOAD ---------------- //
   const handleDownloadCSV = async (url, filename = "data.csv") => {
-    try {
-      const res = await fetch(`${API_URL}${url}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const res = await fetch(`https://vitya-ai-qlbn.onrender.com${url}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (!res.ok) throw new Error("Download failed");
+    if (!res.ok) throw new Error("Download failed");
 
-      const blob = await res.blob();
+    const blob = await res.blob();
 
-      const fileUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
+    const fileUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
 
-      a.href = fileUrl;
-      a.download = filename;
+    a.href = fileUrl;
+    a.download = filename;
 
-      document.body.appendChild(a);
-      a.click();
+    document.body.appendChild(a);
+    a.click();
 
-      a.remove();
-      window.URL.revokeObjectURL(fileUrl);
+    a.remove();
+    window.URL.revokeObjectURL(fileUrl);
 
-    } catch (err) {
-      console.error("CSV error:", err);
-    }
-  };
-
+  } catch (err) {
+    console.error("CSV error:", err);
+  }
+};
   // ---------------- SEND MESSAGE ---------------- //
-  const sendMessage = async (voiceText = null) => {
-    const messageToSend = voiceText || input;
+const sendMessage = async (voiceText = null) => {
+  const messageToSend = voiceText || input;
 
-    if (!messageToSend.trim()) return;
+  if (!messageToSend.trim()) return;
 
-    const userMessage = { sender: "user", text: messageToSend };
-    setMessages((prev) => [...prev, userMessage]);
+  const userMessage = { sender: "user", text: messageToSend };
+  setMessages((prev) => [...prev, userMessage]);
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const controller = new AbortController();
-      setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message: messageToSend }),
+    });
 
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message: messageToSend }),
-        signal: controller.signal
-      });
+    const contentType = res.headers.get("content-type");
 
-      const contentType = res.headers.get("content-type");
+// ✅ CSV DOWNLOAD
+if (contentType && contentType.includes("text/csv")) {
 
-      // CSV RESPONSE
-      if (contentType && contentType.includes("text/csv")) {
+  const blob = await res.blob();
 
-        const blob = await res.blob();
+  const fileUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
 
-        const fileUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+  a.href = fileUrl;
+  a.download = "chat_data.csv";
 
-        a.href = fileUrl;
-        a.download = "chat_data.csv";
+  document.body.appendChild(a);
+  a.click();
 
-        document.body.appendChild(a);
-        a.click();
+  a.remove();
+  window.URL.revokeObjectURL(fileUrl);
 
-        a.remove();
-        window.URL.revokeObjectURL(fileUrl);
+  setMessages(prev => [
+    ...prev,
+    { sender: "bot", text: "CSV downloaded ✅" }
+  ]);
 
-        setMessages(prev => [
-          ...prev,
-          { sender: "bot", text: "CSV downloaded ✅" }
-        ]);
+  return;
+}
 
-        return;
-      }
+// ✅ 🔥 DOC DOWNLOAD (NEW)
+if (
+  contentType &&
+  contentType.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+) {
 
-      const data = await res.json();
+  const blob = await res.blob();
 
-      const botMessage = {
-        sender: "bot",
-        type: data.type || "text",
-        text: data.type === "text" ? data.content : "",
-        content: data.content || []
-      };
+  const fileUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
 
-      setMessages(prev => [...prev, botMessage]);
+  a.href = fileUrl;
+  a.download = "chat_data.docx";
 
-      if (botMessage.text) {
-        speak(botMessage.text);
-      }
+  document.body.appendChild(a);
+  a.click();
 
-    } catch (error) {
-      console.error(error);
+  a.remove();
+  window.URL.revokeObjectURL(fileUrl);
 
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "Server error ❌" },
-      ]);
+  setMessages(prev => [
+    ...prev,
+    { sender: "bot", text: "DOC downloaded ✅" }
+  ]);
+
+  return;
+}
+// ✅ PDF DOWNLOAD
+if (contentType && contentType.includes("application/pdf")) {
+
+  const blob = await res.blob();
+
+  const fileUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = fileUrl;
+  a.download = "chat_data.pdf";
+
+  document.body.appendChild(a);
+  a.click();
+
+  a.remove();
+  window.URL.revokeObjectURL(fileUrl);
+
+  setMessages(prev => [
+    ...prev,
+    { sender: "bot", text: "PDF downloaded ✅" }
+  ]);
+
+  return;
+}
+// ✅ PPT DOWNLOAD
+if (
+  contentType &&
+  contentType.includes("application/vnd.openxmlformats-officedocument.presentationml.presentation")
+) {
+
+  const blob = await res.blob();
+
+  const fileUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = fileUrl;
+  a.download = "chat_data.pptx";
+
+  document.body.appendChild(a);
+  a.click();
+
+  a.remove();
+  window.URL.revokeObjectURL(fileUrl);
+
+  setMessages(prev => [
+    ...prev,
+    { sender: "bot", text: "PPT downloaded ✅" }
+  ]);
+
+  return;
+}
+
+    // ✅ NORMAL JSON RESPONSE
+    const data = await res.json();
+
+    const botText = data.reply || data.content || "No response";
+
+    const botMessage = {
+      sender: "bot",
+      type: data.type || "text",
+      text: botText,
+    };
+
+    setMessages(prev => [...prev, botMessage]);
+
+    if (typeof botText === "string") {
+      speak(botText);
     }
 
-    setLoading(false);
-    setInput("");
-  };
+  } catch (error) {
+    console.error(error);
 
+    setMessages((prev) => [
+      ...prev,
+      { sender: "bot", text: "Server error ❌" },
+    ]);
+  }
+
+  setLoading(false);
+  setInput("");
+};
   // ---------------- FORMAT MONTH ---------------- //
   const formatMonth = (dateStr) => {
     const d = new Date(dateStr);
@@ -232,27 +299,42 @@ const Chatbot = () => {
 
   // ---------------- CHART ---------------- //
   const renderChart = (msg) => {
-    let data = msg.content || [];
+    let data = msg.text;
 
-    if (msg.type === "multi_line" && Array.isArray(data) && data.length) {
-      data = data.map(item => ({
-        month: formatMonth(item.month),
-        income: item.income || 0,
-        expense: item.expense || 0,
-      }));
+    if (msg.type === "multi_line") {
+      const incomeData = data?.income || [];
+      const expenseData = data?.expense || [];
+
+      const merged = {};
+
+      incomeData.forEach((i) => {
+        merged[i.month] = {
+          month: formatMonth(i.month),
+          income: i.amount,
+          expense: 0,
+        };
+      });
+
+      expenseData.forEach((e) => {
+        if (merged[e.month]) {
+          merged[e.month].expense = e.amount;
+        } else {
+          merged[e.month] = {
+            month: formatMonth(e.month),
+            income: 0,
+            expense: e.amount,
+          };
+        }
+      });
+
+      data = Object.values(merged);
     }
 
-    if (!Array.isArray(data) || data.length === 0) {
-      return <div>No data 📊</div>;
-    }
+    if (!Array.isArray(data)) return null;
 
-    const xKey = data[0]?.category
-      ? "category"
-      : data[0]?.month
-      ? "month"
-      : Object.keys(data[0] || {})[0];
+    const xKey = data[0]?.category ? "category" : "month";
 
-    switch (msg.type) {
+switch (msg.type) {
 
       case "bar":
       case "chart":
@@ -388,8 +470,8 @@ const Chatbot = () => {
             background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
             color: msg.sender === "user" ? "white" : "black",
           }}>
-             {CHART_TYPES.includes(msg.type) && Array.isArray(msg.content) ? (
-              <div style={{ width: "100%", height: 250 }}>
+            {["bar","chart","line","line_chart","pie","area","composed","multi_line"].includes(msg.type) ? (
+              <div style={{ width: 300, height: 200 }}>
                 <ResponsiveContainer>
                   {renderChart(msg)}
                 </ResponsiveContainer>
