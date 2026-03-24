@@ -12,9 +12,23 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 
+const CHAT_TYPES = [
+  "bar",
+  "chart",
+  "line_chart", // keep only this
+  "pie",
+  "donut",
+  "area",
+  "composed",
+  "multi_line",
+  "scatter",
+  "radar",
+  "heatmap",
+  "waterfall",
+  "stacked" // ADD THIS
+];
 
 const Chatbot = () => {
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,6 +45,7 @@ const Chatbot = () => {
     if ("webkitSpeechRecognition" in window) {
       const rec = new window.webkitSpeechRecognition();
       rec.continuous = false;
+      rec.interimResults = false;
       rec.lang = "en-IN";
       recognitionRef.current = rec;
     }
@@ -45,7 +60,7 @@ const Chatbot = () => {
   const speak = (text) => {
     if (!text || isSpeakingRef.current) return;
 
-    speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
@@ -56,12 +71,16 @@ const Chatbot = () => {
       isSpeakingRef.current = false;
     };
 
-    speechSynthesis.speak(utterance);
+    utterance.onerror = () => {
+      isSpeakingRef.current = false;
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   // ---------------- VOICE INPUT ---------------- //
   const preprocessVoice = (text) => {
-    return text.toLowerCase().replace(/rupees|rs/g, "").trim();
+    return (text || "").toLowerCase().replace(/\b(rupees|rs|rupee)\b/g, "").trim();
   };
 
   const startListening = () => {
@@ -82,12 +101,6 @@ const Chatbot = () => {
 
     setListening(true);
 
-    try {
-      recognition.start();
-    } catch {
-      return;
-    }
-
     recognition.onresult = (event) => {
       if (!event.results || !event.results[0]) return;
 
@@ -97,195 +110,122 @@ const Chatbot = () => {
       sendMessage(speechText);
     };
 
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      setListening(false);
+      console.error("Speech recognition start error:", err);
+    }
   };
 
-  // ---------------- CSV DOWNLOAD ---------------- //
-  const handleDownloadCSV = async (url, filename = "data.csv") => {
-  try {
-    const res = await fetch(`https://vitya-ai-qlbn.onrender.com${url}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) throw new Error("Download failed");
-
+  // ---------------- FILE DOWNLOAD HELPERS ---------------- //
+  const downloadBlob = async (res, filename) => {
     const blob = await res.blob();
-
     const fileUrl = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
 
+    const a = document.createElement("a");
     a.href = fileUrl;
     a.download = filename;
-
     document.body.appendChild(a);
     a.click();
 
     a.remove();
     window.URL.revokeObjectURL(fileUrl);
+  };
 
-  } catch (err) {
-    console.error("CSV error:", err);
-  }
-};
-  // ---------------- SEND MESSAGE ---------------- //
-const sendMessage = async (voiceText = null) => {
-  const messageToSend = voiceText || input;
+  const handleFileResponse = async (res, contentType) => {
+    const lower = (contentType || "").toLowerCase();
 
-  if (!messageToSend.trim()) return;
-
-  const userMessage = { sender: "user", text: messageToSend };
-  setMessages((prev) => [...prev, userMessage]);
-
-  setLoading(true);
-
-  try {
-    const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ message: messageToSend }),
-    });
-
-    const contentType = res.headers.get("content-type");
-
-// ✅ CSV DOWNLOAD
-if (contentType && contentType.includes("text/csv")) {
-
-  const blob = await res.blob();
-
-  const fileUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = fileUrl;
-  a.download = "chat_data.csv";
-
-  document.body.appendChild(a);
-  a.click();
-
-  a.remove();
-  window.URL.revokeObjectURL(fileUrl);
-
-  setMessages(prev => [
-    ...prev,
-    { sender: "bot", text: "CSV downloaded ✅" }
-  ]);
-
-  return;
-}
-
-// ✅ 🔥 DOC DOWNLOAD (NEW)
-if (
-  contentType &&
-  contentType.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-) {
-
-  const blob = await res.blob();
-
-  const fileUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = fileUrl;
-  a.download = "chat_data.docx";
-
-  document.body.appendChild(a);
-  a.click();
-
-  a.remove();
-  window.URL.revokeObjectURL(fileUrl);
-
-  setMessages(prev => [
-    ...prev,
-    { sender: "bot", text: "DOC downloaded ✅" }
-  ]);
-
-  return;
-}
-// ✅ PDF DOWNLOAD
-if (contentType && contentType.includes("application/pdf")) {
-
-  const blob = await res.blob();
-
-  const fileUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = fileUrl;
-  a.download = "chat_data.pdf";
-
-  document.body.appendChild(a);
-  a.click();
-
-  a.remove();
-  window.URL.revokeObjectURL(fileUrl);
-
-  setMessages(prev => [
-    ...prev,
-    { sender: "bot", text: "PDF downloaded ✅" }
-  ]);
-
-  return;
-}
-// ✅ PPT DOWNLOAD
-if (
-  contentType &&
-  contentType.includes("application/vnd.openxmlformats-officedocument.presentationml.presentation")
-) {
-
-  const blob = await res.blob();
-
-  const fileUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = fileUrl;
-  a.download = "chat_data.pptx";
-
-  document.body.appendChild(a);
-  a.click();
-
-  a.remove();
-  window.URL.revokeObjectURL(fileUrl);
-
-  setMessages(prev => [
-    ...prev,
-    { sender: "bot", text: "PPT downloaded ✅" }
-  ]);
-
-  return;
-}
-
-    // ✅ NORMAL JSON RESPONSE
-    const data = await res.json();
-
-    const botText = data.reply || data.content || "No response";
-
-    const botMessage = {
-      sender: "bot",
-      type: data.type || "text",
-      text: botText,
-    };
-
-    setMessages(prev => [...prev, botMessage]);
-
-    if (typeof botText === "string") {
-      speak(botText);
+    if (lower.includes("text/csv")) {
+      await downloadBlob(res, "chat_data.csv");
+      setMessages((prev) => [...prev, { sender: "bot", text: "CSV downloaded ✅" }]);
+      return true;
     }
 
-  } catch (error) {
-    console.error(error);
+    if (lower.includes("wordprocessingml.document") || lower.includes("application/msword")) {
+      await downloadBlob(res, "chat_data.docx");
+      setMessages((prev) => [...prev, { sender: "bot", text: "DOC downloaded ✅" }]);
+      return true;
+    }
 
-    setMessages((prev) => [
-      ...prev,
-      { sender: "bot", text: "Server error ❌" },
-    ]);
-  }
+    if (lower.includes("application/pdf")) {
+      await downloadBlob(res, "chat_data.pdf");
+      setMessages((prev) => [...prev, { sender: "bot", text: "PDF downloaded ✅" }]);
+      return true;
+    }
 
-  setLoading(false);
-  setInput("");
-};
+    if (lower.includes("presentationml.presentation") || lower.includes("powerpoint")) {
+      await downloadBlob(res, "chat_data.pptx");
+      setMessages((prev) => [...prev, { sender: "bot", text: "PPT downloaded ✅" }]);
+      return true;
+    }
+
+    return false;
+  };
+
+  // ---------------- SEND MESSAGE ---------------- //
+  const sendMessage = async (voiceText = null) => {
+    const messageToSend = (voiceText || input).trim();
+    if (!messageToSend) return;
+
+    const userMessage = { sender: "user", text: messageToSend };
+    setMessages((prev) => [...prev, userMessage]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: messageToSend }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+
+      // File response
+      if (await handleFileResponse(res, contentType)) {
+        return;
+      }
+
+      // JSON response
+      const data = await res.json();
+
+      const botContent = data.reply ?? data.content ?? "No response";
+
+      const botMessage = {
+        sender: "bot",
+        type: data.type || "text",
+        text: botContent,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+
+      if (typeof botContent === "string") {
+        speak(botContent);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) => [...prev, { sender: "bot", text: "Server error ❌" }]);
+    } finally {
+      setLoading(false);
+      setInput("");
+    }
+  };
+
   // ---------------- FORMAT MONTH ---------------- //
   const formatMonth = (dateStr) => {
     const d = new Date(dateStr);
@@ -334,8 +274,7 @@ if (
 
     const xKey = data[0]?.category ? "category" : "month";
 
-switch (msg.type) {
-
+    switch (msg.type) {
       case "bar":
       case "chart":
         return (
@@ -379,7 +318,7 @@ switch (msg.type) {
       case "donut":
         return (
           <PieChart>
-            <Pie data={data} dataKey="amount" nameKey={xKey}>
+            <Pie data={data} dataKey="amount" nameKey={xKey} innerRadius={msg.type === "donut" ? 50 : 0} outerRadius={80}>
               {data.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
@@ -388,18 +327,20 @@ switch (msg.type) {
             <Legend />
           </PieChart>
         );
+
       case "composed":
-    return (
-      <ComposedChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={xKey} />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="amount" fill="#8884d8" />
-        <Line type="monotone" dataKey="amount" stroke="#ff7300" />
-      </ComposedChart>
-    );
+        return (
+          <ComposedChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey={xKey} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="amount" fill="#8884d8" />
+            <Line type="monotone" dataKey="amount" stroke="#ff7300" />
+          </ComposedChart>
+        );
+
       case "area":
         return (
           <AreaChart data={data}>
@@ -407,7 +348,7 @@ switch (msg.type) {
             <XAxis dataKey={xKey} />
             <YAxis />
             <Tooltip />
-            <Area type="monotone" dataKey="amount" fill="#8884d8" />
+            <Area type="monotone" dataKey="amount" fill="#8884d8" stroke="#8884d8" />
           </AreaChart>
         );
 
@@ -415,20 +356,30 @@ switch (msg.type) {
         return (
           <ScatterChart>
             <CartesianGrid />
-            <XAxis dataKey="x" />
-            <YAxis dataKey="y" />
+            <XAxis dataKey="x" type="number" />
+            <YAxis dataKey="y" type="number" />
             <Tooltip />
             <Scatter data={data} fill="#8884d8" />
           </ScatterChart>
         );
-
+      case "stacked":
+  return (
+    <BarChart data={data}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey={xKey} />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="amount" stackId="a" fill="#8884d8" />
+    </BarChart>
+  );
       case "radar":
         return (
           <RadarChart data={data}>
             <PolarGrid />
             <PolarAngleAxis dataKey="category" />
             <PolarRadiusAxis />
-            <Radar dataKey="amount" fill="#8884d8" />
+            <Radar dataKey="amount" fill="#8884d8" stroke="#8884d8" />
           </RadarChart>
         );
 
@@ -436,10 +387,13 @@ switch (msg.type) {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
             {data.map((item, i) => (
-              <div key={i} style={{
-                height: 30,
-                background: `rgba(0,128,0, ${Math.min(item.amount / 1000, 1)})`
-              }} />
+              <div
+                key={i}
+                style={{
+                  height: 30,
+                  background: `rgba(0,128,0, ${Math.min((item.amount || 0) / 1000, 1)})`,
+                }}
+              />
             ))}
           </div>
         );
@@ -461,23 +415,27 @@ switch (msg.type) {
 
   return (
     <div style={styles.container}>
-
       <div style={styles.chatBox}>
         {messages.map((msg, i) => (
-          <div key={i} style={{
-            ...styles.message,
-            alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-            background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
-            color: msg.sender === "user" ? "white" : "black",
-          }}>
-            {["bar","chart","line","line_chart","pie","area","composed","multi_line"].includes(msg.type) ? (
+          <div
+            key={i}
+            style={{
+              ...styles.message,
+              alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+              background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
+              color: msg.sender === "user" ? "white" : "black",
+            }}
+          >
+            {CHAT_TYPES.includes(msg.type) ? (
               <div style={{ width: 300, height: 200 }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   {renderChart(msg)}
                 </ResponsiveContainer>
               </div>
             ) : (
-              <span>{msg.text}</span>
+              <span>
+                {typeof msg.text === "string" ? msg.text : "Chart data received"}
+              </span>
             )}
           </div>
         ))}
@@ -493,20 +451,20 @@ switch (msg.type) {
           placeholder="Type or speak..."
           style={styles.input}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          
         />
 
         <button onClick={() => sendMessage()} style={styles.button}>
-          <img src="/send.png" alt="Send" style={{width:"20px",height:"20px"}}/>
+          <img src="/send.png" alt="Send" style={{ width: "20px", height: "20px" }} />
         </button>
 
         <button onClick={startListening} style={styles.mic}>
-          <img src={listening ? "/mic.png" : "/mic.png"} 
-          alt = "Mic"
-          style={{width:"24px",height:"24px"}}/>
+          <img
+            src="/mic.png"
+            alt="Mic"
+            style={{ width: "24px", height: "24px" }}
+          />
         </button>
       </div>
-
     </div>
   );
 };
@@ -547,7 +505,6 @@ const styles = {
     color: "#fff",
     border: "none",
     borderRadius: "55px",
-    
   },
   mic: {
     padding: 10,

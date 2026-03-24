@@ -1,8 +1,9 @@
-rules = {
+import re
 
+rules = {
     "greeting": {
         "type": "text",
-        "keywords": ["hy","hi", "hello", "hey", "hii", "namaste"],
+        "keywords": ["hi", "hello", "hey", "hii", "namaste"],
         "response": "Hello! How can I help you?"
     },
 
@@ -200,11 +201,32 @@ rules = {
 }
 
 
+def normalize_message(message: str) -> str:
+    message = (message or "").lower().strip()
+    message = re.sub(r"[^\w\s]", " ", message)   # punctuation हटाओ
+    message = re.sub(r"\s+", " ", message)       # extra spaces हटाओ
+    return message
+
+
+def keyword_matches(message: str, keyword: str) -> bool:
+    """
+    Single word keywords -> word boundary match
+    Multi-word keywords -> normalized phrase search
+    """
+    keyword = keyword.lower().strip()
+
+    if " " in keyword:
+        return keyword in message
+
+    return bool(re.search(rf"\b{re.escape(keyword)}\b", message))
+
+
 def get_reply(message: str):
-    msg = message.lower()
+    msg = normalize_message(message)
 
     for intent in rules.values():
-        if any(keyword in msg for keyword in intent["keywords"]):
-            return intent["response"]
+        for keyword in intent["keywords"]:
+            if keyword_matches(msg, keyword):
+                return intent["response"]
 
     return "Sorry, I didn't understand. Please contact support."
