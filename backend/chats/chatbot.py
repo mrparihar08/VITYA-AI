@@ -11,7 +11,7 @@ from backend.api.routes.vitya import (
     get_expenses_chart,
 )
 from backend.chats.categories import CATEGORY_KEYWORDS
-
+from backend.chats.FileCreator import generate_qr, generate_barcode
 
 # ---------------- NORMALIZATION ---------------- #
 NORMALIZATION_MAP = {
@@ -209,7 +209,33 @@ def chatbot_reply(message: str, db, current_user):
         ]
 
         return {"type": "waterfall", "content": data}
+    # ================= QR CODE ================= #
+    if "qr" in msg or "qr code" in msg:
+        text = re.sub(r"\b(qr|code)\b", "", msg).strip()
 
+        if not text:
+            text = "Hello from Vitya"
+
+        img = generate_qr(text)
+
+        return {
+             "type": "qr",
+              "content": img
+         }
+
+
+# ================= BARCODE ================= #
+    if "barcode" in msg:
+        text = re.sub(r"\bbarcode\b", "", msg).strip()
+        if not text:
+           text = "123456789"
+
+        img = generate_barcode(text)
+
+        return {
+           "type": "barcode",
+           "content": img
+             }   
     # ================= TOTAL ================= #
     if "total expense" in msg:
         total = (

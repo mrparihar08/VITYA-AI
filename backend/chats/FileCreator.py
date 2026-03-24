@@ -2,7 +2,11 @@ import io
 import csv
 import re
 from typing import Dict, List, Tuple, Optional
-
+import qrcode
+import barcode
+from barcode.writer import ImageWriter
+from io import BytesIO
+import base64
 from docx import Document
 from pptx import Presentation
 
@@ -283,6 +287,25 @@ def generate_ppt_from_text(text: str, user_title: Optional[str] = None):
     buffer.seek(0)
     return buffer
 
+def generate_qr(data: str):
+    qr = qrcode.make(data)
+
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+
+    return img_str
+def generate_barcode(data: str):
+    CODE128 = barcode.get_barcode_class('code128')
+    code = CODE128(data, writer=ImageWriter())
+
+    buffer = BytesIO()
+    code.write(buffer)
+
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+
+    return img_str
 
 def generate_all_files(text: str, user_title: Optional[str] = None):
     """

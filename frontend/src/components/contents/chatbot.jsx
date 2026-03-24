@@ -25,7 +25,9 @@ const CHAT_TYPES = [
   "radar",
   "heatmap",
   "waterfall",
-  "stacked" // ADD THIS
+  "stacked", // ADD THIS
+  "qr",        // ✅ ADD
+  "barcode"    // ✅ ADD
 ];
 
 const Chatbot = () => {
@@ -426,7 +428,27 @@ const Chatbot = () => {
               color: msg.sender === "user" ? "white" : "black",
             }}
           >
-            {CHAT_TYPES.includes(msg.type) ? (
+{["image", "qr", "barcode"].includes(msg.type) ? (
+  <div>
+    <img
+      src={`data:image/png;base64,${msg.text || msg.content}`}
+      alt="Generated"
+      style={{ width: 200 }}
+    />
+    
+    {/* Download button */}
+    <button
+      onClick={() => {
+        const link = document.createElement("a");
+        link.href = `data:image/png;base64,${msg.text || msg.content}`;
+        link.download = "code.png";
+        link.click();
+      }}
+    >
+      Download
+    </button>
+  </div>
+) : CHAT_TYPES.includes(msg.type) ? (
               <div style={{ width: 300, height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   {renderChart(msg)}
