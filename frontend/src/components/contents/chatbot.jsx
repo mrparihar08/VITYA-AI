@@ -420,7 +420,8 @@ const Chatbot = () => {
               display: "flex",
               flexDirection: "column",
               gap: 8,
-              maxWidth: 520,
+              maxWidth: 560,
+              boxSizing: "border-box",
             }}
           >
             {item.image ? (
@@ -440,11 +441,11 @@ const Chatbot = () => {
               />
             ) : null}
 
-            <div style={{ fontWeight: "bold", fontSize: 16 }}>
+            <div style={{ fontWeight: "bold", fontSize: 16, color: "#111" }}>
               {item.title || "No title"}
             </div>
 
-            <div style={{ fontSize: 14, color: "#444" }}>
+            <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
               {item.description || "No description"}
             </div>
 
@@ -466,6 +467,74 @@ const Chatbot = () => {
             ) : null}
           </div>
         ))}
+      </div>
+    );
+  };
+
+  const renderWiki = (msg) => {
+    const raw = msg.content ?? {};
+    const data =
+      typeof raw === "string"
+        ? parseMaybeJSON(raw)
+        : raw || {};
+
+    if (!data || typeof data !== "object") {
+      return <div>No Wikipedia data available</div>;
+    }
+
+    return (
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 12,
+          padding: 12,
+          background: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          maxWidth: 560,
+          boxSizing: "border-box",
+        }}
+      >
+        {data.image ? (
+          <img
+            src={data.image}
+            alt={data.title || "wikipedia"}
+            style={{
+              width: "100%",
+              height: 220,
+              objectFit: "cover",
+              borderRadius: 10,
+            }}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
+
+        <div style={{ fontWeight: "bold", fontSize: 18, color: "#111" }}>
+          {data.title || "Wikipedia"}
+        </div>
+
+        <div style={{ fontSize: 14, color: "#444", lineHeight: 1.6 }}>
+          {data.summary || "No summary available"}
+        </div>
+
+        {data.url ? (
+          <a
+            href={data.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "inline-block",
+              textDecoration: "none",
+              color: "#17333a",
+              fontWeight: "600",
+            }}
+          >
+            Read More →
+          </a>
+        ) : null}
       </div>
     );
   };
@@ -802,7 +871,10 @@ const Chatbot = () => {
                 alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
                 background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
                 color: msg.sender === "user" ? "white" : "black",
-                maxWidth: CHAT_TYPES.has(msg.type) || msg.type === "news" ? "95%" : "75%",
+                maxWidth:
+                  CHAT_TYPES.has(msg.type) || msg.type === "news" || msg.type === "wiki"
+                    ? "95%"
+                    : "75%",
               }}
             >
               {msg.type === "news" ? (
@@ -815,6 +887,17 @@ const Chatbot = () => {
                   }}
                 >
                   {renderNews(msg)}
+                </div>
+              ) : msg.type === "wiki" ? (
+                <div
+                  ref={(el) => (chartRefs.current[i] = el)}
+                  style={{
+                    ...chartWrapperStyle,
+                    width: "100%",
+                    maxWidth: 560,
+                  }}
+                >
+                  {renderWiki(msg)}
                 </div>
               ) : MEDIA_TYPES.has(msg.type) ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

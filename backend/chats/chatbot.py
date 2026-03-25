@@ -58,7 +58,23 @@ def fetch_news(category="general"):
     except Exception as e:
         print("NEWS ERROR:", e)
         return []
+import requests
 
+def fetch_wikipedia(query):
+    try:
+        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{query}"
+        res = requests.get(url)
+        data = res.json()
+
+        return {
+            "title": data.get("title"),
+            "summary": data.get("extract"),
+            "image": data.get("thumbnail", {}).get("source"),
+            "url": data.get("content_urls", {}).get("desktop", {}).get("page")
+        }
+    except Exception as e:
+        print("WIKI ERROR:", e)
+        return None
 
 def normalize(msg: str):
     msg = (msg or "").lower()
@@ -364,7 +380,28 @@ def chatbot_reply(message: str, db, current_user):
             return {"type": "text", "content": "News was not fetched 😢"}
 
         return {"type": "news", "content": news_data}
+    if "wiki" in msg or "wikipedia" in msg:
+        query = msg.replace("wiki", "").replace("wikipedia", "").strip()
 
+        if not query:
+            return {
+                "type": "text",
+                "content": "Kya search karna hai Wikipedia par? 🤔"
+            }
+        
+
+        wiki_data = fetch_wikipedia(query)
+
+        if not wiki_data:
+               return {
+            "type": "text",
+            "content": "Wikipedia data nahi mila 😢"
+        }
+
+        return {
+             "type": "wiki",
+             "content": wiki_data
+         }
     # ================= HELP / INFO ================= #
     if "report" in msg:
         return {"type": "text", "content": "Report feature is coming soon!"}
