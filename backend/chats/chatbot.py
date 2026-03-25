@@ -225,8 +225,8 @@ def chatbot_reply(message: str, db, current_user):
 
 
 # ================= BARCODE ================= #
-    if "barcode" in msg:
-        text = re.sub(r"\bbarcode\b", "", msg).strip()
+    if "barcodes" in msg or "barcode" in msg:
+        text = re.sub(r"\b(barcode|barcodes)\b", "", msg).strip()
         if not text:
            text = "123456789"
 
