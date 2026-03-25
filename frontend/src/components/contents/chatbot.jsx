@@ -726,6 +726,9 @@ const Chatbot = () => {
         {messages.map((msg, i) => {
           const chartElement = CHAT_TYPES.has(msg.type) ? renderChart(msg) : null;
 
+
+
+          
           return (
             <div
               key={i}
