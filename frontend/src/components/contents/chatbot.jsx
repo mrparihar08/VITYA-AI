@@ -46,7 +46,6 @@ const CHAT_TYPES = new Set([
 
 const MEDIA_TYPES = new Set(["image", "qr", "barcode"]);
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#ff6b6b", "#4dabf7"];
-
 const CHART_HEIGHT = 240;
 
 const Chatbot = () => {
@@ -402,6 +401,75 @@ const Chatbot = () => {
     return { xKey, yKey };
   };
 
+  const renderNews = (msg) => {
+    const raw = msg.content ?? msg.text ?? [];
+    const data = Array.isArray(raw) ? raw : [];
+
+    if (!data.length) return <div>No news available</div>;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+        {data.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 12,
+              padding: 12,
+              background: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              maxWidth: 520,
+            }}
+          >
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={item.title || "news"}
+                style={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  height: 180,
+                  objectFit: "cover",
+                  borderRadius: 10,
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : null}
+
+            <div style={{ fontWeight: "bold", fontSize: 16 }}>
+              {item.title || "No title"}
+            </div>
+
+            <div style={{ fontSize: 14, color: "#444" }}>
+              {item.description || "No description"}
+            </div>
+
+            {item.url ? (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: 4,
+                  textDecoration: "none",
+                  color: "#17333a",
+                  fontWeight: "600",
+                }}
+              >
+                Read More →
+              </a>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const downloadChartPNG = async (index, msg) => {
     const element = chartRefs.current[index];
     if (!element) return;
@@ -726,9 +794,6 @@ const Chatbot = () => {
         {messages.map((msg, i) => {
           const chartElement = CHAT_TYPES.has(msg.type) ? renderChart(msg) : null;
 
-
-
-          
           return (
             <div
               key={i}
@@ -737,10 +802,21 @@ const Chatbot = () => {
                 alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
                 background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
                 color: msg.sender === "user" ? "white" : "black",
-                maxWidth: CHAT_TYPES.has(msg.type) ? "95%" : "75%"
+                maxWidth: CHAT_TYPES.has(msg.type) || msg.type === "news" ? "95%" : "75%",
               }}
             >
-              {MEDIA_TYPES.has(msg.type) ? (
+              {msg.type === "news" ? (
+                <div
+                  ref={(el) => (chartRefs.current[i] = el)}
+                  style={{
+                    ...chartWrapperStyle,
+                    width: "100%",
+                    maxWidth: 560,
+                  }}
+                >
+                  {renderNews(msg)}
+                </div>
+              ) : MEDIA_TYPES.has(msg.type) ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {getMediaSrc(msg) ? (
                     <>

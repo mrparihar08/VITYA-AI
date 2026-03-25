@@ -1,6 +1,8 @@
+import os
 import re
 from datetime import datetime
 
+import requests
 from sqlalchemy import func
 
 from backend.api.models.vitya import Expense, Income
@@ -22,6 +24,40 @@ NORMALIZATION_MAP = {
     "khana": "food",
     "dawai": "medicine",
 }
+
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+
+
+def fetch_news(category="general"):
+    try:
+        if not NEWS_API_KEY:
+            print("NEWS API KEY missing")
+            return []
+
+        url = (
+            f"https://newsapi.org/v2/top-headlines?"
+            f"country=in&category={category}&apiKey={NEWS_API_KEY}"
+        )
+        res = requests.get(url, timeout=10)
+        data = res.json()
+
+        articles = data.get("articles", [])
+
+        news_list = []
+        for a in articles[:5]:
+            news_list.append(
+                {
+                    "title": a.get("title"),
+                    "description": a.get("description"),
+                    "url": a.get("url"),
+                    "image": a.get("urlToImage"),
+                }
+            )
+
+        return news_list
+    except Exception as e:
+        print("NEWS ERROR:", e)
+        return []
 
 
 def normalize(msg: str):
@@ -74,7 +110,6 @@ def detect_category(msg: str):
 
 # ---------------- CUSTOM DATA ---------------- #
 def extract_chart_data(msg: str):
-
     pairs = re.findall(
         r'\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)',
         msg
@@ -154,7 +189,6 @@ def chatbot_reply(message: str, db, current_user):
         }
 
     # ================= PRIORITY 2 → DATABASE ================= #
-
     if "pie" in msg or "donut" in msg:
         data = get_expense_graph(current_user=current_user, db=db)
         return {"type": detect_chart_type(msg), "content": data or []}
@@ -169,14 +203,7 @@ def chatbot_reply(message: str, db, current_user):
 
     if "scatter" in msg:
         trend = get_expense_income_trend(current_user=current_user, db=db) or []
-        scatter_data = []
-        for item in trend:
-            scatter_data.append(
-                {
-                    "x": item.get("income", 0),
-                    "y": item.get("expense", 0),
-                }
-            )
+        scatter_data = [{"x": item.get("income", 0), "y": item.get("expense", 0)} for item in trend]
         return {"type": "scatter", "content": scatter_data}
 
     if "radar" in msg:
@@ -209,33 +236,25 @@ def chatbot_reply(message: str, db, current_user):
         ]
 
         return {"type": "waterfall", "content": data}
+
     # ================= QR CODE ================= #
     if "qr" in msg or "qr code" in msg:
         text = re.sub(r"\b(qr|code)\b", "", msg).strip()
-
         if not text:
             text = "Hello from Vitya"
 
         img = generate_qr(text)
+        return {"type": "qr", "content": img}
 
-        return {
-             "type": "qr",
-              "content": img
-         }
-
-
-# ================= BARCODE ================= #
+    # ================= BARCODE ================= #
     if "barcodes" in msg or "barcode" in msg:
         text = re.sub(r"\b(barcode|barcodes)\b", "", msg).strip()
         if not text:
-           text = "123456789"
+            text = "123456789"
 
         img = generate_barcode(text)
+        return {"type": "barcode", "content": img}
 
-        return {
-           "type": "barcode",
-           "content": img
-             }   
     # ================= TOTAL ================= #
     if "total expense" in msg:
         total = (
@@ -323,6 +342,28 @@ def chatbot_reply(message: str, db, current_user):
         except Exception as e:
             print("MONTHLY REPORT ERROR:", e)
             return {"type": "text", "content": "Error generating report ❌"}
+
+    # ================= NEWS ================= #
+    if "news" in msg:
+        category = "general"
+
+        if "tech" in msg or "technology" in msg:
+            category = "technology"
+        elif "sports" in msg:
+            category = "sports"
+        elif "business" in msg:
+            category = "business"
+        elif "health" in msg:
+            category = "health"
+        elif "entertainment" in msg or "movie" in msg:
+            category = "entertainment"
+
+        news_data = fetch_news(category)
+
+        if not news_data:
+            return {"type": "text", "content": "News was not fetched 😢"}
+
+        return {"type": "news", "content": news_data}
 
     # ================= HELP / INFO ================= #
     if "report" in msg:
@@ -412,12 +453,6 @@ def chatbot_reply(message: str, db, current_user):
         return {
             "type": "text",
             "content": "I can't check the weather yet, but I hope it's sunny where you are!",
-        }
-
-    if "news" in msg:
-        return {
-            "type": "text",
-            "content": "I can't fetch news yet, but I hope you have a great day!",
         }
 
     if "holiday" in msg:
