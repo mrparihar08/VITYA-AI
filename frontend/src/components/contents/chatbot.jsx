@@ -237,7 +237,7 @@ const Chatbot = () => {
         return;
       }
 
-      let data = null;
+      let data = {};
       try {
         data = await res.json();
       } catch {
@@ -245,9 +245,9 @@ const Chatbot = () => {
       }
 
       const payload =
+        data?.content ??
         data?.data ??
         data?.reply ??
-        data?.content ??
         data?.result ??
         data?.message ??
         data?.payload ??
@@ -402,7 +402,7 @@ const Chatbot = () => {
   };
 
   const renderNews = (msg) => {
-    const raw = msg.content ?? msg.text ?? [];
+    const raw = parseMaybeJSON(msg.content ?? msg.text ?? []);
     const data = Array.isArray(raw) ? raw : [];
 
     if (!data.length) return <div>No news available</div>;
@@ -424,13 +424,12 @@ const Chatbot = () => {
               boxSizing: "border-box",
             }}
           >
-            {item.image ? (
+            {item?.image ? (
               <img
                 src={item.image}
                 alt={item.title || "news"}
                 style={{
                   width: "100%",
-                  maxWidth: "100%",
                   height: 180,
                   objectFit: "cover",
                   borderRadius: 10,
@@ -442,14 +441,14 @@ const Chatbot = () => {
             ) : null}
 
             <div style={{ fontWeight: "bold", fontSize: 16, color: "#111" }}>
-              {item.title || "No title"}
+              {item?.title || "No title"}
             </div>
 
             <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
-              {item.description || "No description"}
+              {item?.description || "No description"}
             </div>
 
-            {item.url ? (
+            {item?.url ? (
               <a
                 href={item.url}
                 target="_blank"
@@ -472,11 +471,8 @@ const Chatbot = () => {
   };
 
   const renderWiki = (msg) => {
-    const raw = msg.content ?? {};
-    const data =
-      typeof raw === "string"
-        ? parseMaybeJSON(raw)
-        : raw || {};
+    const raw = parseMaybeJSON(msg.content ?? {});
+    const data = typeof raw === "string" ? parseMaybeJSON(raw) : raw || {};
 
     if (!data || typeof data !== "object") {
       return <div>No Wikipedia data available</div>;
@@ -608,7 +604,6 @@ const Chatbot = () => {
 
     const imgWidth = pageWidth - margin * 2;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
     const finalHeight = Math.min(imgHeight, pageHeight - margin * 2);
 
     pdf.addImage(imgData, "PNG", margin, margin, imgWidth, finalHeight);
@@ -627,7 +622,7 @@ const Chatbot = () => {
   };
 
   const renderChart = (msg) => {
-    const type = (msg.type || "").toLowerCase();
+    const type = (msg.type || "").toLowerCase().trim();
     const data = getChartData(msg);
 
     if (!data || !Array.isArray(data) || data.length === 0) {
@@ -851,17 +846,15 @@ const Chatbot = () => {
   return (
     <div style={styles.container}>
       <div style={styles.toolbar}>
-        <button
-          onClick={() => setVoiceEnabled((v) => !v)}
-          style={styles.voiceBtn}
-        >
+        <button onClick={() => setVoiceEnabled((v) => !v)} style={styles.voiceBtn}>
           {voiceEnabled ? "🔊" : "🔇"}
         </button>
       </div>
 
       <div style={styles.chatBox}>
         {messages.map((msg, i) => {
-          const chartElement = CHAT_TYPES.has(msg.type) ? renderChart(msg) : null;
+          const type = (msg.type || "").toLowerCase().trim();
+          const chartElement = CHAT_TYPES.has(type) ? renderChart(msg) : null;
 
           return (
             <div
@@ -871,13 +864,10 @@ const Chatbot = () => {
                 alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
                 background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
                 color: msg.sender === "user" ? "white" : "black",
-                maxWidth:
-                  CHAT_TYPES.has(msg.type) || msg.type === "news" || msg.type === "wiki"
-                    ? "95%"
-                    : "75%",
+                maxWidth: CHAT_TYPES.has(type) || type === "news" || type === "wiki" ? "95%" : "75%",
               }}
             >
-              {msg.type === "news" ? (
+              {type === "news" ? (
                 <div
                   ref={(el) => (chartRefs.current[i] = el)}
                   style={{
@@ -888,7 +878,7 @@ const Chatbot = () => {
                 >
                   {renderNews(msg)}
                 </div>
-              ) : msg.type === "wiki" ? (
+              ) : type === "wiki" ? (
                 <div
                   ref={(el) => (chartRefs.current[i] = el)}
                   style={{
@@ -899,13 +889,13 @@ const Chatbot = () => {
                 >
                   {renderWiki(msg)}
                 </div>
-              ) : MEDIA_TYPES.has(msg.type) ? (
+              ) : MEDIA_TYPES.has(type) ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {getMediaSrc(msg) ? (
                     <>
                       <img
                         src={getMediaSrc(msg)}
-                        alt={msg.type}
+                        alt={type}
                         style={{
                           width: "100%",
                           maxWidth: 220,
@@ -921,7 +911,7 @@ const Chatbot = () => {
                         onClick={() => {
                           const link = document.createElement("a");
                           link.href = getMediaSrc(msg);
-                          link.download = `${msg.type}.png`;
+                          link.download = `${type}.png`;
                           link.click();
                         }}
                         style={styles.downloadBtn}
@@ -933,7 +923,7 @@ const Chatbot = () => {
                     <div>Invalid QR / image data</div>
                   )}
                 </div>
-              ) : CHAT_TYPES.has(msg.type) ? (
+              ) : CHAT_TYPES.has(type) ? (
                 <div
                   ref={(el) => (chartRefs.current[i] = el)}
                   style={chartWrapperStyle}
@@ -941,30 +931,19 @@ const Chatbot = () => {
                   {chartElement || <div>No chart data</div>}
 
                   <div style={styles.exportRow}>
-                    <button
-                      style={styles.exportBtn}
-                      onClick={() => downloadChartPNG(i, msg)}
-                    >
+                    <button style={styles.exportBtn} onClick={() => downloadChartPNG(i, msg)}>
                       PNG
                     </button>
-                    <button
-                      style={styles.exportBtn}
-                      onClick={() => exportCSV(msg, i)}
-                    >
+                    <button style={styles.exportBtn} onClick={() => exportCSV(msg, i)}>
                       CSV
                     </button>
-                    <button
-                      style={styles.exportBtn}
-                      onClick={() => exportPDF(i, msg)}
-                    >
+                    <button style={styles.exportBtn} onClick={() => exportPDF(i, msg)}>
                       PDF
                     </button>
                   </div>
                 </div>
               ) : (
-                <span>
-                  {typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}
-                </span>
+                <span>{typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}</span>
               )}
             </div>
           );

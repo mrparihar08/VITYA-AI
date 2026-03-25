@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+from urllib.parse import quote
 
 import requests
 from sqlalchemy import func
@@ -35,15 +36,15 @@ def fetch_news(category="general"):
             return []
 
         url = (
-            f"https://newsapi.org/v2/top-headlines?"
-            f"country=in&category={category}&apiKey={NEWS_API_KEY}"
+            "https://newsapi.org/v2/top-headlines"
+            f"?country=in&category={category}&apiKey={NEWS_API_KEY}"
         )
         res = requests.get(url, timeout=10)
         data = res.json()
 
         articles = data.get("articles", [])
-
         news_list = []
+
         for a in articles[:5]:
             news_list.append(
                 {
@@ -55,50 +56,60 @@ def fetch_news(category="general"):
             )
 
         return news_list
+
     except Exception as e:
         print("NEWS ERROR:", e)
         return []
-import requests
+
 
 def fetch_wikipedia(query):
     try:
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{query}"
-        res = requests.get(url)
+        if not query:
+            return None
+
+        safe_query = quote(query)
+        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe_query}"
+        res = requests.get(url, timeout=10)
         data = res.json()
+
+        if not isinstance(data, dict):
+            return None
 
         return {
             "title": data.get("title"),
             "summary": data.get("extract"),
             "image": data.get("thumbnail", {}).get("source"),
-            "url": data.get("content_urls", {}).get("desktop", {}).get("page")
+            "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
         }
+
     except Exception as e:
         print("WIKI ERROR:", e)
         return None
 
-def normalize(msg: str):
-    msg = (msg or "").lower()
+
+def normalize(text: str):
+    text = (text or "").lower()
     for k, v in NORMALIZATION_MAP.items():
-        msg = re.sub(rf"\b{re.escape(k)}\b", v, msg)
-    return msg
+        text = re.sub(rf"\b{re.escape(k)}\b", v, text)
+    return text
 
 
-def contains_any(msg: str, words):
-    return any(word in msg for word in words)
+def contains_any(text: str, words):
+    return any(word in text for word in words)
 
 
 # ---------------- PARSER ---------------- #
-def extract_amount(msg: str):
-    match = re.search(r"(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)", msg)
+def extract_amount(text: str):
+    match = re.search(r"(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)", text)
     return float(match.group(1)) if match else None
 
 
-def detect_txn_type(msg: str):
+def detect_txn_type(text: str):
     income_words = ["salary", "income", "credited", "received", "earn"]
     expense_words = ["spent", "buy", "paid", "expense"]
 
-    income_score = sum(word in msg for word in income_words)
-    expense_score = sum(word in msg for word in expense_words)
+    income_score = sum(word in text for word in income_words)
+    expense_score = sum(word in text for word in expense_words)
 
     if income_score > expense_score:
         return "income"
@@ -107,8 +118,8 @@ def detect_txn_type(msg: str):
     return None
 
 
-def detect_category(msg: str):
-    if "salary" in msg:
+def detect_category(text: str):
+    if "salary" in text:
         return "salary"
 
     scores = {}
@@ -116,7 +127,7 @@ def detect_category(msg: str):
         score = sum(
             weight
             for word, weight in keywords.items()
-            if re.search(rf"\b{re.escape(word)}\b", msg)
+            if re.search(rf"\b{re.escape(word)}\b", text)
         )
         if score:
             scores[category] = score
@@ -125,10 +136,10 @@ def detect_category(msg: str):
 
 
 # ---------------- CUSTOM DATA ---------------- #
-def extract_chart_data(msg: str):
+def extract_chart_data(text: str):
     pairs = re.findall(
         r'\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)',
-        msg
+        text,
     )
     return [
         {"category": category.capitalize(), "amount": float(amount)}
@@ -137,39 +148,39 @@ def extract_chart_data(msg: str):
 
 
 # ---------------- CHART TYPE ---------------- #
-def detect_chart_type(msg: str):
-    if "pie" in msg:
+def detect_chart_type(text: str):
+    if "pie" in text:
         return "pie"
-    if "donut" in msg:
+    if "donut" in text:
         return "donut"
-    if "line" in msg:
+    if "line" in text:
         return "line_chart"
-    if "area" in msg:
+    if "area" in text:
         return "area"
-    if "scatter" in msg:
+    if "scatter" in text:
         return "scatter"
-    if "radar" in msg:
+    if "radar" in text:
         return "radar"
-    if "heatmap" in msg:
+    if "heatmap" in text:
         return "heatmap"
-    if "waterfall" in msg:
+    if "waterfall" in text:
         return "waterfall"
-    if "stack" in msg:
+    if "stack" in text:
         return "stacked"
-    if "compare" in msg or "vs" in msg:
+    if "compare" in text or "vs" in text:
         return "multi_line"
-    if "mix" in msg or "combined" in msg:
+    if "mix" in text or "combined" in text:
         return "composed"
     return "bar"
 
 
 # ---------------- MAIN CHATBOT ---------------- #
 def chatbot_reply(message: str, db, current_user):
-    msg = normalize(message)
+    text = normalize(message)
 
-    amount = extract_amount(msg)
-    txn_type = detect_txn_type(msg)
-    category = detect_category(msg)
+    amount = extract_amount(text)
+    txn_type = detect_txn_type(text)
+    category = detect_category(text)
 
     # ================= TRANSACTIONS ================= #
     if amount is not None and txn_type == "expense":
@@ -197,40 +208,43 @@ def chatbot_reply(message: str, db, current_user):
         return {"type": "text", "content": f"Income ₹{amount} added as {category}"}
 
     # ================= PRIORITY 1 → CUSTOM DATA ================= #
-    custom_data = extract_chart_data(msg)
+    custom_data = extract_chart_data(text)
     if len(custom_data) >= 2:
         return {
-            "type": detect_chart_type(msg),
+            "type": detect_chart_type(text),
             "content": custom_data,
         }
 
     # ================= PRIORITY 2 → DATABASE ================= #
-    if "pie" in msg or "donut" in msg:
+    if "pie" in text or "donut" in text:
         data = get_expense_graph(current_user=current_user, db=db)
-        return {"type": detect_chart_type(msg), "content": data or []}
+        return {"type": detect_chart_type(text), "content": data or []}
 
-    if "line" in msg or "trend" in msg:
+    if "line" in text or "trend" in text:
         data = get_expense_income_trend(current_user=current_user, db=db)
         return {"type": "line_chart", "content": data or []}
 
-    if "chart" in msg or "graph" in msg:
+    if "chart" in text or "graph" in text:
         data = get_expenses_chart(current_user=current_user, db=db)
         return {"type": "bar", "content": data or []}
 
-    if "scatter" in msg:
+    if "scatter" in text:
         trend = get_expense_income_trend(current_user=current_user, db=db) or []
-        scatter_data = [{"x": item.get("income", 0), "y": item.get("expense", 0)} for item in trend]
+        scatter_data = [
+            {"x": item.get("income", 0), "y": item.get("expense", 0)}
+            for item in trend
+        ]
         return {"type": "scatter", "content": scatter_data}
 
-    if "radar" in msg:
+    if "radar" in text:
         data = get_expense_graph(current_user=current_user, db=db)
         return {"type": "radar", "content": data or []}
 
-    if "heatmap" in msg:
+    if "heatmap" in text:
         data = get_expenses_chart(current_user=current_user, db=db)
         return {"type": "heatmap", "content": data or []}
 
-    if "waterfall" in msg:
+    if "waterfall" in text:
         income = (
             db.query(func.sum(Income.amount))
             .filter(Income.user_id == current_user.id)
@@ -254,25 +268,25 @@ def chatbot_reply(message: str, db, current_user):
         return {"type": "waterfall", "content": data}
 
     # ================= QR CODE ================= #
-    if "qr" in msg or "qr code" in msg:
-        text = re.sub(r"\b(qr|code)\b", "", msg).strip()
-        if not text:
-            text = "Hello from Vitya"
+    if "qr" in text or "qr code" in text:
+        qr_text = re.sub(r"\b(qr|code)\b", "", text).strip()
+        if not qr_text:
+            qr_text = "Hello from Vitya"
 
-        img = generate_qr(text)
+        img = generate_qr(qr_text)
         return {"type": "qr", "content": img}
 
     # ================= BARCODE ================= #
-    if "barcodes" in msg or "barcode" in msg:
-        text = re.sub(r"\b(barcode|barcodes)\b", "", msg).strip()
-        if not text:
-            text = "123456789"
+    if "barcode" in text or "barcodes" in text:
+        barcode_text = re.sub(r"\b(barcode|barcodes)\b", "", text).strip()
+        if not barcode_text:
+            barcode_text = "123456789"
 
-        img = generate_barcode(text)
+        img = generate_barcode(barcode_text)
         return {"type": "barcode", "content": img}
 
     # ================= TOTAL ================= #
-    if "total expense" in msg:
+    if "total expense" in text:
         total = (
             db.query(func.sum(Expense.amount))
             .filter(Expense.user_id == current_user.id)
@@ -281,7 +295,7 @@ def chatbot_reply(message: str, db, current_user):
         )
         return {"type": "text", "content": f"Total expense: ₹{total}"}
 
-    if "total income" in msg:
+    if "total income" in text:
         total = (
             db.query(func.sum(Income.amount))
             .filter(Income.user_id == current_user.id)
@@ -291,7 +305,7 @@ def chatbot_reply(message: str, db, current_user):
         return {"type": "text", "content": f"Total income: ₹{total}"}
 
     # ================= BUDGET ================= #
-    if "budget" in msg:
+    if "budget" in text:
         data = budget_plan(current_user=current_user, db=db)
         summary = data.get("summary", {})
 
@@ -305,7 +319,7 @@ def chatbot_reply(message: str, db, current_user):
         }
 
     # ================= MONTHLY REPORT ================= #
-    if "monthly" in msg and ("report" in msg or "trend" in msg):
+    if "monthly" in text and ("report" in text or "trend" in text):
         data = monthly_trend(current_user=current_user, db=db)
 
         if not data:
@@ -317,8 +331,8 @@ def chatbot_reply(message: str, db, current_user):
             for item in data:
                 try:
                     date_obj = datetime.strptime(item["month"], "%Y-%m")
-                    amount = float(item["amount"])
-                    valid_items.append((date_obj, amount))
+                    amount_val = float(item["amount"])
+                    valid_items.append((date_obj, amount_val))
                 except Exception:
                     continue
 
@@ -333,17 +347,17 @@ def chatbot_reply(message: str, db, current_user):
             highest = ("", float("-inf"))
             lowest = ("", float("inf"))
 
-            for date_obj, amount in valid_items:
+            for date_obj, amount_val in valid_items:
                 month_name = date_obj.strftime("%b %Y")
-                total += amount
+                total += amount_val
 
-                if amount > highest[1]:
-                    highest = (month_name, amount)
+                if amount_val > highest[1]:
+                    highest = (month_name, amount_val)
 
-                if amount < lowest[1]:
-                    lowest = (month_name, amount)
+                if amount_val < lowest[1]:
+                    lowest = (month_name, amount_val)
 
-                response += f"{month_name}: ₹{amount}\n"
+                response += f"{month_name}: ₹{amount_val}\n"
 
             avg = total / len(valid_items)
 
@@ -360,56 +374,58 @@ def chatbot_reply(message: str, db, current_user):
             return {"type": "text", "content": "Error generating report ❌"}
 
     # ================= NEWS ================= #
-    if "news" in msg:
-        category = "general"
+    if "news" in text:
+        category_name = "general"
 
-        if "tech" in msg or "technology" in msg:
-            category = "technology"
-        elif "sports" in msg:
-            category = "sports"
-        elif "business" in msg:
-            category = "business"
-        elif "health" in msg:
-            category = "health"
-        elif "entertainment" in msg or "movie" in msg:
-            category = "entertainment"
+        if "tech" in text or "technology" in text:
+            category_name = "technology"
+        elif "sports" in text:
+            category_name = "sports"
+        elif "business" in text:
+            category_name = "business"
+        elif "health" in text:
+            category_name = "health"
+        elif "entertainment" in text or "movie" in text:
+            category_name = "entertainment"
 
-        news_data = fetch_news(category)
+        news_data = fetch_news(category_name)
 
         if not news_data:
             return {"type": "text", "content": "News was not fetched 😢"}
 
         return {"type": "news", "content": news_data}
-    if "wiki" in msg or "wikipedia" in msg:
-        query = msg.replace("wiki", "").replace("wikipedia", "").strip()
+
+    # ================= WIKIPEDIA ================= #
+    if "wiki" in text or "wikipedia" in text:
+        query = text.replace("wiki", "").replace("wikipedia", "").strip()
 
         if not query:
             return {
                 "type": "text",
-                "content": "Kya search karna hai Wikipedia par? 🤔"
+                "content": "Kya search karna hai Wikipedia par? 🤔",
             }
-        
 
         wiki_data = fetch_wikipedia(query)
 
         if not wiki_data:
-               return {
-            "type": "text",
-            "content": "Wikipedia data nahi mila 😢"
-        }
+            return {
+                "type": "text",
+                "content": "Wikipedia data nahi mila 😢",
+            }
 
         return {
-             "type": "wiki",
-             "content": wiki_data
-         }
+            "type": "wiki",
+            "content": wiki_data,
+        }
+
     # ================= HELP / INFO ================= #
-    if "report" in msg:
+    if "report" in text:
         return {"type": "text", "content": "Report feature is coming soon!"}
 
-    if "advice" in msg:
+    if "advice" in text:
         return {"type": "text", "content": "Financial advice feature is coming soon!"}
 
-    if "help" in msg:
+    if "help" in text:
         return {
             "type": "text",
             "content": (
@@ -419,7 +435,7 @@ def chatbot_reply(message: str, db, current_user):
             ),
         }
 
-    if "category" in msg:
+    if "category" in text:
         return {
             "type": "text",
             "content": (
@@ -429,19 +445,19 @@ def chatbot_reply(message: str, db, current_user):
             ),
         }
 
-    if "feedback" in msg:
+    if "feedback" in text:
         return {
             "type": "text",
             "content": "We value your feedback! Please email us at feedback@vitya.com",
         }
 
-    if "contact" in msg:
+    if "contact" in text:
         return {
             "type": "text",
             "content": "You can contact our support team at support@vitya.com",
         }
 
-    if "about" in msg:
+    if "about" in text:
         return {
             "type": "text",
             "content": (
@@ -450,61 +466,61 @@ def chatbot_reply(message: str, db, current_user):
             ),
         }
 
-    if "thanks" in msg or "thank you" in msg:
+    if "thanks" in text or "thank you" in text:
         return {
             "type": "text",
             "content": "You're welcome! I'm here to help you manage your finances.",
         }
 
-    if "greet" in msg or "hello" in msg or "hi" in msg:
+    if "greet" in text or "hello" in text or "hi" in text:
         return {
             "type": "text",
             "content": "Hello! I'm vitya, your personal finance assistant. How can I help you today?",
         }
 
-    if "bye" in msg or "goodbye" in msg:
+    if "bye" in text or "goodbye" in text:
         return {
             "type": "text",
             "content": "Goodbye! Have a great day managing your finances!",
         }
 
-    if "joke" in msg:
+    if "joke" in text:
         return {
             "type": "text",
             "content": "Why don't scientists trust atoms? Because they make up everything!",
         }
 
-    if "quote" in msg:
+    if "quote" in text:
         return {
             "type": "text",
             "content": "The best way to get started is to quit talking and begin doing. - Walt Disney",
         }
 
-    if "motivation" in msg:
+    if "motivation" in text:
         return {
             "type": "text",
             "content": "Don't watch the clock; do what it does. Keep going. - Sam Levenson",
         }
 
-    if "weather" in msg:
+    if "weather" in text:
         return {
             "type": "text",
             "content": "I can't check the weather yet, but I hope it's sunny where you are!",
         }
 
-    if "holiday" in msg:
+    if "holiday" in text:
         return {
             "type": "text",
             "content": "I hope you have a wonderful holiday! Remember to budget for it!",
         }
 
-    if "goal" in msg:
+    if "goal" in text:
         return {
             "type": "text",
             "content": "Setting financial goals is a great way to stay motivated! What are your goals?",
         }
 
-    if "challenge" in msg:
+    if "challenge" in text:
         return {
             "type": "text",
             "content": "Here's a financial challenge for you: Try to save 10% of your income this month!",
