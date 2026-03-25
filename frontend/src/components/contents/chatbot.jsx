@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import {
   BarChart,
   Bar,
@@ -162,10 +161,7 @@ const Chatbot = () => {
 
     if (lower.includes("text/csv")) {
       await downloadBlob(res, "chat_data.csv");
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", type: "text", text: "CSV downloaded ✅" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "CSV downloaded ✅" }]);
       return true;
     }
 
@@ -175,19 +171,13 @@ const Chatbot = () => {
       lower.includes("application/msword")
     ) {
       await downloadBlob(res, "chat_data.docx");
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", type: "text", text: "DOCX downloaded ✅" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "DOCX downloaded ✅" }]);
       return true;
     }
 
     if (lower.includes("application/pdf")) {
       await downloadBlob(res, "chat_data.pdf");
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", type: "text", text: "PDF downloaded ✅" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "PDF downloaded ✅" }]);
       return true;
     }
 
@@ -197,10 +187,7 @@ const Chatbot = () => {
       lower.includes("powerpoint")
     ) {
       await downloadBlob(res, "chat_data.pptx");
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", type: "text", text: "PPTX downloaded ✅" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "PPTX downloaded ✅" }]);
       return true;
     }
 
@@ -211,10 +198,7 @@ const Chatbot = () => {
     const messageToSend = (voiceText || input).trim();
     if (!messageToSend || loading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { sender: "user", type: "text", text: messageToSend },
-    ]);
+    setMessages((prev) => [...prev, { sender: "user", type: "text", text: messageToSend }]);
     setLoading(true);
 
     try {
@@ -227,15 +211,11 @@ const Chatbot = () => {
         body: JSON.stringify({ message: messageToSend }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
       const contentType = res.headers.get("content-type") || "";
 
-      if (await handleFileResponse(res, contentType)) {
-        return;
-      }
+      if (await handleFileResponse(res, contentType)) return;
 
       let data = {};
       try {
@@ -245,13 +225,7 @@ const Chatbot = () => {
       }
 
       const payload =
-        data?.content ??
-        data?.data ??
-        data?.reply ??
-        data?.result ??
-        data?.message ??
-        data?.payload ??
-        null;
+        data?.content ?? data?.data ?? data?.reply ?? data?.result ?? data?.message ?? data?.payload ?? null;
 
       const botMessage = {
         sender: "bot",
@@ -267,10 +241,7 @@ const Chatbot = () => {
       }
     } catch (error) {
       console.error(error);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", type: "text", text: "Server error ❌" },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "Server error ❌" }]);
     } finally {
       setLoading(false);
       setInput("");
@@ -280,10 +251,7 @@ const Chatbot = () => {
   const formatMonth = (dateStr) => {
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("en-IN", {
-      month: "short",
-      year: "numeric",
-    });
+    return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
   };
 
   const parseMaybeJSON = (value) => {
@@ -345,16 +313,7 @@ const Chatbot = () => {
     if (Array.isArray(parsed)) return parsed;
 
     if (parsed && typeof parsed === "object") {
-      const preferredKeys = [
-        "data",
-        "items",
-        "rows",
-        "result",
-        "content",
-        "reply",
-        "payload",
-        "chartData",
-      ];
+      const preferredKeys = ["data", "items", "rows", "result", "content", "reply", "payload", "chartData"];
 
       for (const key of preferredKeys) {
         const found = findArrayDeep(parsed[key], depth + 1);
@@ -428,12 +387,7 @@ const Chatbot = () => {
               <img
                 src={item.image}
                 alt={item.title || "news"}
-                style={{
-                  width: "100%",
-                  height: 180,
-                  objectFit: "cover",
-                  borderRadius: 10,
-                }}
+                style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 10 }}
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
@@ -496,12 +450,7 @@ const Chatbot = () => {
           <img
             src={data.image}
             alt={data.title || "wikipedia"}
-            style={{
-              width: "100%",
-              height: 220,
-              objectFit: "cover",
-              borderRadius: 10,
-            }}
+            style={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 10 }}
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
@@ -548,77 +497,6 @@ const Chatbot = () => {
     link.download = `${msg.type || "chart"}_${index + 1}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
-  };
-
-  const exportCSV = (msg, index) => {
-    const data = getChartData(msg);
-    if (!data || !Array.isArray(data) || data.length === 0) return;
-
-    const allKeys = Array.from(
-      data.reduce((set, row) => {
-        Object.keys(row || {}).forEach((k) => set.add(k));
-        return set;
-      }, new Set())
-    );
-
-    const escapeCSV = (value) => {
-      if (value === null || value === undefined) return "";
-      const str = String(value);
-      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
-
-    const csv = [
-      allKeys.join(","),
-      ...data.map((row) => allKeys.map((k) => escapeCSV(row[k])).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${msg.type || "chart"}_${index + 1}.csv`;
-    a.click();
-
-    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-  };
-
-  const exportPDF = async (index, msg) => {
-    const element = chartRefs.current[index];
-    if (!element) return;
-
-    const canvas = await html2canvas(element, {
-      backgroundColor: "#ffffff",
-      scale: 2,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-
-    const imgWidth = pageWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const finalHeight = Math.min(imgHeight, pageHeight - margin * 2);
-
-    pdf.addImage(imgData, "PNG", margin, margin, imgWidth, finalHeight);
-    pdf.save(`${msg.type || "chart"}_${index + 1}.pdf`);
-  };
-
-  const chartWrapperStyle = {
-    width: 500,
-    maxWidth: "100%",
-    minWidth: 0,
-    overflow: "hidden",
-    background: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    boxSizing: "border-box",
   };
 
   const renderChart = (msg) => {
@@ -843,132 +721,126 @@ const Chatbot = () => {
     return `data:image/png;base64,${raw}`;
   };
 
+  const showLanding = messages.length === 0;
+
   return (
-    <div style={styles.container}>
-      <div style={styles.toolbar}>
+    <div style={styles.page}>
+      <div style={styles.topRight}>
         <button onClick={() => setVoiceEnabled((v) => !v)} style={styles.voiceBtn}>
           {voiceEnabled ? "🔊" : "🔇"}
         </button>
       </div>
 
-      <div style={styles.chatBox}>
-        {messages.map((msg, i) => {
-          const type = (msg.type || "").toLowerCase().trim();
-          const chartElement = CHAT_TYPES.has(type) ? renderChart(msg) : null;
+      <div style={styles.main}>
+        {showLanding ? (
+          <div style={styles.hero}>
+            <div style={styles.heroText}>
+              <div style={styles.heroLine2}>What can I help you with today?</div>
+            </div>
+          </div>
+        ) : (
+          <div style={styles.chatArea}>
+            {messages.map((msg, i) => {
+              const type = (msg.type || "").toLowerCase().trim();
+              const chartElement = CHAT_TYPES.has(type) ? renderChart(msg) : null;
 
-          return (
-            <div
-              key={i}
-              style={{
-                ...styles.message,
-                alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-                background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
-                color: msg.sender === "user" ? "white" : "black",
-                maxWidth: CHAT_TYPES.has(type) || type === "news" || type === "wiki" ? "95%" : "75%",
-              }}
-            >
-              {type === "news" ? (
+              return (
                 <div
-                  ref={(el) => (chartRefs.current[i] = el)}
+                  key={i}
                   style={{
-                    ...chartWrapperStyle,
-                    width: "100%",
-                    maxWidth: 560,
+                    ...styles.messageRow,
+                    justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
                   }}
                 >
-                  {renderNews(msg)}
-                </div>
-              ) : type === "wiki" ? (
-                <div
-                  ref={(el) => (chartRefs.current[i] = el)}
-                  style={{
-                    ...chartWrapperStyle,
-                    width: "100%",
-                    maxWidth: 560,
-                  }}
-                >
-                  {renderWiki(msg)}
-                </div>
-              ) : MEDIA_TYPES.has(type) ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {getMediaSrc(msg) ? (
-                    <>
-                      <img
-                        src={getMediaSrc(msg)}
-                        alt={type}
-                        style={{
-                          width: "100%",
-                          maxWidth: 220,
-                          height: "auto",
-                          display: "block",
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-
-                      <button
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = getMediaSrc(msg);
-                          link.download = `${type}.png`;
-                          link.click();
-                        }}
-                        style={styles.downloadBtn}
-                      >
-                        Download
-                      </button>
-                    </>
-                  ) : (
-                    <div>Invalid QR / image data</div>
-                  )}
-                </div>
-              ) : CHAT_TYPES.has(type) ? (
-                <div
-                  ref={(el) => (chartRefs.current[i] = el)}
-                  style={chartWrapperStyle}
-                >
-                  {chartElement || <div>No chart data</div>}
-
-                  <div style={styles.exportRow}>
-                    <button style={styles.exportBtn} onClick={() => downloadChartPNG(i, msg)}>
-                      PNG
-                    </button>
-                    <button style={styles.exportBtn} onClick={() => exportCSV(msg, i)}>
-                      CSV
-                    </button>
-                    <button style={styles.exportBtn} onClick={() => exportPDF(i, msg)}>
-                      PDF
-                    </button>
+                  <div
+                    style={{
+                      ...styles.bubble,
+                      background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
+                      color: msg.sender === "user" ? "#fff" : "#000",
+                      maxWidth: CHAT_TYPES.has(type) || type === "news" || type === "wiki" ? "95%" : "75%",
+                    }}
+                  >
+                    {type === "news" ? (
+                      <div ref={(el) => (chartRefs.current[i] = el)} style={{ ...styles.cardWrap, width: "100%" }}>
+                        {renderNews(msg)}
+                      </div>
+                    ) : type === "wiki" ? (
+                      <div ref={(el) => (chartRefs.current[i] = el)} style={{ ...styles.cardWrap, width: "100%" }}>
+                        {renderWiki(msg)}
+                      </div>
+                    ) : MEDIA_TYPES.has(type) ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {getMediaSrc(msg) ? (
+                          <>
+                            <img
+                              src={getMediaSrc(msg)}
+                              alt={type}
+                              style={{ width: "100%", maxWidth: 220, height: "auto", display: "block" }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                const link = document.createElement("a");
+                                link.href = getMediaSrc(msg);
+                                link.download = `${type}.png`;
+                                link.click();
+                              }}
+                              style={styles.downloadBtn}
+                            >
+                              Download
+                            </button>
+                          </>
+                        ) : (
+                          <div>Invalid QR / image data</div>
+                        )}
+                      </div>
+                    ) : CHAT_TYPES.has(type) ? (
+                      <div ref={(el) => (chartRefs.current[i] = el)} style={styles.cardWrap}>
+                        {chartElement || <div>No chart data</div>}
+                        <div style={styles.exportRow}>
+                          <button style={styles.exportBtn} onClick={() => downloadChartPNG(i, msg)}>
+                            PNG
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <span>{typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}</span>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <span>{typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}</span>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
 
-        {loading && <div>Bot typing...</div>}
-        <div ref={bottomRef} />
+            {loading && <div style={styles.typing}>Bot typing...</div>}
+            <div ref={bottomRef} />
+          </div>
+        )}
       </div>
 
-      <div style={styles.inputArea}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type or speak..."
-          style={styles.input}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        />
+      <div style={styles.bottomDock}>
+        <div style={styles.composer}>
+          <button onClick={() => alert("Add action here")} style={styles.iconBtn}>
+            <img src="/plus.png" alt="Plus" style={{ width: 20, height: 20 }} />
+          </button>
 
-        <button onClick={() => sendMessage()} style={styles.button}>
-          <img src="/send.png" alt="Send" style={{ width: 20, height: 20 }} />
-        </button>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            style={styles.input}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
 
-        <button onClick={startListening} style={styles.mic}>
-          <img src="/mic.png" alt="Mic" style={{ width: 24, height: 24 }} />
-        </button>
+          <button onClick={startListening} style={styles.iconBtn}>
+            <img src="/mic.png" alt="Mic" style={{ width: 20, height: 20 }} />
+          </button>
+
+          <button onClick={() => sendMessage()} style={styles.iconBtn}>
+            <img src="/send.png" alt="Send" style={{ width: 18, height: 18 }} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -977,76 +849,155 @@ const Chatbot = () => {
 export default Chatbot;
 
 const styles = {
-  container: {
+  page: {
     width: "100%",
-    height: "100%",
+    height: "100vh",
     display: "flex",
     flexDirection: "column",
-    minWidth: 0,
+    background: "#0f1424",
+    color: "#fff",
+    position: "relative",
+    overflow: "hidden",
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
   },
-  toolbar: {
-    display: "flex",
-    justifyContent: "flex-end",
-    padding: "8px 10px",
-    borderBottom: "1px solid #eee",
+  topRight: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
   },
   voiceBtn: {
     padding: "8px 12px",
     border: "none",
-    borderRadius: 8,
-    background: "#17333a",
+    borderRadius: 10,
+    background: "rgba(255,255,255,0.08)",
     color: "#fff",
     cursor: "pointer",
+    backdropFilter: "blur(10px)",
   },
-  chatBox: {
+  main: {
     flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "24px",
+    boxSizing: "border-box",
+  },
+  hero: {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
+  },
+  heroText: {
+    marginTop: "-6vh",
+  },
+  heroLine1: {
+    fontSize: "clamp(30px, 4vw, 56px)",
+    fontWeight: 700,
+    lineHeight: 1.1,
+    color: "#fff",
+    marginBottom: 12,
+  },
+  heroLine2: {
+    fontSize: "clamp(28px, 3.6vw, 50px)",
+    fontWeight: 700,
+    lineHeight: 1.15,
+    color: "#fff",
+  },
+  chatArea: {
+    width: "min(1100px, 100%)",
+    height: "100%",
     overflowY: "auto",
-    overflowX: "hidden",
+    padding: "72px 5px 5px 10px",
     display: "flex",
     flexDirection: "column",
-    padding: 10,
-    minWidth: 0,
+    gap: 12,
+    boxSizing: "border-box",
   },
-  message: {
-    padding: 10,
-    borderRadius: 10,
-    margin: 5,
-    maxWidth: "75%",
-    width: "fit-content",
-    minWidth: 0,
+  messageRow: {
+    display: "flex",
+    width: "100%",
+  },
+  bubble: {
+    padding: 12,
+    borderRadius: 14,
     wordBreak: "break-word",
     boxSizing: "border-box",
   },
-  inputArea: {
+  cardWrap: {
+    width: 500,
+    maxWidth: "100%",
+    overflow: "hidden",
+    background: "#17333a",
+    padding: 16,
+    borderRadius: 12,
+    boxSizing: "border-box",
+    color: "#fff",
+  },
+  typing: {
+    color: "rgba(255,255,255,0.75)",
+    paddingLeft: 8,
+  },
+  bottomDock: {
+    width: "100%",
+    position: "sticky",
+    bottom: 0,
+    left: 0,
+    padding: "0 10px 10px",
+    boxSizing: "border-box",
     display: "flex",
-    gap: 8,
-    borderTop: "1px solid #ccc",
-    padding: 8,
-    minWidth: 0,
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 10,
+  },
+  composer: {
+    width: "min(920px, 100%)",
+    height: 76,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "12px 16px",
+    borderRadius: 28,
+    background: "rgba(36, 36, 36, 0.95)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+    boxSizing: "border-box",
+  },
+  iconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: "50%",
+    border: "none",
+    background: "transparent",
+    color: "#fff",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    fontSize: 26,
   },
   input: {
     flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #ccc",
+    height: 48,
+    border: "1px solid rgba(255,255,255,0.08)",
     outline: "none",
+    borderRadius: 18,
+    background: "#111",
+    color: "#fff",
+    padding: "0 18px",
     minWidth: 0,
+    fontSize: 16,
   },
-  button: {
-    padding: 12,
-    background: "#9d77ff",
-    color: "#fff",
-    border: "none",
-    borderRadius: 12,
-    cursor: "pointer",
-  },
-  mic: {
-    padding: 10,
-    background: "#17333a",
-    color: "#fff",
-    border: "none",
-    borderRadius: 12,
-    cursor: "pointer",
+  footer: {
+    width: "min(920px, 100%)",
+    fontSize: 12,
+    lineHeight: 1.4,
+    color: "rgba(255,255,255,0.55)",
+    textAlign: "center",
+    paddingBottom: 2,
   },
   downloadBtn: {
     padding: "8px 10px",
