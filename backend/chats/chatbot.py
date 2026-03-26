@@ -26,7 +26,7 @@ NORMALIZATION_MAP = {
     "dawai": "medicine",
 }
 
-NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+NEWS_API_KEY = "cab48a68546b43b19255d2e2b4dc9a6d"
 
 
 def fetch_news(category="general"):
@@ -40,7 +40,16 @@ def fetch_news(category="general"):
             f"?country=in&category={category}&apiKey={NEWS_API_KEY}"
         )
         res = requests.get(url, timeout=10)
+        
+        if res.status_code != 200:
+            print("NEWS HTTP ERROR:", res.status_code, res.text[:300])
+            return []
+
         data = res.json()
+
+        if data.get("status") != "ok":
+            print("NEWS API ERROR:", data)
+            return []
 
         articles = data.get("articles", [])
         news_list = []
@@ -57,6 +66,9 @@ def fetch_news(category="general"):
 
         return news_list
 
+    except requests.RequestException as e:
+        print("NEWS REQUEST ERROR:", e)
+        return []
     except Exception as e:
         print("NEWS ERROR:", e)
         return []
@@ -64,28 +76,46 @@ def fetch_news(category="general"):
 
 def fetch_wikipedia(query):
     try:
-        if not query:
+        if not query or not query.strip():
             return None
 
-        safe_query = quote(query)
+        safe_query = quote(query.strip())
         url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe_query}"
+
         res = requests.get(url, timeout=10)
+
+        if res.status_code != 200:
+            print("WIKI HTTP ERROR:", res.status_code, res.text[:300])
+            return None
+
         data = res.json()
 
         if not isinstance(data, dict):
             return None
 
+        # Wikipedia not found / error response
+        if data.get("type") == "https://mediawiki.org/wiki/HyperSwitch/errors/not_found":
+            return None
+
+        summary = data.get("extract")
+        title = data.get("title")
+
+        if not title and not summary:
+            return None
+
         return {
-            "title": data.get("title"),
-            "summary": data.get("extract"),
+            "title": title,
+            "summary": summary,
             "image": data.get("thumbnail", {}).get("source"),
             "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
         }
 
+    except requests.RequestException as e:
+        print("WIKI REQUEST ERROR:", e)
+        return None
     except Exception as e:
         print("WIKI ERROR:", e)
         return None
-
 
 def normalize(text: str):
     text = (text or "").lower()
@@ -138,7 +168,7 @@ def detect_category(text: str):
 # ---------------- CUSTOM DATA ---------------- #
 def extract_chart_data(text: str):
     pairs = re.findall(
-        r'\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)',
+        r"\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)",
         text,
     )
     return [
@@ -149,6 +179,13 @@ def extract_chart_data(text: str):
 
 # ---------------- CHART TYPE ---------------- #
 def detect_chart_type(text: str):
+    # More specific patterns first
+    if "multi line" in text or "compare" in text or "vs" in text:
+        return "multi_line"
+    if "composed" in text or "combined" in text or "mix" in text:
+        return "composed"
+    if "stack" in text:
+        return "stacked"
     if "pie" in text:
         return "pie"
     if "donut" in text:
@@ -165,13 +202,12 @@ def detect_chart_type(text: str):
         return "heatmap"
     if "waterfall" in text:
         return "waterfall"
-    if "stack" in text:
-        return "stacked"
-    if "compare" in text or "vs" in text:
-        return "multi_line"
-    if "mix" in text or "combined" in text:
-        return "composed"
     return "bar"
+
+
+def build_trend_chart_data(current_user, db):
+    data = get_expense_income_trend(current_user=current_user, db=db)
+    return data or []
 
 
 # ---------------- MAIN CHATBOT ---------------- #
@@ -215,23 +251,15 @@ def chatbot_reply(message: str, db, current_user):
             "content": custom_data,
         }
 
-    # ================= PRIORITY 2 → DATABASE ================= #
-    if "pie" in text or "donut" in text:
-        data = get_expense_graph(current_user=current_user, db=db)
-        return {"type": detect_chart_type(text), "content": data or []}
-
-    if "line" in text or "trend" in text:
-        data = get_expense_income_trend(current_user=current_user, db=db)
-        return {"type": "line_chart", "content": data or []}
-
-    if "chart" in text or "graph" in text:
-        data = get_expenses_chart(current_user=current_user, db=db)
-        return {"type": "bar", "content": data or []}
-
+    # ================= PRIORITY 2 → SPECIFIC CHARTS ================= #
     if "scatter" in text:
-        trend = get_expense_income_trend(current_user=current_user, db=db) or []
+        trend = build_trend_chart_data(current_user, db)
         scatter_data = [
-            {"x": item.get("income", 0), "y": item.get("expense", 0)}
+            {
+                "x": item.get("income", 0),
+                "y": item.get("expense", 0),
+                "name": item.get("month") or item.get("date") or "",
+            }
             for item in trend
         ]
         return {"type": "scatter", "content": scatter_data}
@@ -266,6 +294,35 @@ def chatbot_reply(message: str, db, current_user):
         ]
 
         return {"type": "waterfall", "content": data}
+
+    if "area" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "area", "content": data}
+
+    if "stack" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "stacked", "content": data}
+
+    if "composed" in text or "combined" in text or "mix" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "composed", "content": data}
+
+    if "compare" in text or "vs" in text or "multi line" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "multi_line", "content": data}
+
+    # ================= DATABASE CHARTS ================= #
+    if "pie" in text or "donut" in text:
+        data = get_expense_graph(current_user=current_user, db=db)
+        return {"type": detect_chart_type(text), "content": data or []}
+
+    if "line" in text or "trend" in text:
+        data = get_expense_income_trend(current_user=current_user, db=db)
+        return {"type": "line_chart", "content": data or []}
+
+    if "chart" in text or "graph" in text:
+        data = get_expenses_chart(current_user=current_user, db=db)
+        return {"type": "bar", "content": data or []}
 
     # ================= QR CODE ================= #
     if "qr" in text or "qr code" in text:

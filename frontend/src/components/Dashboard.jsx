@@ -35,7 +35,7 @@ export default function Dashboard() {
           {/* Sidebar (Desktop) */}
           <aside className="sidebar">
            <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
-                <div className="logo-circle">V</div>
+                <div className="logo-circle">𝒱.</div>
                 <div className="logo-text">
                    <h1>VITYA.AI</h1>
                    <p>Expense Dashboard</p>
@@ -60,7 +60,7 @@ export default function Dashboard() {
         </main>
         <div className="open-options-mo">
            <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
-                <div className="logo-circle">V</div>
+                <div className="logo-circle">𝒱.</div>
                 <div className="logo-text">
                    <h2>VITYA.AI</h2>
                    <p>Expense Analysis</p>
@@ -113,34 +113,48 @@ export default function Dashboard() {
         {/* 💬 CHATBOT UI */}
 <AnimatePresence>
   {chatOpen && (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 50 }}
-      className="chat-popup"
-    >
-      <div className="chat-header">
-        <div className="mobile-logo" role="banner" aria-label="VITYA.AI logo">
-                <div className="logo-circle">V</div>
-                <div className="logo-text">
-                   <h2>VITYA.AI</h2>
-                   <p>Your Personal AI Agent..</p>
-                </div>
-                </div> 
-      </div>
+    <>
 
-      <div className="chat-body">
-        {/* 👉 Replace with your Chatbot component */}
-        <Chatbot />
+  {/* Chat Popup */}
+  <motion.div
+    initial={{ opacity: 0, y: window.innerWidth < 768 ? 300 : 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: window.innerWidth < 768 ? 300 : 50 }}
+    transition={{ duration: 0.3 }}
+    className={`chat-popup ${chatOpen ? "open" : ""}`}
+  >
+    <div className="chat-header">
+      
+      <div className="mobile-logo" role="banner">
+        <div className="logo-circle">𝒱.</div>
+        <div className="logo-text">
+          <h2>VITYA.AI</h2>
+          <p>Your Personal AI Agent..</p>
+
+        </div>
       </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+      <button
+    className="open-options-btn"
+    onClick={() => setChatOpen(false)}
+    aria-label="Close chat"
+  >
+    ✘
+  </button>
+    </div>
+
+    <div className="chat-body">
+      <Chatbot />
+    </div>
+  </motion.div>
+</>
+
+)} </AnimatePresence>
+
         <button
           className="chat-float-btn"
           onClick={() => setChatOpen(!chatOpen)}
              >
-              v
+              𝒱.
         </button>
       </div>
     </div>

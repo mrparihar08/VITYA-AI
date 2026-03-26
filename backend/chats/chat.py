@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -102,7 +102,7 @@ def chat(
         )
 
     # ================= CHATBOT ================= #
-    reply = chatbot_reply(user_message, db, current_user)
+    reply = chatbot_reply(user_message, db, current_user, background_tasks)
 
     if not reply:
         reply = get_reply(user_message)

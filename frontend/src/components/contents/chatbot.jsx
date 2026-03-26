@@ -592,7 +592,7 @@ const Chatbot = () => {
         return (
           <div style={{ width: "100%", overflow: "hidden" }}>
             <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-              <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+              <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey={xKey} />
                 <YAxis />
