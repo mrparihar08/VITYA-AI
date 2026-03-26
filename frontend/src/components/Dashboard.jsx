@@ -124,7 +124,7 @@ export default function Dashboard() {
                 <div className="logo-circle">V</div>
                 <div className="logo-text">
                    <h2>VITYA.AI</h2>
-                   <p>Expense Analysis</p>
+                   <p>Your Personal AI Agent..</p>
                 </div>
                 </div> 
       </div>

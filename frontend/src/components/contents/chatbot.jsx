@@ -52,17 +52,20 @@ const Chatbot = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const token = localStorage.getItem("token");
   const bottomRef = useRef(null);
   const recognitionRef = useRef(null);
   const isSpeakingRef = useRef(false);
   const chartRefs = useRef({});
+  const forceStopRef = useRef(false);
 
   useEffect(() => {
-    if ("webkitSpeechRecognition" in window) {
-      const rec = new window.webkitSpeechRecognition();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
       rec.continuous = false;
       rec.interimResults = false;
       rec.lang = "en-IN";
@@ -75,7 +78,6 @@ const Chatbot = () => {
   }, [messages, loading]);
 
   const speak = (text) => {
-    if (!voiceEnabled) return;
     if (!text || isSpeakingRef.current) return;
     if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") return;
 
@@ -101,46 +103,98 @@ const Chatbot = () => {
       .trim();
   };
 
-  const startListening = () => {
+  const stopRecognition = () => {
     const recognition = recognitionRef.current;
+    if (!recognition) return;
 
-    if (!recognition) {
-      alert("Voice not supported");
-      return;
-    }
-
-    if (listening) {
-      recognition.stop();
-      setListening(false);
-      return;
-    }
-
-    if (isSpeakingRef.current) return;
-
-    setListening(true);
-
-    recognition.onresult = (event) => {
-      const speechText = event?.results?.[0]?.[0]?.transcript;
-      if (!speechText) {
-        setListening(false);
-        return;
-      }
-
-      const cleaned = preprocessVoice(speechText);
-      setListening(false);
-      sendMessage(cleaned);
-    };
-
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    forceStopRef.current = true;
 
     try {
-      recognition.start();
-    } catch (err) {
-      setListening(false);
-      console.error("Speech recognition start error:", err);
-    }
+      recognition.stop();
+    } catch {}
+    setListening(false);
   };
+
+  const startListening = () => {
+  const recognition = recognitionRef.current;
+
+  if (!recognition) {
+    alert("Voice not supported");
+    return;
+  }
+
+  if (!voiceEnabled) return;   // 👈 block start if disabled
+
+  if (listening) {
+    stopRecognition();
+    return;
+  }
+
+  if (isSpeakingRef.current) return;
+
+  forceStopRef.current = false;   // 👈 reset
+
+  setListening(true);
+
+  recognition.onresult = (event) => {
+    const speechText = event?.results?.[0]?.[0]?.transcript;
+    if (!speechText) {
+      setListening(false);
+      return;
+    }
+
+    const cleaned = preprocessVoice(speechText);
+    setListening(false);
+    sendMessage(cleaned);
+  };
+
+  recognition.onerror = () => setListening(false);
+
+  recognition.onend = () => {
+    if (forceStopRef.current) return;   // 👈 stop loop
+    setListening(false);
+  };
+
+  try {
+    recognition.start();
+  } catch (err) {
+    setListening(false);
+    console.error("Speech recognition start error:", err);
+  }
+};
+
+  const toggleVoiceEnabled = () => {
+    setVoiceEnabled((prev) => {
+      const next = !prev;
+      if (!next) {
+        forceStopRef.current = true;
+        stopRecognition();
+      }
+      return next;
+    });
+  };
+
+  const getMicIcon = () => {
+    if (listening) return "/speak.png";
+    if (!voiceEnabled) return "/mic-off.png";
+    return "/mic.png";
+  };
+
+  const handleMicClick = () => {
+    if (!voiceEnabled) {
+      setVoiceEnabled(true);
+      setTimeout(() => startListening(), 50);
+      return;
+    }
+
+    startListening();
+  };
+
+  useEffect(() => {
+  return () => {
+    recognitionRef.current?.stop();
+  };
+}, []);
 
   const downloadBlob = async (res, filename) => {
     const blob = await res.blob();
@@ -154,6 +208,20 @@ const Chatbot = () => {
     a.remove();
 
     setTimeout(() => window.URL.revokeObjectURL(fileUrl), 1000);
+  };
+
+  const downloadTextFile = (text, filename) => {
+    const blob = new Blob([text || ""], { type: "text/plain;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
   };
 
   const handleFileResponse = async (res, contentType) => {
@@ -195,7 +263,8 @@ const Chatbot = () => {
   };
 
   const sendMessage = async (voiceText = null) => {
-    const messageToSend = (voiceText || input).trim();
+      const isVoiceMessage = !!voiceText;   // ⭐ track source
+      const messageToSend = (voiceText || input).trim();
     if (!messageToSend || loading) return;
 
     setMessages((prev) => [...prev, { sender: "user", type: "text", text: messageToSend }]);
@@ -234,11 +303,19 @@ const Chatbot = () => {
         content: payload,
       };
 
-      setMessages((prev) => [...prev, botMessage]);
+     setMessages((prev) => {
+        const updated = [...prev, botMessage];
 
-      if (botMessage.type === "text" && typeof botMessage.text === "string") {
-        speak(botMessage.text);
-      }
+  // ⭐ Only auto speak if user used voice
+        if (isVoiceMessage) {
+           const speakText = getSpeakText(botMessage);
+           if (speakText) {
+             setTimeout(() => speak(speakText), 300);
+    }
+  }
+
+        return updated;
+      });
     } catch (error) {
       console.error(error);
       setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "Server error ❌" }]);
@@ -721,15 +798,117 @@ const Chatbot = () => {
     return `data:image/png;base64,${raw}`;
   };
 
+  const getMessageText = (msg) => {
+    const type = (msg.type || "").toLowerCase().trim();
+    const raw = msg.content ?? msg.text ?? msg.data ?? "";
+
+    if (type === "news") {
+      const parsed = parseMaybeJSON(raw);
+      const data = Array.isArray(parsed) ? parsed : [];
+      if (!data.length) return "News response";
+
+      return data
+        .map((item, index) => {
+          const title = item?.title ? `Title: ${item.title}` : `News item ${index + 1}`;
+          const desc = item?.description ? `Description: ${item.description}` : "";
+          const url = item?.url ? `Link: ${item.url}` : "";
+          return [title, desc, url].filter(Boolean).join("\n");
+        })
+        .join("\n\n");
+    }
+
+    if (type === "wiki") {
+      const parsed = parseMaybeJSON(raw);
+      const data = typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed || {};
+      if (!data || typeof data !== "object") return "Wikipedia response";
+
+      return [
+        data.title ? `Title: ${data.title}` : "",
+        data.summary ? `Summary: ${data.summary}` : "",
+        data.url ? `Link: ${data.url}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
+
+    if (MEDIA_TYPES.has(type)) {
+      return "Media message";
+    }
+
+    if (CHAT_TYPES.has(type)) {
+      return typeof raw === "string" ? raw : JSON.stringify(raw, null, 2);
+    }
+
+    if (typeof raw === "string") return raw;
+    if (raw && typeof raw === "object") return JSON.stringify(raw, null, 2);
+    return "";
+  };
+
+  const getSpeakText = (msg) => {
+    const type = (msg.type || "").toLowerCase().trim();
+    const text = getMessageText(msg);
+
+    if (!text) return "";
+
+    if (type === "news") return text;
+    if (type === "wiki") return text;
+    if (CHAT_TYPES.has(type)) return "Chart response received.";
+    if (MEDIA_TYPES.has(type)) return "Media response received.";
+    return text;
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
+
+  const handleCopyMessage = async (msg) => {
+    const text = getMessageText(msg);
+    if (text) await copyToClipboard(text);
+  };
+
+  const handleSpeakMessage = (msg) => {
+    const text = getSpeakText(msg);
+    if (text) speak(text);
+  };
+
+  const handleDownloadMessage = (msg, index) => {
+    const type = (msg.type || "").toLowerCase().trim();
+
+    if (CHAT_TYPES.has(type)) {
+      downloadChartPNG(index, msg);
+      return;
+    }
+
+    if (MEDIA_TYPES.has(type)) {
+      const src = getMediaSrc(msg);
+      if (!src) return;
+
+      const link = document.createElement("a");
+      link.href = src;
+      link.download = `${type || "media"}_${index + 1}.png`;
+      link.click();
+      return;
+    }
+
+    const text = getMessageText(msg);
+    if (text) {
+      downloadTextFile(text, `${type || "message"}_${index + 1}.txt`);
+    }
+  };
+
   const showLanding = messages.length === 0;
 
   return (
     <div style={styles.page}>
-      <div style={styles.topRight}>
-        <button onClick={() => setVoiceEnabled((v) => !v)} style={styles.voiceBtn}>
-          {voiceEnabled ? "🔊" : "🔇"}
-        </button>
-      </div>
+      <style>{`
+        .chat-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
 
       <div style={styles.main}>
         {showLanding ? (
@@ -739,10 +918,12 @@ const Chatbot = () => {
             </div>
           </div>
         ) : (
-          <div style={styles.chatArea}>
+          <div style={styles.chatArea} className="chat-scroll">
             {messages.map((msg, i) => {
               const type = (msg.type || "").toLowerCase().trim();
               const chartElement = CHAT_TYPES.has(type) ? renderChart(msg) : null;
+              const bubbleMaxWidth =
+                CHAT_TYPES.has(type) || type === "news" || type === "wiki" ? "95%" : "75%";
 
               return (
                 <div
@@ -754,24 +935,39 @@ const Chatbot = () => {
                 >
                   <div
                     style={{
-                      ...styles.bubble,
-                      background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
-                      color: msg.sender === "user" ? "#fff" : "#000",
-                      maxWidth: CHAT_TYPES.has(type) || type === "news" || type === "wiki" ? "95%" : "75%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      width: "fit-content",
+                      maxWidth: bubbleMaxWidth,
+                      alignItems: msg.sender === "user" ? "flex-end" : "flex-start",
                     }}
                   >
-                    {type === "news" ? (
-                      <div ref={(el) => (chartRefs.current[i] = el)} style={{ ...styles.cardWrap, width: "100%" }}>
-                        {renderNews(msg)}
-                      </div>
-                    ) : type === "wiki" ? (
-                      <div ref={(el) => (chartRefs.current[i] = el)} style={{ ...styles.cardWrap, width: "100%" }}>
-                        {renderWiki(msg)}
-                      </div>
-                    ) : MEDIA_TYPES.has(type) ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {getMediaSrc(msg) ? (
-                          <>
+                    <div
+                      style={{
+                        ...styles.bubble,
+                        background: msg.sender === "user" ? "#17333a" : "#e5e5ea",
+                        color: msg.sender === "user" ? "#fff" : "#000",
+                        width: "100%",
+                      }}
+                    >
+                      {type === "news" ? (
+                        <div
+                          ref={(el) => (chartRefs.current[i] = el)}
+                          style={{ ...styles.cardWrap, width: "100%" }}
+                        >
+                          {renderNews(msg)}
+                        </div>
+                      ) : type === "wiki" ? (
+                        <div
+                          ref={(el) => (chartRefs.current[i] = el)}
+                          style={{ ...styles.cardWrap, width: "100%" }}
+                        >
+                          {renderWiki(msg)}
+                        </div>
+                      ) : MEDIA_TYPES.has(type) ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {getMediaSrc(msg) ? (
                             <img
                               src={getMediaSrc(msg)}
                               alt={type}
@@ -780,33 +976,36 @@ const Chatbot = () => {
                                 e.currentTarget.style.display = "none";
                               }}
                             />
-                            <button
-                              onClick={() => {
-                                const link = document.createElement("a");
-                                link.href = getMediaSrc(msg);
-                                link.download = `${type}.png`;
-                                link.click();
-                              }}
-                              style={styles.downloadBtn}
-                            >
-                              Download
-                            </button>
-                          </>
-                        ) : (
-                          <div>Invalid QR / image data</div>
-                        )}
-                      </div>
-                    ) : CHAT_TYPES.has(type) ? (
-                      <div ref={(el) => (chartRefs.current[i] = el)} style={styles.cardWrap}>
-                        {chartElement || <div>No chart data</div>}
-                        <div style={styles.exportRow}>
-                          <button style={styles.exportBtn} onClick={() => downloadChartPNG(i, msg)}>
-                            PNG
-                          </button>
+                          ) : (
+                            <div>Invalid QR / image data</div>
+                          )}
                         </div>
+                      ) : CHAT_TYPES.has(type) ? (
+                        <div ref={(el) => (chartRefs.current[i] = el)} style={styles.cardWrap}>
+                          {chartElement || <div>No chart data</div>}
+                        </div>
+                      ) : (
+                        <span>{typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}</span>
+                      )}
+                    </div>
+
+                    {msg.sender === "bot" && (
+                      <div style={styles.messageActions}>
+                        <button onClick={() => handleCopyMessage(msg)} style={styles.actionBtn}>
+                          <img src="/copy.png" alt="copy" style={{ width: 10, height: 10 }} />
+                        </button>
+
+                        <button onClick={() => handleSpeakMessage(msg)} style={styles.actionBtn}>
+                          <img src="/speak.png" alt="speak" style={{ width: 10, height: 10 }} />
+                        </button>
+
+                        <button onClick={() => handleDownloadMessage(msg, i)} style={styles.actionBtn}>
+                          <img src="/downloading.png" alt="download" style={{ width: 10, height: 10 }} />
+                        </button>
+                        <button onClick={() => alert("Add action here")} style={styles.actionBtn}>
+                          <img src="/dots.png" alt="more" style={{ width: 10, height: 10 }} />
+                        </button>
                       </div>
-                    ) : (
-                      <span>{typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)}</span>
                     )}
                   </div>
                 </div>
@@ -833,8 +1032,20 @@ const Chatbot = () => {
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
 
-          <button onClick={startListening} style={styles.iconBtn}>
-            <img src="/mic.png" alt="Mic" style={{ width: 20, height: 20 }} />
+          <button
+            onClick={handleMicClick}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              toggleVoiceEnabled();
+            }}
+            title="Click to talk. Right-click to turn voice on/off."
+            style={{
+              ...styles.iconBtn,
+              background: listening ? "rgba(72,118,255,0.22)" : "transparent",
+              boxShadow: listening ? "0 0 0 6px rgba(72,118,255,0.15)" : "none",
+            }}
+          >
+            <img src={getMicIcon()} alt="Mic" style={{ width: 20, height: 20 }} />
           </button>
 
           <button onClick={() => sendMessage()} style={styles.iconBtn}>
@@ -860,39 +1071,29 @@ const styles = {
     overflow: "hidden",
     fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
   },
-  topRight: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    zIndex: 10,
-  },
-  voiceBtn: {
-    padding: "8px 12px",
-    border: "none",
-    borderRadius: 10,
-    background: "rgba(255,255,255,0.08)",
-    color: "#fff",
-    cursor: "pointer",
-    backdropFilter: "blur(10px)",
-  },
+
   main: {
     flex: 1,
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: "column",
     padding: "24px",
     boxSizing: "border-box",
+    overflow: "hidden",
   },
+
   hero: {
     width: "100%",
+    flex: 1,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
   },
+
   heroText: {
     marginTop: "-6vh",
   },
+
   heroLine1: {
     fontSize: "clamp(30px, 4vw, 56px)",
     fontWeight: 700,
@@ -900,32 +1101,41 @@ const styles = {
     color: "#fff",
     marginBottom: 12,
   },
+
   heroLine2: {
     fontSize: "clamp(28px, 3.6vw, 50px)",
     fontWeight: 700,
     lineHeight: 1.15,
     color: "#fff",
   },
+
   chatArea: {
     width: "min(1100px, 100%)",
-    height: "100%",
+    flex: 1,
     overflowY: "auto",
-    padding: "72px 5px 5px 10px",
+    padding: "72px 10px 10px",
     display: "flex",
     flexDirection: "column",
     gap: 12,
     boxSizing: "border-box",
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
+    alignItems: "center",
   },
+
   messageRow: {
     display: "flex",
     width: "100%",
   },
+
   bubble: {
     padding: 12,
     borderRadius: 14,
     wordBreak: "break-word",
     boxSizing: "border-box",
+    maxWidth: "100%",
   },
+
   cardWrap: {
     width: 500,
     maxWidth: "100%",
@@ -936,10 +1146,12 @@ const styles = {
     boxSizing: "border-box",
     color: "#fff",
   },
+
   typing: {
     color: "rgba(255,255,255,0.75)",
     paddingLeft: 8,
   },
+
   bottomDock: {
     width: "100%",
     position: "sticky",
@@ -951,7 +1163,9 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: 10,
+    background: "linear-gradient(to top, #0f1424 70%, transparent)",
   },
+
   composer: {
     width: "min(920px, 100%)",
     height: 76,
@@ -965,6 +1179,7 @@ const styles = {
     boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
     boxSizing: "border-box",
   },
+
   iconBtn: {
     width: 48,
     height: 48,
@@ -979,6 +1194,7 @@ const styles = {
     flexShrink: 0,
     fontSize: 26,
   },
+
   input: {
     flex: 1,
     height: 48,
@@ -991,6 +1207,7 @@ const styles = {
     minWidth: 0,
     fontSize: 16,
   },
+
   footer: {
     width: "min(920px, 100%)",
     fontSize: 12,
@@ -999,6 +1216,7 @@ const styles = {
     textAlign: "center",
     paddingBottom: 2,
   },
+
   downloadBtn: {
     padding: "8px 10px",
     border: "none",
@@ -1007,12 +1225,14 @@ const styles = {
     color: "#fff",
     cursor: "pointer",
   },
+
   exportRow: {
     display: "flex",
     gap: 8,
     marginTop: 8,
     flexWrap: "wrap",
   },
+
   exportBtn: {
     padding: "8px 10px",
     border: "none",
@@ -1020,5 +1240,23 @@ const styles = {
     background: "#17333a",
     color: "#fff",
     cursor: "pointer",
+  },
+
+  messageActions: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+    alignItems: "center",
+    marginTop: 2,
+  },
+
+  actionBtn: {
+    padding: "6px 10px",
+    border: "none",
+    borderRadius: 8,
+    background: "rgba(255,255,255,0.12)",
+    color: "inherit",
+    cursor: "pointer",
+    fontSize: 12,
   },
 };
