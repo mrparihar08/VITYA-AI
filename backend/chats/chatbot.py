@@ -117,6 +117,7 @@ def fetch_wikipedia(query):
         print("WIKI ERROR:", e)
         return None
 
+
 def normalize(text: str):
     text = (text or "").lower()
     for k, v in NORMALIZATION_MAP.items():
@@ -168,7 +169,7 @@ def detect_category(text: str):
 # ---------------- CUSTOM DATA ---------------- #
 def extract_chart_data(text: str):
     pairs = re.findall(
-        r"\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)",
+        r'\b([a-zA-Z]+)\b\s*[:=]?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)',
         text,
     )
     return [
@@ -179,13 +180,6 @@ def extract_chart_data(text: str):
 
 # ---------------- CHART TYPE ---------------- #
 def detect_chart_type(text: str):
-    # More specific patterns first
-    if "multi line" in text or "compare" in text or "vs" in text:
-        return "multi_line"
-    if "composed" in text or "combined" in text or "mix" in text:
-        return "composed"
-    if "stack" in text:
-        return "stacked"
     if "pie" in text:
         return "pie"
     if "donut" in text:
@@ -202,12 +196,13 @@ def detect_chart_type(text: str):
         return "heatmap"
     if "waterfall" in text:
         return "waterfall"
+    if "stack" in text:
+        return "stacked"
+    if "compare" in text or "vs" in text:
+        return "multi_line"
+    if "mix" in text or "combined" in text:
+        return "composed"
     return "bar"
-
-
-def build_trend_chart_data(current_user, db):
-    data = get_expense_income_trend(current_user=current_user, db=db)
-    return data or []
 
 
 # ---------------- MAIN CHATBOT ---------------- #
@@ -251,15 +246,23 @@ def chatbot_reply(message: str, db, current_user):
             "content": custom_data,
         }
 
-    # ================= PRIORITY 2 → SPECIFIC CHARTS ================= #
+    # ================= PRIORITY 2 → DATABASE ================= #
+    if "pie" in text or "donut" in text:
+        data = get_expense_graph(current_user=current_user, db=db)
+        return {"type": detect_chart_type(text), "content": data or []}
+
+    if "line" in text or "trend" in text:
+        data = get_expense_income_trend(current_user=current_user, db=db)
+        return {"type": "line_chart", "content": data or []}
+
+    if "chart" in text or "graph" in text:
+        data = get_expenses_chart(current_user=current_user, db=db)
+        return {"type": "bar", "content": data or []}
+
     if "scatter" in text:
-        trend = build_trend_chart_data(current_user, db)
+        trend = get_expense_income_trend(current_user=current_user, db=db) or []
         scatter_data = [
-            {
-                "x": item.get("income", 0),
-                "y": item.get("expense", 0),
-                "name": item.get("month") or item.get("date") or "",
-            }
+            {"x": item.get("income", 0), "y": item.get("expense", 0)}
             for item in trend
         ]
         return {"type": "scatter", "content": scatter_data}
@@ -294,35 +297,6 @@ def chatbot_reply(message: str, db, current_user):
         ]
 
         return {"type": "waterfall", "content": data}
-
-    if "area" in text:
-        data = build_trend_chart_data(current_user, db)
-        return {"type": "area", "content": data}
-
-    if "stack" in text:
-        data = build_trend_chart_data(current_user, db)
-        return {"type": "stacked", "content": data}
-
-    if "composed" in text or "combined" in text or "mix" in text:
-        data = build_trend_chart_data(current_user, db)
-        return {"type": "composed", "content": data}
-
-    if "compare" in text or "vs" in text or "multi line" in text:
-        data = build_trend_chart_data(current_user, db)
-        return {"type": "multi_line", "content": data}
-
-    # ================= DATABASE CHARTS ================= #
-    if "pie" in text or "donut" in text:
-        data = get_expense_graph(current_user=current_user, db=db)
-        return {"type": detect_chart_type(text), "content": data or []}
-
-    if "line" in text or "trend" in text:
-        data = get_expense_income_trend(current_user=current_user, db=db)
-        return {"type": "line_chart", "content": data or []}
-
-    if "chart" in text or "graph" in text:
-        data = get_expenses_chart(current_user=current_user, db=db)
-        return {"type": "bar", "content": data or []}
 
     # ================= QR CODE ================= #
     if "qr" in text or "qr code" in text:
