@@ -71,6 +71,15 @@ const Chatbot = () => {
       rec.lang = "en-IN";
       recognitionRef.current = rec;
     }
+
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+      try {
+        window.speechSynthesis?.cancel();
+      } catch {}
+    };
   }, []);
 
   useEffect(() => {
@@ -78,17 +87,22 @@ const Chatbot = () => {
   }, [messages, loading]);
 
   const speak = (text) => {
-    if (!text || isSpeakingRef.current) return;
+    if (!text) return;
     if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") return;
 
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
 
     isSpeakingRef.current = true;
+
     utterance.onend = () => {
       isSpeakingRef.current = false;
     };
+
     utterance.onerror = () => {
       isSpeakingRef.current = false;
     };
@@ -112,56 +126,55 @@ const Chatbot = () => {
     try {
       recognition.stop();
     } catch {}
+
     setListening(false);
   };
 
   const startListening = () => {
-  const recognition = recognitionRef.current;
+    const recognition = recognitionRef.current;
 
-  if (!recognition) {
-    alert("Voice not supported");
-    return;
-  }
-
-  if (!voiceEnabled) return;   // 👈 block start if disabled
-
-  if (listening) {
-    stopRecognition();
-    return;
-  }
-
-  if (isSpeakingRef.current) return;
-
-  forceStopRef.current = false;   // 👈 reset
-
-  setListening(true);
-
-  recognition.onresult = (event) => {
-    const speechText = event?.results?.[0]?.[0]?.transcript;
-    if (!speechText) {
-      setListening(false);
+    if (!recognition) {
+      alert("Voice not supported");
       return;
     }
 
-    const cleaned = preprocessVoice(speechText);
-    setListening(false);
-    sendMessage(cleaned);
+    if (!voiceEnabled) return;
+    if (listening) {
+      stopRecognition();
+      return;
+    }
+
+    if (isSpeakingRef.current) return;
+
+    forceStopRef.current = false;
+    setListening(true);
+
+    recognition.onresult = (event) => {
+      const speechText = event?.results?.[0]?.[0]?.transcript;
+      if (!speechText) {
+        setListening(false);
+        return;
+      }
+
+      const cleaned = preprocessVoice(speechText);
+      setListening(false);
+      sendMessage(cleaned);
+    };
+
+    recognition.onerror = () => setListening(false);
+
+    recognition.onend = () => {
+      if (forceStopRef.current) return;
+      setListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      setListening(false);
+      console.error("Speech recognition start error:", err);
+    }
   };
-
-  recognition.onerror = () => setListening(false);
-
-  recognition.onend = () => {
-    if (forceStopRef.current) return;   // 👈 stop loop
-    setListening(false);
-  };
-
-  try {
-    recognition.start();
-  } catch (err) {
-    setListening(false);
-    console.error("Speech recognition start error:", err);
-  }
-};
 
   const toggleVoiceEnabled = () => {
     setVoiceEnabled((prev) => {
@@ -169,6 +182,9 @@ const Chatbot = () => {
       if (!next) {
         forceStopRef.current = true;
         stopRecognition();
+        try {
+          window.speechSynthesis?.cancel();
+        } catch {}
       }
       return next;
     });
@@ -189,12 +205,6 @@ const Chatbot = () => {
 
     startListening();
   };
-
-  useEffect(() => {
-  return () => {
-    recognitionRef.current?.stop();
-  };
-}, []);
 
   const downloadBlob = async (res, filename) => {
     const blob = await res.blob();
@@ -262,68 +272,6 @@ const Chatbot = () => {
     return false;
   };
 
-  const sendMessage = async (voiceText = null) => {
-      const isVoiceMessage = !!voiceText;   // ⭐ track source
-      const messageToSend = (voiceText || input).trim();
-    if (!messageToSend || loading) return;
-
-    setMessages((prev) => [...prev, { sender: "user", type: "text", text: messageToSend }]);
-    setLoading(true);
-
-    try {
-      const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message: messageToSend }),
-      });
-
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-
-      const contentType = res.headers.get("content-type") || "";
-
-      if (await handleFileResponse(res, contentType)) return;
-
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      const payload =
-        data?.content ?? data?.data ?? data?.reply ?? data?.result ?? data?.message ?? data?.payload ?? null;
-      const normalizedPayload =
-        data?.type === "wiki" ? normalizeWikiData(payload) : payload;
-      const botMessage = {
-        sender: "bot",
-        type: data?.type || "text",
-        text: typeof normalizedPayload === "string" ? normalizedPayload : "",
-        content: normalizedPayload,
-      };
-
-  setMessages((prev) => {
-    const updated = [...prev, botMessage];
-
-    if (isVoiceMessage) {
-      const speakText = getSpeakText(botMessage);
-      if (speakText) setTimeout(() => speak(speakText), 300);
-    }
-
-    return updated;
-  });
-
-    } catch (error) {
-      console.error(error);
-      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "Server error ❌" }]);
-    } finally {
-      setLoading(false);
-      setInput("");
-    }
-  };
-
   const formatMonth = (dateStr) => {
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
@@ -349,6 +297,7 @@ const Chatbot = () => {
 
     return value;
   };
+
   const normalizeWikiData = (value) => {
     const parsed = parseMaybeJSON(value);
     const data = typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed;
@@ -458,80 +407,80 @@ const Chatbot = () => {
   };
 
   const renderNews = (msg) => {
-  const raw = msg.content ?? msg.text ?? [];
+    const raw = msg.content ?? msg.text ?? [];
 
-  let data = [];
+    let data = [];
 
-  if (Array.isArray(raw)) {
-    data = raw;
-  } else {
-    const parsed = parseMaybeJSON(raw);
-    if (Array.isArray(parsed)) data = parsed;
-    else if (parsed?.articles && Array.isArray(parsed.articles)) data = parsed.articles;
-  }
+    if (Array.isArray(raw)) {
+      data = raw;
+    } else {
+      const parsed = parseMaybeJSON(raw);
+      if (Array.isArray(parsed)) data = parsed;
+      else if (parsed?.articles && Array.isArray(parsed.articles)) data = parsed.articles;
+    }
 
-  if (!data.length) return <div>No news available</div>;
+    if (!data.length) return <div>No news available</div>;
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-      {data.map((item, i) => (
-        <div
-          key={i}
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 12,
-            padding: 12,
-            background: "#fff",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            maxWidth: 560,
-            boxSizing: "border-box",
-            color: "#111",
-          }}
-        >
-          {item?.image ? (
-            <img
-              src={item.image}
-              alt={item.title || "news"}
-              style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 10 }}
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : null}
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+        {data.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 12,
+              padding: 12,
+              background: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              maxWidth: 560,
+              boxSizing: "border-box",
+              color: "#111",
+            }}
+          >
+            {item?.image ? (
+              <img
+                src={item.image}
+                alt={item.title || "news"}
+                style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 10 }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : null}
 
-          <div style={{ fontWeight: "bold", fontSize: 16 }}>
-            {item?.title || "No title"}
+            <div style={{ fontWeight: "bold", fontSize: 16 }}>
+              {item?.title || "No title"}
+            </div>
+
+            <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
+              {item?.description || "No description"}
+            </div>
+
+            {item?.url ? (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: 4,
+                  textDecoration: "none",
+                  color: "#17333a",
+                  fontWeight: "600",
+                }}
+              >
+                Read More →
+              </a>
+            ) : null}
           </div>
+        ))}
+      </div>
+    );
+  };
 
-          <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
-            {item?.description || "No description"}
-          </div>
-
-          {item?.url ? (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "inline-block",
-                marginTop: 4,
-                textDecoration: "none",
-                color: "#17333a",
-                fontWeight: "600",
-              }}
-            >
-              Read More →
-            </a>
-          ) : null}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-    const renderWiki = (msg) => {
+  const renderWiki = (msg) => {
     const data = normalizeWikiData(msg.content ?? msg.text ?? msg.data ?? {});
 
     if (!data.title && !data.summary && !data.url && !data.image) {
@@ -830,10 +779,23 @@ const Chatbot = () => {
   const getMessageText = (msg) => {
     const type = (msg.type || "").toLowerCase().trim();
     const raw = msg.content ?? msg.text ?? msg.data ?? "";
+    if (type === "text") {
+       return msg.content || msg.text || msg.reply || "";
+    }
 
+    if (type === "chat") {
+        const data = msg.content ?? msg.reply ?? msg.text ?? "";
+
+        if (typeof data === "string") return data;
+        if (data && typeof data === "object") {
+          return data.content || data.reply || JSON.stringify(data, null, 2);
+        }
+
+        return "";
+      }
     if (type === "news") {
-      const raw = msg.content ?? msg.text ?? [];
-      const parsed = Array.isArray(raw) ? raw : parseMaybeJSON(raw);
+      const rawNews = msg.content ?? msg.text ?? [];
+      const parsed = Array.isArray(rawNews) ? rawNews : parseMaybeJSON(rawNews);
       const data = Array.isArray(parsed) ? parsed : parsed?.articles || [];
 
       if (!data.length) return "News response";
@@ -863,6 +825,7 @@ const Chatbot = () => {
         .filter(Boolean)
         .join("\n\n");
     }
+
     if (MEDIA_TYPES.has(type)) {
       return "Media message";
     }
@@ -929,6 +892,79 @@ const Chatbot = () => {
     const text = getMessageText(msg);
     if (text) {
       downloadTextFile(text, `${type || "message"}_${index + 1}.txt`);
+    }
+  };
+
+  const sendMessage = async (voiceText = null) => {
+    const isVoiceMessage = !!voiceText;
+    const messageToSend = (voiceText ?? input).trim();
+
+    if (!messageToSend || loading) return;
+
+    if (!token) {
+      alert("Please login again.");
+      return;
+    }
+
+    setMessages((prev) => [...prev, { sender: "user", type: "text", text: messageToSend }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://vitya-ai-qlbn.onrender.com/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: messageToSend }),
+      });
+
+      if (res.status === 401) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
+      const contentType = res.headers.get("content-type") || "";
+
+      const isFile = await handleFileResponse(res, contentType);
+      if (isFile) return;
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+
+      const payload =
+        data?.content ?? data?.data ?? data?.reply ?? data?.result ?? data?.message ?? data?.payload ?? null;
+
+      const normalizedPayload = data?.type === "wiki" ? normalizeWikiData(payload) : payload;
+
+      const botMessage = {
+        sender: "bot",
+        type: data?.type || "text",
+        text: typeof normalizedPayload === "string" ? normalizedPayload : "",
+        content: normalizedPayload,
+      };
+
+      setMessages((prev) => {
+        const updated = [...prev, botMessage];
+        return updated.slice(-50);
+      });
+
+      if (isVoiceMessage) {
+        const speakText = getSpeakText(botMessage);
+        if (speakText) setTimeout(() => speak(speakText), 300);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "Server error ❌" }]);
+    } finally {
+      setLoading(false);
+      setInput("");
     }
   };
 
@@ -1034,6 +1070,7 @@ const Chatbot = () => {
                         <button onClick={() => handleDownloadMessage(msg, i)} style={styles.actionBtn}>
                           <img src="/downloading.png" alt="download" style={{ width: 10, height: 10 }} />
                         </button>
+
                         <button onClick={() => alert("Add action here")} style={styles.actionBtn}>
                           <img src="/dots.png" alt="more" style={{ width: 10, height: 10 }} />
                         </button>
@@ -1061,7 +1098,12 @@ const Chatbot = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             style={styles.input}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
           />
 
           <button

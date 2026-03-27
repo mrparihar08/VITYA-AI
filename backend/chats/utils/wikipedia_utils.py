@@ -1,10 +1,10 @@
+# wikipedia_utils.py
 import wikipedia
 
-# ---------- Language Detection ----------
+
 def detect_language(text: str) -> str:
     text = text or ""
 
-    # Simple Hindi detection (Devanagari range)
     for ch in text:
         if '\u0900' <= ch <= '\u097F':
             return "hi"
@@ -18,7 +18,6 @@ def set_language(text: str):
     return lang
 
 
-# ---------- SEARCH ----------
 def search(query: str):
     query = (query or "").strip()
     if not query:
@@ -37,7 +36,6 @@ def search(query: str):
         return {"error": str(e), "results": []}
 
 
-# ---------- SUMMARY ----------
 def get_summary(title: str, sentences: int = 3):
     title = (title or "").strip()
     if not title:
@@ -70,7 +68,6 @@ def get_summary(title: str, sentences: int = 3):
         return {"error": str(e), "language": lang}
 
 
-# ---------- PAGE ----------
 def get_page(title: str):
     title = (title or "").strip()
     if not title:
@@ -102,7 +99,6 @@ def get_page(title: str):
         return {"error": str(e), "language": lang}
 
 
-# ---------- COMPLETE ----------
 def get_complete(title: str):
     title = (title or "").strip()
     if not title:

@@ -1,3 +1,4 @@
+# news_utils.py
 import os
 import re
 import requests
@@ -99,14 +100,11 @@ def extract_news_query(message: str) -> str:
     msg = (message or "").strip()
     lower = msg.lower()
 
-    # Remove leading common phrases
     lower = re.sub(r"^(show me|tell me|give me|latest|latest news|news about)\s+", "", lower).strip()
 
-    # If it contains "news", remove that word and keep the rest
     if "news" in lower:
         lower = lower.replace("news", "").strip()
 
-    # Remove filler words
     stop_words = {"about", "the", "a", "an", "today", "please", "of"}
     words = [w for w in lower.split() if w not in stop_words]
 
