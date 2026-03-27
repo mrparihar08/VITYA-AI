@@ -295,12 +295,13 @@ const Chatbot = () => {
 
       const payload =
         data?.content ?? data?.data ?? data?.reply ?? data?.result ?? data?.message ?? data?.payload ?? null;
-
+      const normalizedPayload =
+        data?.type === "wiki" ? normalizeWikiData(payload) : payload;
       const botMessage = {
         sender: "bot",
         type: data?.type || "text",
-        text: typeof payload === "string" ? payload : "",
-        content: payload,
+        text: typeof normalizedPayload === "string" ? normalizedPayload : "",
+        content: normalizedPayload,
       };
 
      setMessages((prev) => {
@@ -349,6 +350,39 @@ const Chatbot = () => {
     }
 
     return value;
+  };
+    const normalizeWikiData = (value) => {
+    const parsed = parseMaybeJSON(value);
+    const data =
+      typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed;
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return {};
+    }
+
+    return {
+      title:
+        data.title ||
+        data.name ||
+        data.pageTitle ||
+        "Wikipedia",
+      summary:
+        data.summary ||
+        data.extract ||
+        data.description ||
+        "",
+      image:
+        data.image ||
+        data.thumbnail?.source ||
+        data.thumbnail ||
+        data.imageUrl ||
+        "",
+      url:
+        data.url ||
+        data.pageUrl ||
+        data.content_urls?.desktop?.page ||
+        "",
+    };
   };
 
   const normalizeMultiLineData = (data) => {
@@ -438,74 +472,83 @@ const Chatbot = () => {
   };
 
   const renderNews = (msg) => {
-    const raw = parseMaybeJSON(msg.content ?? msg.text ?? []);
-    const data = Array.isArray(raw) ? raw : [];
+  const raw = msg.content ?? msg.text ?? [];
 
-    if (!data.length) return <div>No news available</div>;
+  let data = [];
 
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-        {data.map((item, i) => (
-          <div
-            key={i}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 12,
-              padding: 12,
-              background: "#fff",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              maxWidth: 560,
-              boxSizing: "border-box",
-            }}
-          >
-            {item?.image ? (
-              <img
-                src={item.image}
-                alt={item.title || "news"}
-                style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 10 }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : null}
+  if (Array.isArray(raw)) {
+    data = raw;
+  } else {
+    const parsed = parseMaybeJSON(raw);
+    if (Array.isArray(parsed)) data = parsed;
+    else if (parsed?.articles && Array.isArray(parsed.articles)) data = parsed.articles;
+  }
 
-            <div style={{ fontWeight: "bold", fontSize: 16, color: "#111" }}>
-              {item?.title || "No title"}
-            </div>
+  if (!data.length) return <div>No news available</div>;
 
-            <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
-              {item?.description || "No description"}
-            </div>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+      {data.map((item, i) => (
+        <div
+          key={i}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 12,
+            padding: 12,
+            background: "#fff",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxWidth: 560,
+            boxSizing: "border-box",
+            color: "#111",
+          }}
+        >
+          {item?.image ? (
+            <img
+              src={item.image}
+              alt={item.title || "news"}
+              style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 10 }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : null}
 
-            {item?.url ? (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "inline-block",
-                  marginTop: 4,
-                  textDecoration: "none",
-                  color: "#17333a",
-                  fontWeight: "600",
-                }}
-              >
-                Read More →
-              </a>
-            ) : null}
+          <div style={{ fontWeight: "bold", fontSize: 16 }}>
+            {item?.title || "No title"}
           </div>
-        ))}
-      </div>
-    );
-  };
 
-  const renderWiki = (msg) => {
-    const raw = parseMaybeJSON(msg.content ?? {});
-    const data = typeof raw === "string" ? parseMaybeJSON(raw) : raw || {};
+          <div style={{ fontSize: 14, color: "#444", lineHeight: 1.5 }}>
+            {item?.description || "No description"}
+          </div>
 
-    if (!data || typeof data !== "object") {
+          {item?.url ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "inline-block",
+                marginTop: 4,
+                textDecoration: "none",
+                color: "#17333a",
+                fontWeight: "600",
+              }}
+            >
+              Read More →
+            </a>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+    const renderWiki = (msg) => {
+    const data = normalizeWikiData(msg.content ?? msg.text ?? msg.data ?? {});
+
+    if (!data.title && !data.summary && !data.url && !data.image) {
       return <div>No Wikipedia data available</div>;
     }
 
@@ -535,7 +578,7 @@ const Chatbot = () => {
         ) : null}
 
         <div style={{ fontWeight: "bold", fontSize: 18, color: "#111" }}>
-          {data.title || "Wikipedia"}
+          {data.title}
         </div>
 
         <div style={{ fontSize: 14, color: "#444", lineHeight: 1.6 }}>
@@ -803,8 +846,10 @@ const Chatbot = () => {
     const raw = msg.content ?? msg.text ?? msg.data ?? "";
 
     if (type === "news") {
-      const parsed = parseMaybeJSON(raw);
-      const data = Array.isArray(parsed) ? parsed : [];
+      const raw = msg.content ?? msg.text ?? [];
+      const parsed = Array.isArray(raw) ? raw : parseMaybeJSON(raw);
+      const data = Array.isArray(parsed) ? parsed : parsed?.articles || [];
+
       if (!data.length) return "News response";
 
       return data
@@ -818,9 +863,11 @@ const Chatbot = () => {
     }
 
     if (type === "wiki") {
-      const parsed = parseMaybeJSON(raw);
-      const data = typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed || {};
-      if (!data || typeof data !== "object") return "Wikipedia response";
+      const data = normalizeWikiData(raw);
+
+      if (!data.title && !data.summary && !data.url) {
+        return "Wikipedia response";
+      }
 
       return [
         data.title ? `Title: ${data.title}` : "",
@@ -830,7 +877,6 @@ const Chatbot = () => {
         .filter(Boolean)
         .join("\n\n");
     }
-
     if (MEDIA_TYPES.has(type)) {
       return "Media message";
     }

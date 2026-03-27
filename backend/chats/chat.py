@@ -1,27 +1,22 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
 from backend.api.database import get_db
 from backend.api.models.vitya import User
 from backend.api.auth import token_required
-
 from backend.chats.rules import get_reply
 from backend.chats.chatbot import chatbot_reply
-
 from backend.api.routes.vitya import (
     download_expenses_csv,
     download_incomes_csv
 )
-
 from backend.chats.FileCreator import (
     generate_csv_from_text,
     generate_doc_from_text,
     generate_pdf_from_text,
     generate_ppt_from_text
 )
-
 # ✅ Proper Request Model
 class ChatRequest(BaseModel):
     message: str
@@ -102,7 +97,7 @@ def chat(
         )
 
     # ================= CHATBOT ================= #
-    reply = chatbot_reply(user_message, db, current_user, background_tasks)
+    reply = chatbot_reply(user_message, db, current_user)
 
     if not reply:
         reply = get_reply(user_message)

@@ -1,11 +1,11 @@
 import os
 import re
+from fastapi import  Query, HTTPException
+from dotenv import load_dotenv
 from datetime import datetime
 from urllib.parse import quote
-
 import requests
 from sqlalchemy import func
-
 from backend.api.models.vitya import Expense, Income
 from backend.api.routes.ai import budget_plan, monthly_trend
 from backend.api.routes.vitya import (
@@ -26,97 +26,155 @@ NORMALIZATION_MAP = {
     "dawai": "medicine",
 }
 
-NEWS_API_KEY = "cab48a68546b43b19255d2e2b4dc9a6d"
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
+BASE_TOP = "https://newsapi.org/v2/top-headlines"
+BASE_SEARCH = "https://newsapi.org/v2/everything"
 
-def fetch_news(category="general"):
+def fetch_news_data(category="general", q="", limit=5):
     try:
         if not NEWS_API_KEY:
-            print("NEWS API KEY missing")
-            return []
+            raise Exception("NEWS_API_KEY missing")
 
-        url = (
-            "https://newsapi.org/v2/top-headlines"
-            f"?country=in&category={category}&apiKey={NEWS_API_KEY}"
-        )
-        res = requests.get(url, timeout=10)
-        
-        if res.status_code != 200:
-            print("NEWS HTTP ERROR:", res.status_code, res.text[:300])
-            return []
+        # Decide endpoint
+        if q.strip():
+            response = requests.get(
+                BASE_SEARCH,
+                params={
+                    "q": q.strip(),
+                    "language": "en",
+                    "sortBy": "publishedAt",
+                    "apiKey": NEWS_API_KEY
+                },
+                timeout=10
+            )
+        else:
+            response = requests.get(
+                BASE_TOP,
+                params={
+                    "country": "in",
+                    "category": category,
+                    "apiKey": NEWS_API_KEY
+                },
+                timeout=10
+            )
 
-        data = res.json()
+        data = response.json()
 
-        if data.get("status") != "ok":
-            print("NEWS API ERROR:", data)
-            return []
+        if response.status_code != 200:
+            raise Exception(data.get("message", "News API error"))
 
         articles = data.get("articles", [])
-        news_list = []
 
-        for a in articles[:5]:
-            news_list.append(
-                {
-                    "title": a.get("title"),
-                    "description": a.get("description"),
-                    "url": a.get("url"),
-                    "image": a.get("urlToImage"),
-                }
-            )
+        # Clean output (important)
+        news_list = []
+        for a in articles[:limit]:
+            news_list.append({
+                "title": a.get("title"),
+                "description": a.get("description"),
+                "url": a.get("url"),
+                "image": a.get("urlToImage"),
+                "source": a.get("source", {}).get("name"),
+                "publishedAt": a.get("publishedAt"),
+            })
 
         return news_list
 
-    except requests.RequestException as e:
-        print("NEWS REQUEST ERROR:", e)
-        return []
     except Exception as e:
         print("NEWS ERROR:", e)
         return []
 
 
-def fetch_wikipedia(query):
+import wikipedia
+import requests
+from urllib.parse import quote
+
+wikipedia.set_lang("en")
+
+
+def fetch_wikipedia(query: str):
     try:
         if not query or not query.strip():
             return None
 
-        safe_query = quote(query.strip())
+        query = query.strip()
+
+        # ---------------- TRY 1: wikipedia library ---------------- #
+        try:
+            summary = wikipedia.summary(query, sentences=3)
+            page = wikipedia.page(query)
+
+            return {
+                "title": page.title,
+                "summary": summary,
+                "url": page.url,
+                "image": page.images[0] if page.images else None,
+                "source": "library"
+            }
+
+        except wikipedia.exceptions.DisambiguationError as e:
+            # pick first option automatically
+            try:
+                option = e.options[0]
+                summary = wikipedia.summary(option, sentences=3)
+                page = wikipedia.page(option)
+
+                return {
+                    "title": page.title,
+                    "summary": summary,
+                    "url": page.url,
+                    "image": page.images[0] if page.images else None,
+                    "source": "library_disambiguation"
+                }
+            except Exception:
+                pass
+
+        except wikipedia.exceptions.PageError:
+            pass
+
+        # ---------------- TRY 2: API FALLBACK ---------------- #
+        safe_query = quote(query)
         url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe_query}"
 
         res = requests.get(url, timeout=10)
 
         if res.status_code != 200:
-            print("WIKI HTTP ERROR:", res.status_code, res.text[:300])
+            print("WIKI HTTP ERROR:", res.status_code, res.text[:200])
             return None
 
         data = res.json()
 
-        if not isinstance(data, dict):
-            return None
-
-        # Wikipedia not found / error response
         if data.get("type") == "https://mediawiki.org/wiki/HyperSwitch/errors/not_found":
             return None
 
-        summary = data.get("extract")
-        title = data.get("title")
-
-        if not title and not summary:
-            return None
-
         return {
-            "title": title,
-            "summary": summary,
-            "image": data.get("thumbnail", {}).get("source"),
+            "title": data.get("title"),
+            "summary": data.get("extract"),
             "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
+            "image": data.get("thumbnail", {}).get("source"),
+            "source": "api"
         }
 
     except requests.RequestException as e:
         print("WIKI REQUEST ERROR:", e)
         return None
+
     except Exception as e:
         print("WIKI ERROR:", e)
         return None
 
+import re
+
+def clean_wiki_query(text: str):
+    text = text.lower()
+
+    text = re.sub(
+        r"(wiki|wikipedia|tell me about|who is|what is|info about|information on)",
+        "",
+        text
+    )
+
+    return text.strip()
 
 def normalize(text: str):
     text = (text or "").lower()
@@ -180,6 +238,13 @@ def extract_chart_data(text: str):
 
 # ---------------- CHART TYPE ---------------- #
 def detect_chart_type(text: str):
+    # More specific patterns first
+    if "multi line" in text or "compare" in text or "vs" in text:
+        return "multi_line"
+    if "composed" in text or "combined" in text or "mix" in text:
+        return "composed"
+    if "stack" in text:
+        return "stacked"
     if "pie" in text:
         return "pie"
     if "donut" in text:
@@ -196,13 +261,12 @@ def detect_chart_type(text: str):
         return "heatmap"
     if "waterfall" in text:
         return "waterfall"
-    if "stack" in text:
-        return "stacked"
-    if "compare" in text or "vs" in text:
-        return "multi_line"
-    if "mix" in text or "combined" in text:
-        return "composed"
     return "bar"
+
+
+def build_trend_chart_data(current_user, db):
+    data = get_expense_income_trend(current_user=current_user, db=db)
+    return data or []
 
 
 # ---------------- MAIN CHATBOT ---------------- #
@@ -246,23 +310,15 @@ def chatbot_reply(message: str, db, current_user):
             "content": custom_data,
         }
 
-    # ================= PRIORITY 2 → DATABASE ================= #
-    if "pie" in text or "donut" in text:
-        data = get_expense_graph(current_user=current_user, db=db)
-        return {"type": detect_chart_type(text), "content": data or []}
-
-    if "line" in text or "trend" in text:
-        data = get_expense_income_trend(current_user=current_user, db=db)
-        return {"type": "line_chart", "content": data or []}
-
-    if "chart" in text or "graph" in text:
-        data = get_expenses_chart(current_user=current_user, db=db)
-        return {"type": "bar", "content": data or []}
-
+    # ================= PRIORITY 2 → SPECIFIC CHARTS ================= #
     if "scatter" in text:
-        trend = get_expense_income_trend(current_user=current_user, db=db) or []
+        trend = build_trend_chart_data(current_user, db)
         scatter_data = [
-            {"x": item.get("income", 0), "y": item.get("expense", 0)}
+            {
+                "x": item.get("income", 0),
+                "y": item.get("expense", 0),
+                "name": item.get("month") or item.get("date") or "",
+            }
             for item in trend
         ]
         return {"type": "scatter", "content": scatter_data}
@@ -297,6 +353,35 @@ def chatbot_reply(message: str, db, current_user):
         ]
 
         return {"type": "waterfall", "content": data}
+
+    if "area" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "area", "content": data}
+
+    if "stack" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "stacked", "content": data}
+
+    if "composed" in text or "combined" in text or "mix" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "composed", "content": data}
+
+    if "compare" in text or "vs" in text or "multi line" in text:
+        data = build_trend_chart_data(current_user, db)
+        return {"type": "multi_line", "content": data}
+
+    # ================= DATABASE CHARTS ================= #
+    if "pie" in text or "donut" in text:
+        data = get_expense_graph(current_user=current_user, db=db)
+        return {"type": detect_chart_type(text), "content": data or []}
+
+    if "line" in text or "trend" in text:
+        data = get_expense_income_trend(current_user=current_user, db=db)
+        return {"type": "line_chart", "content": data or []}
+
+    if "chart" in text or "graph" in text:
+        data = get_expenses_chart(current_user=current_user, db=db)
+        return {"type": "bar", "content": data or []}
 
     # ================= QR CODE ================= #
     if "qr" in text or "qr code" in text:
@@ -407,7 +492,9 @@ def chatbot_reply(message: str, db, current_user):
     # ================= NEWS ================= #
     if "news" in text:
         category_name = "general"
+        query = ""
 
+        # 🔹 Category detection
         if "tech" in text or "technology" in text:
             category_name = "technology"
         elif "sports" in text:
@@ -419,21 +506,37 @@ def chatbot_reply(message: str, db, current_user):
         elif "entertainment" in text or "movie" in text:
             category_name = "entertainment"
 
-        news_data = fetch_news(category_name)
+        # 🔹 Query extraction (important improvement)
+        # Example: "bitcoin news", "ai news"
+        words = text.split()
+        if "news" in words:
+            idx = words.index("news")
+            if idx > 0:
+                query = words[idx - 1]   # last word before "news"
+
+        # 🔹 Fetch news
+        news_data = fetch_news_data(category=category_name, q=query, limit=5)
 
         if not news_data:
-            return {"type": "text", "content": "News was not fetched 😢"}
+            return {
+                "type": "text",
+                "content": "News fetch nahi ho paayi 😢 (check API key or try again)"
+            }
 
-        return {"type": "news", "content": news_data}
+        return {
+            "type": "news",
+            "content": news_data
+        }
 
     # ================= WIKIPEDIA ================= #
-    if "wiki" in text or "wikipedia" in text:
-        query = text.replace("wiki", "").replace("wikipedia", "").strip()
+    if any(word in text for word in ["wiki", "wikipedia", "who is", "what is", "tell me about"]):
+
+        query = clean_wiki_query(message)
 
         if not query:
             return {
                 "type": "text",
-                "content": "Kya search karna hai Wikipedia par? 🤔",
+                "content": "Kya search karna hai Wikipedia par? 🤔"
             }
 
         wiki_data = fetch_wikipedia(query)
@@ -441,12 +544,17 @@ def chatbot_reply(message: str, db, current_user):
         if not wiki_data:
             return {
                 "type": "text",
-                "content": "Wikipedia data nahi mila 😢",
+                "content": f"'{query}' ke liye Wikipedia data nahi mila 😢"
             }
 
         return {
             "type": "wiki",
-            "content": wiki_data,
+            "content": {
+                "title": wiki_data.get("title"),
+                "summary": wiki_data.get("summary"),
+                "image": wiki_data.get("image"),
+                "url": wiki_data.get("url")
+            }
         }
 
     # ================= HELP / INFO ================= #
