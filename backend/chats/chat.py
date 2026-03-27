@@ -33,12 +33,12 @@ def chat(
     if res:
         return res
 
-    res = handle_chatbot(user_message, db, current_user)
-    if res:
-        return res
-
     res = handle_news_request(msg, user_message)
     if res:
         return res
 
-    return handle_wiki_request(msg, user_message)
+    res = handle_wiki_request(msg, user_message)
+    if res:
+        return res
+
+    return handle_chatbot(user_message, db, current_user)
