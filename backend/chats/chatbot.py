@@ -1,10 +1,7 @@
-import os
+
 import re
-from fastapi import  Query, HTTPException
-from dotenv import load_dotenv
+
 from datetime import datetime
-from urllib.parse import quote
-import requests
 from sqlalchemy import func
 from backend.api.models.vitya import Expense, Income
 from backend.api.routes.ai import budget_plan, monthly_trend
@@ -26,166 +23,14 @@ NORMALIZATION_MAP = {
     "dawai": "medicine",
 }
 
-NEWS_API_KEY = os.getenv("NEWS_API_KEY")
-
-BASE_TOP = "https://newsapi.org/v2/top-headlines"
-BASE_SEARCH = "https://newsapi.org/v2/everything"
-
-def fetch_news_data(category="general", q="", limit=5):
-    try:
-        if not NEWS_API_KEY:
-            raise Exception("NEWS_API_KEY missing")
-
-        # Decide endpoint
-        if q.strip():
-            response = requests.get(
-                BASE_SEARCH,
-                params={
-                    "q": q.strip(),
-                    "language": "en",
-                    "sortBy": "publishedAt",
-                    "apiKey": NEWS_API_KEY
-                },
-                timeout=10
-            )
-        else:
-            response = requests.get(
-                BASE_TOP,
-                params={
-                    "country": "in",
-                    "category": category,
-                    "apiKey": NEWS_API_KEY
-                },
-                timeout=10
-            )
-
-        data = response.json()
-
-        if response.status_code != 200:
-            raise Exception(data.get("message", "News API error"))
-
-        articles = data.get("articles", [])
-
-        # Clean output (important)
-        news_list = []
-        for a in articles[:limit]:
-            news_list.append({
-                "title": a.get("title"),
-                "description": a.get("description"),
-                "url": a.get("url"),
-                "image": a.get("urlToImage"),
-                "source": a.get("source", {}).get("name"),
-                "publishedAt": a.get("publishedAt"),
-            })
-
-        return news_list
-
-    except Exception as e:
-        print("NEWS ERROR:", e)
-        return []
-
-
-import wikipedia
-import requests
-from urllib.parse import quote
-
-wikipedia.set_lang("en")
-
-
-def fetch_wikipedia(query: str):
-    try:
-        if not query or not query.strip():
-            return None
-
-        query = query.strip()
-
-        # ---------------- TRY 1: wikipedia library ---------------- #
-        try:
-            summary = wikipedia.summary(query, sentences=3)
-            page = wikipedia.page(query)
-
-            return {
-                "title": page.title,
-                "summary": summary,
-                "url": page.url,
-                "image": page.images[0] if page.images else None,
-                "source": "library"
-            }
-
-        except wikipedia.exceptions.DisambiguationError as e:
-            # pick first option automatically
-            try:
-                option = e.options[0]
-                summary = wikipedia.summary(option, sentences=3)
-                page = wikipedia.page(option)
-
-                return {
-                    "title": page.title,
-                    "summary": summary,
-                    "url": page.url,
-                    "image": page.images[0] if page.images else None,
-                    "source": "library_disambiguation"
-                }
-            except Exception:
-                pass
-
-        except wikipedia.exceptions.PageError:
-            pass
-
-        # ---------------- TRY 2: API FALLBACK ---------------- #
-        safe_query = quote(query)
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe_query}"
-
-        res = requests.get(url, timeout=10)
-
-        if res.status_code != 200:
-            print("WIKI HTTP ERROR:", res.status_code, res.text[:200])
-            return None
-
-        data = res.json()
-
-        if data.get("type") == "https://mediawiki.org/wiki/HyperSwitch/errors/not_found":
-            return None
-
-        return {
-            "title": data.get("title"),
-            "summary": data.get("extract"),
-            "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
-            "image": data.get("thumbnail", {}).get("source"),
-            "source": "api"
-        }
-
-    except requests.RequestException as e:
-        print("WIKI REQUEST ERROR:", e)
-        return None
-
-    except Exception as e:
-        print("WIKI ERROR:", e)
-        return None
-
-import re
-
-def clean_wiki_query(text: str):
-    text = text.lower()
-
-    text = re.sub(
-        r"(wiki|wikipedia|tell me about|who is|what is|info about|information on)",
-        "",
-        text
-    )
-
-    return text.strip()
-
 def normalize(text: str):
     text = (text or "").lower()
     for k, v in NORMALIZATION_MAP.items():
         text = re.sub(rf"\b{re.escape(k)}\b", v, text)
     return text
 
-
 def contains_any(text: str, words):
     return any(word in text for word in words)
-
 
 # ---------------- PARSER ---------------- #
 def extract_amount(text: str):
@@ -489,74 +334,7 @@ def chatbot_reply(message: str, db, current_user):
             print("MONTHLY REPORT ERROR:", e)
             return {"type": "text", "content": "Error generating report ❌"}
 
-    # ================= NEWS ================= #
-    if "news" in text:
-        category_name = "general"
-        query = ""
-
-        # 🔹 Category detection
-        if "tech" in text or "technology" in text:
-            category_name = "technology"
-        elif "sports" in text:
-            category_name = "sports"
-        elif "business" in text:
-            category_name = "business"
-        elif "health" in text:
-            category_name = "health"
-        elif "entertainment" in text or "movie" in text:
-            category_name = "entertainment"
-
-        # 🔹 Query extraction (important improvement)
-        # Example: "bitcoin news", "ai news"
-        words = text.split()
-        if "news" in words:
-            idx = words.index("news")
-            if idx > 0:
-                query = words[idx - 1]   # last word before "news"
-
-        # 🔹 Fetch news
-        news_data = fetch_news_data(category=category_name, q=query, limit=5)
-
-        if not news_data:
-            return {
-                "type": "text",
-                "content": "News fetch nahi ho paayi 😢 (check API key or try again)"
-            }
-
-        return {
-            "type": "news",
-            "content": news_data
-        }
-
-    # ================= WIKIPEDIA ================= #
-    if any(word in text for word in ["wiki", "wikipedia", "who is", "what is", "tell me about"]):
-
-        query = clean_wiki_query(message)
-
-        if not query:
-            return {
-                "type": "text",
-                "content": "Kya search karna hai Wikipedia par? 🤔"
-            }
-
-        wiki_data = fetch_wikipedia(query)
-
-        if not wiki_data:
-            return {
-                "type": "text",
-                "content": f"'{query}' ke liye Wikipedia data nahi mila 😢"
-            }
-
-        return {
-            "type": "wiki",
-            "content": {
-                "title": wiki_data.get("title"),
-                "summary": wiki_data.get("summary"),
-                "image": wiki_data.get("image"),
-                "url": wiki_data.get("url")
-            }
-        }
-
+   
     # ================= HELP / INFO ================= #
     if "report" in text:
         return {"type": "text", "content": "Report feature is coming soon!"}

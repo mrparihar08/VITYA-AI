@@ -304,19 +304,17 @@ const Chatbot = () => {
         content: normalizedPayload,
       };
 
-     setMessages((prev) => {
-        const updated = [...prev, botMessage];
+  setMessages((prev) => {
+    const updated = [...prev, botMessage];
 
-  // ⭐ Only auto speak if user used voice
-        if (isVoiceMessage) {
-           const speakText = getSpeakText(botMessage);
-           if (speakText) {
-             setTimeout(() => speak(speakText), 300);
+    if (isVoiceMessage) {
+      const speakText = getSpeakText(botMessage);
+      if (speakText) setTimeout(() => speak(speakText), 300);
     }
-  }
 
-        return updated;
-      });
+    return updated;
+  });
+
     } catch (error) {
       console.error(error);
       setMessages((prev) => [...prev, { sender: "bot", type: "text", text: "Server error ❌" }]);
@@ -351,37 +349,25 @@ const Chatbot = () => {
 
     return value;
   };
-    const normalizeWikiData = (value) => {
+  const normalizeWikiData = (value) => {
     const parsed = parseMaybeJSON(value);
-    const data =
-      typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed;
+    const data = typeof parsed === "string" ? parseMaybeJSON(parsed) : parsed;
 
     if (!data || typeof data !== "object" || Array.isArray(data)) {
       return {};
     }
 
     return {
-      title:
-        data.title ||
-        data.name ||
-        data.pageTitle ||
-        "Wikipedia",
-      summary:
-        data.summary ||
-        data.extract ||
-        data.description ||
-        "",
+      title: data.title || data.name || data.pageTitle || "Wikipedia",
+      summary: data.summary || data.extract || data.description || "",
       image:
         data.image ||
+        data.images?.[0] ||
         data.thumbnail?.source ||
         data.thumbnail ||
         data.imageUrl ||
         "",
-      url:
-        data.url ||
-        data.pageUrl ||
-        data.content_urls?.desktop?.page ||
-        "",
+      url: data.url || data.pageUrl || data.content_urls?.desktop?.page || "",
     };
   };
 
