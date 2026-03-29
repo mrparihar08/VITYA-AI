@@ -1,3 +1,7 @@
+import re
+from dataclasses import dataclass
+from typing import Optional, Literal
+
 from fastapi.responses import StreamingResponse
 
 from backend.api.routes.vitya import (
@@ -13,49 +17,135 @@ from backend.chats.utils.FileCreator import (
 )
 
 
-def handle_file_request(msg, user_message, current_user):
-    title = user_message[:50] if user_message else "chat_data"
+FileType = Literal["csv", "docx", "pdf", "pptx", "unknown"]
 
-    # CSV
-    if any(word in msg for word in ["csv", "excel"]):
-        if any(word in msg for word in ["expense", "expenses"]):
+
+@dataclass
+class PromptIntent:
+    file_type: FileType
+    filename: str
+    is_expense: bool = False
+    is_income: bool = False
+
+
+def normalize_text(value: Optional[str]) -> str:
+    return (value or "").strip().lower()
+
+
+def make_safe_filename(title: str, default: str = "chat_data") -> str:
+    title = (title or "").strip()
+    if not title:
+        return default
+
+    title = re.sub(r"[^\w\s\-]", "", title)
+    title = re.sub(r"\s+", "_", title).strip("_")
+    return title[:50] if title else default
+
+
+def detect_file_type(msg: str) -> FileType:
+    """
+    Natural-language intent detection for file type.
+    """
+    msg = normalize_text(msg)
+
+    # CSV / Excel / Spreadsheet
+    if re.search(r"\b(csv|excel|spreadsheet|sheet|table)\b", msg):
+        return "csv"
+
+    # DOCX / Word / Document
+    if re.search(r"\b(doc|docx|word|document|report|notes)\b", msg):
+        return "docx"
+
+    # PDF
+    if re.search(r"\b(pdf|portable document)\b", msg):
+        return "pdf"
+
+    # PPT / Presentation / Slides
+    if re.search(r"\b(ppt|pptx|powerpoint|slides|presentation|deck)\b", msg):
+        return "pptx"
+
+    return "unknown"
+
+
+def detect_special_type(msg: str) -> tuple[bool, bool]:
+    """
+    Detect expense / income special cases for CSV.
+    """
+    msg = normalize_text(msg)
+
+    is_expense = bool(re.search(r"\b(expense|expenses|spend|spending|outgoing)\b", msg))
+    is_income = bool(re.search(r"\b(income|incomes|salary|revenues|revenue|earnings|profit)\b", msg))
+
+    return is_expense, is_income
+
+
+def build_intent(msg: str, user_message: Optional[str]) -> PromptIntent:
+    msg_norm = normalize_text(msg)
+    raw_title = (user_message or "chat_data").strip()
+    filename = make_safe_filename(raw_title[:50] if raw_title else "chat_data")
+
+    file_type = detect_file_type(msg_norm)
+    is_expense, is_income = detect_special_type(msg_norm)
+
+    return PromptIntent(
+        file_type=file_type,
+        filename=filename,
+        is_expense=is_expense,
+        is_income=is_income,
+    )
+
+
+def make_download_response(file_obj, media_type: str, filename: str):
+    return StreamingResponse(
+        file_obj,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def handle_file_request(msg, user_message, current_user):
+    intent = build_intent(msg, user_message)
+
+    # Special CSV reports
+    if intent.file_type == "csv":
+        if intent.is_expense:
             return download_expenses_csv(current_user)
 
-        if any(word in msg for word in ["income", "revenues"]):
+        if intent.is_income:
             return download_incomes_csv(current_user)
 
-        file = generate_csv_from_text(user_message, user_title=title)
-        return StreamingResponse(
-            file,
-            media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=chat_data.csv"},
+        file_obj = generate_csv_from_text(user_message or "", user_title=intent.filename)
+        return make_download_response(
+            file_obj,
+            "text/csv",
+            f"{intent.filename}.csv",
         )
 
-    # DOC
-    if any(word in msg for word in ["doc", "word", "document"]):
-        file = generate_doc_from_text(user_message, user_title=title)
-        return StreamingResponse(
-            file,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": "attachment; filename=chat_data.docx"},
+    # DOCX
+    if intent.file_type == "docx":
+        file_obj = generate_doc_from_text(user_message or "", user_title=intent.filename)
+        return make_download_response(
+            file_obj,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            f"{intent.filename}.docx",
         )
 
     # PDF
-    if "pdf" in msg:
-        file = generate_pdf_from_text(user_message, user_title=title)
-        return StreamingResponse(
-            file,
-            media_type="application/pdf",
-            headers={"Content-Disposition": "attachment; filename=chat_data.pdf"},
+    if intent.file_type == "pdf":
+        file_obj = generate_pdf_from_text(user_message or "", user_title=intent.filename)
+        return make_download_response(
+            file_obj,
+            "application/pdf",
+            f"{intent.filename}.pdf",
         )
 
-    # PPT
-    if any(word in msg for word in ["ppt", "powerpoint", "slides"]):
-        file = generate_ppt_from_text(user_message, user_title=title)
-        return StreamingResponse(
-            file,
-            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            headers={"Content-Disposition": "attachment; filename=chat_data.pptx"},
+    # PPTX
+    if intent.file_type == "pptx":
+        file_obj = generate_ppt_from_text(user_message or "", user_title=intent.filename)
+        return make_download_response(
+            file_obj,
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            f"{intent.filename}.pptx",
         )
 
     return None
