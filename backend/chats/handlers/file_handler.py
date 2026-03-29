@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, Literal
+from typing import Optional, Literal, Dict # Import Dict
 
 from fastapi.responses import StreamingResponse
 
@@ -14,6 +14,8 @@ from backend.chats.utils.FileCreator import (
     generate_doc_from_text,
     generate_pdf_from_text,
     generate_ppt_from_text,
+    extract_title,
+    detect_theme, # Import detect_theme
 )
 
 
@@ -26,6 +28,7 @@ class PromptIntent:
     filename: str
     is_expense: bool = False
     is_income: bool = False
+    theme: Optional[Dict] = None # Add theme field
 
 
 def normalize_text(value: Optional[str]) -> str:
@@ -61,7 +64,7 @@ def detect_file_type(msg: str) -> FileType:
         return "pdf"
 
     # PPT / Presentation / Slides
-    if re.search(r"\b(ppt|pptx|powerpoint|slides|presentation|deck)\b", msg):
+    if re.search(r"\b(ppt|pptx|powerpoint|slides|presentation|deck|slideshow)\b", msg):
         return "pptx"
 
     return "unknown"
@@ -81,17 +84,19 @@ def detect_special_type(msg: str) -> tuple[bool, bool]:
 
 def build_intent(msg: str, user_message: Optional[str]) -> PromptIntent:
     msg_norm = normalize_text(msg)
-    raw_title = (user_message or "chat_data").strip()
-    filename = make_safe_filename(raw_title[:50] if raw_title else "chat_data")
+    raw_title = extract_title(user_message or "", user_title=None)
+    filename = make_safe_filename(raw_title)
 
     file_type = detect_file_type(msg_norm)
     is_expense, is_income = detect_special_type(msg_norm)
+    theme = detect_theme(user_message or "")
 
     return PromptIntent(
         file_type=file_type,
         filename=filename,
         is_expense=is_expense,
         is_income=is_income,
+        theme=theme,
     )
 
 
@@ -141,7 +146,11 @@ def handle_file_request(msg, user_message, current_user):
 
     # PPTX
     if intent.file_type == "pptx":
-        file_obj = generate_ppt_from_text(user_message or "", user_title=intent.filename)
+        file_obj = generate_ppt_from_text(
+            user_message or "",
+            user_title=intent.filename,
+            theme=intent.theme
+        )
         return make_download_response(
             file_obj,
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",

@@ -1203,8 +1203,8 @@ const styles = {
   },
 
   bubble: {
-    padding: 12,
-    borderRadius: 14,
+    padding: 6,
+    borderRadius: 10,
     wordBreak: "break-word",
     boxSizing: "border-box",
     maxWidth: "100%",

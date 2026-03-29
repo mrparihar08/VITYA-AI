@@ -169,7 +169,7 @@ export default function Home() {
 
       {/* ===== Quick Stats Overview ===== */}
       {overview && (
-        <div className="stats-row container-grid" style={{ marginBottom: '2rem' }}>
+        <div className="stats-row container-grid" style={{ marginBottom: '2rem', display: 'flex', flexWrap: 'wrap' }}>
           <div className="col col-4">
             <div className="stat-card balance">
               <div className="label">Total Balance</div>
@@ -314,7 +314,7 @@ export default function Home() {
         <div className="col col-8">
           <Card title="Expenses by Category" className="income">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
@@ -330,7 +330,7 @@ export default function Home() {
                   formatter={(val) => [`₹${val.toLocaleString()}`, 'Expenses']}
                 />
                 <Legend />
-                <Bar dataKey="amount" fill="url(#barGrad)" radius={[6, 6, 0, 0]} barSize={35} />
+                <Bar dataKey="amount" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>

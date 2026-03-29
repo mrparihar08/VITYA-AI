@@ -397,7 +397,7 @@ export function Profile() {
               type="password" placeholder="Confirm New Password" required
               value={passwords.confirmNew} onChange={(e) => setPasswords({...passwords, confirmNew: e.target.value})}
             />
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button type="submit" className="button-8b" disabled={updatingPass} style={{ flex: 1 }}>{updatingPass ? "Updating..." : "Update"}</button>
               <button type="button" className="button-8b" onClick={() => setShowChangePass(false)} style={{ flex: 1, background: 'var(--text-muted)' }}>Cancel</button>
             </div>
