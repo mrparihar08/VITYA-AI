@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Card } from "./HomeContent"; // Import the shared Card component
 
 const SETTINGS_KEY = "app_settings_v2";
 
@@ -81,25 +82,20 @@ export default function SettingsContent() {
   const languageLabel = settings.language === "hi" ? "Hindi" : "English";
 
   return (
-    <div className="settings-page">
-      <div className="settings-card card">
-        <div className="settings-header">
-          <div>
-            <h1 className="h1-title">Settings</h1>
-            <p className="settings-subtitle">
-              Customize the app look, feel, and behavior.
-            </p>
-          </div>
-
-          <div className={`save-badge ${saveStatus === "Saved" ? "ok" : ""}`}>
-            {saveStatus}
-          </div>
+    <div className="settings-page home-card">
+      <div className="top-h" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="top-h-h">
+          <h1 className="h1-title">Settings</h1>
+          <p>Customize the app look, feel, and behavior.</p>
         </div>
+        <div className={`save-badge ${saveStatus === "Saved" ? "ok" : ""}`}>
+          {saveStatus === "Saved" ? "● " + saveStatus : saveStatus}
+        </div>
+      </div>
 
-        <div className="settings-grid">
-          <section className="settings-section">
-            <h3>Appearance</h3>
-
+        <div className="container-grid">
+          <div className="col col-6">
+            <Card title="Appearance">
             <div className="settings-option">
               <label className="toggle-label">
                 <input
@@ -182,11 +178,11 @@ export default function SettingsContent() {
                 </select>
               </label>
             </div>
-          </section>
+            </Card>
+          </div>
 
-          <section className="settings-section">
-            <h3>Preferences</h3>
-
+          <div className="col col-6">
+            <Card title="Preferences">
             <div className="settings-option">
               <label className="field-label">
                 <span>
@@ -252,11 +248,12 @@ export default function SettingsContent() {
                 </div>
               </label>
             </div>
-          </section>
+            </Card>
+          </div>
 
-          <section className="settings-section settings-preview">
-            <h3>Preview</h3>
-            <div className="preview-box">
+          <div className="col col-12" style={{ marginTop: '1.5rem' }}>
+            <Card title="Live Preview">
+            <div className="preview-box" style={{ background: 'rgba(0,0,0,0.02)', padding: '1.5rem' }}>
               <div className="preview-top">
                 <span
                   className="preview-dot"
@@ -294,15 +291,15 @@ export default function SettingsContent() {
                 </button>
               </div>
             </div>
-          </section>
+            </Card>
+          </div>
         </div>
 
-        <div className="settings-actions">
+        <div className="settings-actions" style={{ marginTop: '2rem', textAlign: 'right' }}>
           <button className="button-8b" onClick={resetSettings}>
             Reset to Defaults
           </button>
         </div>
-      </div>
     </div>
   );
 }

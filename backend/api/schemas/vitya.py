@@ -25,3 +25,15 @@ class ExpenseCreate(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str    
+
+class ChatResponse(BaseModel):
+    reply: str  
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+

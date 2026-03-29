@@ -28,57 +28,31 @@ ML_REQUEST_TIMEOUT = int(os.environ.get("ML_REQUEST_TIMEOUT", "15"))
 # -------------------------------
 from fastapi.responses import Response
 
-@router.get("/csv")
-def download_expenses_csv(
+@router.get("/export/csv")
+def download_financial_csv(
+    type: str = "expenses",
     current_user: User = Depends(token_required)
 ):
     output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow(["ID", "Amount", "Category", "Description", "Date"])
-
-    for e in current_user.expenses:
-        writer.writerow([
-            e.id,
-            float(e.amount),
-            e.category,
-            e.description or "",
-            e.date.strftime("%Y-%m-%d") if e.date else ""
-        ])
+    if type == "expenses":
+        writer.writerow(["ID", "Amount", "Category", "Description", "Date"])
+        for e in current_user.expenses:
+            writer.writerow([e.id, float(e.amount), e.category, e.description or "", e.date.strftime("%Y-%m-%d") if e.date else ""])
+        filename = "expenses.csv"
+    else:
+        writer.writerow(["ID", "Amount", "Source", "Date"])
+        for i in current_user.incomes:
+            writer.writerow([i.id, float(i.amount), i.source, i.date.strftime("%Y-%m-%d") if i.date else ""])
+        filename = "incomes.csv"
 
     output.seek(0)
-
     return Response(
         content=output.getvalue(),
         media_type="text/csv",
         headers={
-            "Content-Disposition": "attachment; filename=expenses.csv"
-        }
-    )
-@router.get("/csv")
-def download_incomes_csv(
-    current_user: User = Depends(token_required)
-):
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(["ID", "Amount", "Source", "Date"])
-
-    for i in current_user.incomes:
-        writer.writerow([
-            i.id,
-            float(i.amount),
-            i.source,
-            i.date.strftime("%Y-%m-%d") if i.date else ""
-        ])
-
-    output.seek(0)
-
-    return Response(
-        content=output.getvalue(),
-        media_type="text/csv",
-        headers={
-            "Content-Disposition": "attachment; filename=incomes.csv"
+            "Content-Disposition": f"attachment; filename={filename}"
         }
     )
 
