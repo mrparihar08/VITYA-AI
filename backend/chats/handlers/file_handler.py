@@ -9,14 +9,15 @@ from backend.api.routes.vitya import (
     download_incomes_csv,
 )
 
-from backend.chats.utils.FileCreator import (
+from backend.chats.utils.text_utils import extract_title
+from backend.chats.utils.document_generators import (
     generate_csv_from_text,
-    generate_doc_from_text,
+    generate_doc_from_text, 
     generate_pdf_from_text,
-    generate_ppt_from_text,
-    extract_title,
-    detect_theme, # Import detect_theme
 )
+from backend.chats.utils.presentation_generators import generate_ppt_from_text
+from backend.chats.utils.themes import detect_theme
+from backend.chats.utils.media_and_exports import generate_all_files, generate_qr, generate_barcode
 
 
 FileType = Literal["csv", "docx", "pdf", "pptx", "unknown"]
