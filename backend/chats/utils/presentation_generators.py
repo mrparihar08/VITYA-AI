@@ -6,7 +6,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt as PPTPt
 from pptx.dml.color import RGBColor
 
-from themes import detect_theme
+from backend.chats.utils.themes import detect_theme
 from backend.chats.utils.text_utils import (
         normalize_text,
         extract_title,
