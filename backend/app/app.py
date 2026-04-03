@@ -45,7 +45,10 @@ def on_startup():
 # ---------------------------
 DEFAULT_ORIGINS = [
     "https://vitya-ai-re.onrender.com",
-    "http://localhost:3000"
+    "https://vitya-chat.onrender.com",
+    "http://localhost:3000",
+    "http://192.168.1.17:3000"
+    
 ]
 
 cors_origins = os.getenv("CORS_ORIGINS")
